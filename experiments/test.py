@@ -53,6 +53,7 @@ def main(mid: str = "chatgpt", language: str = "english"):
         tid = best_templates[(mid, entity)]   
         task = "classification" if "cls" in tid else "extraction"
         if "exp" in tid:
+<<<<<<< HEAD
             try:
                 print(f"Looking for example doc id: {examples[entity]}")
                 example_doc_id = examples[entity]
@@ -60,6 +61,10 @@ def main(mid: str = "chatgpt", language: str = "english"):
             except IndexError:
                 print(f"Missing doc_id {example_doc_id} in annotations.")
                 continue
+=======
+            example_doc_id = examples[entity]
+            example = [doc for doc in dataset if doc.id == example_doc_id][0]
+>>>>>>> origin/main
         else:
             example = None
         definition = "def" in tid

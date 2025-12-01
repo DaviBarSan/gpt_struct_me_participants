@@ -3,7 +3,11 @@
 import json
 import logging
 from pathlib import Path
+<<<<<<< HEAD
 import chardet
+=======
+
+>>>>>>> origin/main
 import fire
 from src.utils import is_json
 
@@ -14,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 RESULTS_PATH = ROOT / "results"
 
 
+<<<<<<< HEAD
 
 def detect_encoding(file_path: str, buffer_size: int = 4096) -> str:
     """
@@ -105,6 +110,8 @@ def sanitize_json_string(raw_text: str) -> str:
 
 
 
+=======
+>>>>>>> origin/main
 def json_loads_section(content: str) -> dict:
     """Parse a section of a JSON file."""
     content = content.strip()
@@ -119,6 +126,7 @@ def json_loads_section(content: str) -> dict:
 
 def read_json(filepath: Path) -> dict:
     """Read a JSON file."""
+<<<<<<< HEAD
     encoding = detect_encoding(filepath)
     content = filepath.read_text(encoding=encoding)
     content = sanitize_json_string(content)
@@ -127,29 +135,46 @@ def read_json(filepath: Path) -> dict:
     try:
         answer = json.loads(content)
         print(f"Loaded JSON answer: {answer}")
+=======
+    content = filepath.read_text()
+    try:
+        answer = json.loads(content)
+>>>>>>> origin/main
         return answer
 
     except json.decoder.JSONDecodeError:
         try:
             answer = json_loads_section(content)
+<<<<<<< HEAD
             print(f"ERROR: but loaded JSON answer: {answer}")
 
             return answer
         
         except ValueError:
             raise
+=======
+            return answer
+        
+        except ValueError:
+            print(filepath)
+            return []
+>>>>>>> origin/main
 
 
 def read_predictions(path: Path):
     """Parse the prediction files."""
     predictions = []
     filepaths = path.glob("**/*.txt")
+<<<<<<< HEAD
     
+=======
+>>>>>>> origin/main
     for filepath in filepaths:
         *_, model, entity, template, _ = filepath.parts
         doc = filepath.stem
 
         answer = read_json(filepath)
+<<<<<<< HEAD
         # print(f"Read answer from {filepath}: {answer}")
 
         if "ext" in template:
@@ -160,6 +185,14 @@ def read_predictions(path: Path):
                 answer = []
 
             
+=======
+
+        if "ext" in template:
+            is_valid = len(answer) and isinstance(answer, list) and isinstance(answer[0], str)
+            if not is_valid:
+                answer = []
+
+>>>>>>> origin/main
             predictions.append({
                 "model": model,
                 "entity": entity,
@@ -174,7 +207,10 @@ def read_predictions(path: Path):
                 all(isinstance(a, list) for a in answer) and \
                 all(len(a) == 2 for a in answer) and \
                 all(isinstance(a[0], str) for a in answer)
+<<<<<<< HEAD
             # print(f"cls task! is valid: {is_valid} -> answer: {answer}")
+=======
+>>>>>>> origin/main
                 
             if not is_valid:
                 answer = []
@@ -197,8 +233,11 @@ def main(mode: str = "prompt_selection", language: str = "portuguese") -> None:
     """Run the script."""
     path = RESULTS_PATH / mode / language
 
+<<<<<<< HEAD
     print(path)
 
+=======
+>>>>>>> origin/main
     predictions = read_predictions(path)
 
     predictions_path = path / "predictions.json"

@@ -11,8 +11,13 @@ import fire
 from src.prompts import Prompter
 from src.reader import read_lusa, read_timebank
 
+<<<<<<< HEAD
 from experiments.utils import mid2model
 from experiments.constants import (
+=======
+from utils import mid2model
+from constants import (
+>>>>>>> origin/main
     ENTITIES,
     EXAMPLERS,
     RESOURCE_PATH,
@@ -31,7 +36,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def main(mid: str = "llama2-7b", language: str = "english"):
+<<<<<<< HEAD
     print(language)
+=======
+>>>>>>> origin/main
     model = mid2model(mid)
     entities = ENTITIES[language]
     sample_docs = SAMPLE_DOCS_IDS[language]
@@ -43,7 +51,11 @@ def main(mid: str = "llama2-7b", language: str = "english"):
 
     docs = [doc for doc in dataset if doc.id in sample_docs]
     tids = ["cls", "cls_def", "cls_def_exp", "cls_exp", "ext", "ext_def", "ext_def_exp", "ext_exp"]
+<<<<<<< HEAD
     print(entities)
+=======
+
+>>>>>>> origin/main
     n_iter = len(entities) * len(docs) * len(tids)
     iter = 0
     for entity in entities:
@@ -51,7 +63,10 @@ def main(mid: str = "llama2-7b", language: str = "english"):
 
         example_doc_id = examples[entity]
         example_doc = [doc for doc in dataset if doc.id == example_doc_id][0]
+<<<<<<< HEAD
         
+=======
+>>>>>>> origin/main
 
         for tid in tids:
             logger.info(f"Template: {tid}")
@@ -76,9 +91,13 @@ def main(mid: str = "llama2-7b", language: str = "english"):
                 if not answer_path.exists():
                     answer_path.parent.mkdir(parents=True, exist_ok=True)
                     answer = model(prompt)
+<<<<<<< HEAD
                     print(f"Generated answer: {answer}")
                     print(f"Writing answer to {answer_path}")
                     answer_path.write_text(answer, encoding='utf-8')
+=======
+                    answer_path.write_text(answer)
+>>>>>>> origin/main
                     logger.info(f"{mid} Answer:\n{answer}")
                     time.sleep(10)
                 else:

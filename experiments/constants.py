@@ -8,6 +8,7 @@ RESULTS_PATH = ROOT / "results"
 
 SAMPLE_DOCS_IDS = {
     "portuguese": [
+<<<<<<< HEAD
         "lusa_1",
         "lusa_2",
         "lusa_3",
@@ -28,6 +29,28 @@ SAMPLE_DOCS_IDS = {
         "lusa_18",
         "lusa_19",
         "lusa_20",
+=======
+        "lusa_189",
+        "lusa_100",
+        "lusa_197",
+        "lusa_161",
+        "lusa_116",
+        "lusa_176",
+        "lusa_195",
+        "lusa_173",
+        "lusa_172",
+        "lusa_13",
+        "lusa_142",
+        "lusa_126",
+        "lusa_188",
+        "lusa_107",
+        "lusa_203",
+        "lusa_191",
+        "lusa_170",
+        "lusa_133",
+        "lusa_179",
+        "lusa_155",
+>>>>>>> origin/main
     ],
 
     "english": [
@@ -55,9 +78,15 @@ SAMPLE_DOCS_IDS = {
 }
 EXAMPLERS = {
     "portuguese": {
+<<<<<<< HEAD
         # "event triggers": "lusa_43",
         # "time expressions": "lusa_11",
         "participants": "lusa_2"
+=======
+        "event triggers": "lusa_119",
+        "time expressions": "lusa_11",
+        "participants": "lusa_156"
+>>>>>>> origin/main
     },
     "english": {
         "event triggers": "APW19980213.1310",
@@ -67,9 +96,15 @@ EXAMPLERS = {
 
 ENTITIES = {
     "portuguese": [
+<<<<<<< HEAD
         # "event triggers",
         "participants",
         # "time expressions",
+=======
+        "event triggers",
+        "participants",
+        "time expressions",
+>>>>>>> origin/main
     ],
     "english": [
         "event triggers",
@@ -114,10 +149,13 @@ BEST_TEMPLATES = {
         ("llama2-70b-chat", "event triggers"): "cls_def_exp",
         ("llama2-70b-chat", "participants"): "ext_def_exp",
         ("llama2-70b-chat", "time expressions"): "ext_exp",
+<<<<<<< HEAD
                
         # ("gemini", "event triggers"): "ext_exp",
         ("gemini", "participants"): "ext_exp",
         # ("gemini", "time expressions"): "ext_exp",
+=======
+>>>>>>> origin/main
     },
 
     "english": {

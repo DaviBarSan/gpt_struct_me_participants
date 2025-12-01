@@ -27,12 +27,19 @@ def strict_metrics(prediction: list, annotation: list) -> dict:
 
     tps, fns, fps = 0, 0, 0
     for doc_id in prediction:
+<<<<<<< HEAD
         try:
             pred = set(prediction[doc_id])
             annt = set(annotation[doc_id])
         except KeyError:
             print(f"Missing doc_id {doc_id} in annotations.")
             continue
+=======
+
+        pred = set(prediction[doc_id])
+        annt = set(annotation[doc_id])
+
+>>>>>>> origin/main
         tp, fp, fn = exact_match(pred, annt)
 
         tps += tp
@@ -58,12 +65,17 @@ def relaxed_metrics(prediction: Dict, annotation: Dict) -> dict:
     """Compute micro-averaged metrics for a given entity."""
     f1 = 0
     for doc_id in prediction:
+<<<<<<< HEAD
         try:
             pred = set(prediction[doc_id])
             annt = set(annotation[doc_id])
         except KeyError:
             print(f"Missing doc_id {doc_id} in annotations.")
             continue
+=======
+        pred = set(prediction[doc_id])
+        annt = set(annotation[doc_id])
+>>>>>>> origin/main
         f1 += macro_averaged_f1_score(pred, annt)
     f1 /= len(prediction)
     return {"f1": f1}

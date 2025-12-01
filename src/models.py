@@ -6,6 +6,7 @@ import logging
 import requests
 from pathlib import Path
 
+<<<<<<< HEAD
 # import replicate
 # import boto3
 import dotenv
@@ -15,6 +16,16 @@ import dotenv
 # import torch
 # from text_generation import Client
 # from transformers import pipeline
+=======
+import replicate
+import boto3
+import dotenv
+import openai
+import transformers
+from transformers import AutoTokenizer
+import torch
+from text_generation import Client
+>>>>>>> origin/main
 
 from src.utils import is_json
 
@@ -26,8 +37,13 @@ MODELS_PATH = ROOT / "resources" / "models"
 
 dotenv.load_dotenv(ROOT / ".env")
 
+<<<<<<< HEAD
 # HF_KEY = os.getenv("HF_KEY")
 # os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
+=======
+HF_KEY = os.getenv("HF_KEY")
+os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
+>>>>>>> origin/main
 
 
 class Falcon:
@@ -227,6 +243,7 @@ def llama2_70b(prompt: str, max_tokens: int = 800) -> str:
         if is_json(answer):
             return answer
     return answer
+<<<<<<< HEAD
 
 def roberta_ner(prompt: str):
     tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
@@ -269,3 +286,5 @@ def gemini(prompt: str) -> str:
 
 # Example Usage (assuming you have your API key set as an environment variable)
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
+=======
+>>>>>>> origin/main
