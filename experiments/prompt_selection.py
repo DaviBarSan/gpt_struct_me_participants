@@ -63,10 +63,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
 
         example_doc_id = examples[entity]
         example_doc = [doc for doc in dataset if doc.id == example_doc_id][0]
-<<<<<<< HEAD
         
-=======
->>>>>>> origin/main
 
         for tid in tids:
             logger.info(f"Template: {tid}")

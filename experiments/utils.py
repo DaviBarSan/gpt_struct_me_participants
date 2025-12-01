@@ -57,9 +57,6 @@ def mid2model(mid: str):
 
     elif mid == "llama2-70b-chat":
         return Llama2InferenceAPI("70b", chat=True)
-<<<<<<< HEAD
     
     elif mid == "gemini":
         return gemini
-=======
->>>>>>> origin/main

@@ -96,15 +96,9 @@ EXAMPLERS = {
 
 ENTITIES = {
     "portuguese": [
-<<<<<<< HEAD
         # "event triggers",
         "participants",
         # "time expressions",
-=======
-        "event triggers",
-        "participants",
-        "time expressions",
->>>>>>> origin/main
     ],
     "english": [
         "event triggers",

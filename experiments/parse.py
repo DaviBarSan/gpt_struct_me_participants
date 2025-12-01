@@ -18,7 +18,6 @@ logging.basicConfig(level=logging.INFO)
 RESULTS_PATH = ROOT / "results"
 
 
-<<<<<<< HEAD
 
 def detect_encoding(file_path: str, buffer_size: int = 4096) -> str:
     """
@@ -110,8 +109,6 @@ def sanitize_json_string(raw_text: str) -> str:
 
 
 
-=======
->>>>>>> origin/main
 def json_loads_section(content: str) -> dict:
     """Parse a section of a JSON file."""
     content = content.strip()
