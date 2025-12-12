@@ -8,49 +8,26 @@ RESULTS_PATH = ROOT / "results"
 
 SAMPLE_DOCS_IDS = {
     "portuguese": [
-<<<<<<< HEAD
         "lusa_1",
         "lusa_2",
-        "lusa_3",
-        "lusa_4",
-        "lusa_5",
-        "lusa_6",
-        "lusa_7",
-        "lusa_8",
-        "lusa_9",
-        "lusa_10",
-        "lusa_11",
-        "lusa_12",
-        "lusa_13",
-        "lusa_14",
-        "lusa_15",
-        "lusa_16",
-        "lusa_17",
-        "lusa_18",
-        "lusa_19",
-        "lusa_20",
-=======
-        "lusa_189",
-        "lusa_100",
-        "lusa_197",
-        "lusa_161",
-        "lusa_116",
-        "lusa_176",
-        "lusa_195",
-        "lusa_173",
-        "lusa_172",
-        "lusa_13",
-        "lusa_142",
-        "lusa_126",
-        "lusa_188",
-        "lusa_107",
-        "lusa_203",
-        "lusa_191",
-        "lusa_170",
-        "lusa_133",
-        "lusa_179",
-        "lusa_155",
->>>>>>> origin/main
+        # "lusa_3",
+        # "lusa_4",
+        # "lusa_5",
+        # "lusa_6",
+        # "lusa_7",
+        # "lusa_8",
+        # "lusa_9",
+        # "lusa_10",
+        # "lusa_11",
+        # "lusa_12",
+        # "lusa_13",
+        # "lusa_14",
+        # "lusa_15",
+        # "lusa_16",
+        # "lusa_17",
+        # "lusa_18",
+        # "lusa_19",
+        # "lusa_20",
     ],
 
     "english": [
@@ -78,15 +55,7 @@ SAMPLE_DOCS_IDS = {
 }
 EXAMPLERS = {
     "portuguese": {
-<<<<<<< HEAD
-        # "event triggers": "lusa_43",
-        # "time expressions": "lusa_11",
         "participants": "lusa_2"
-=======
-        "event triggers": "lusa_119",
-        "time expressions": "lusa_11",
-        "participants": "lusa_156"
->>>>>>> origin/main
     },
     "english": {
         "event triggers": "APW19980213.1310",
@@ -108,74 +77,13 @@ ENTITIES = {
 
 BEST_TEMPLATES = {
     "portuguese": {
-        ("chatgpt", "event triggers"): "ext_def_exp",
-        ("chatgpt", "participants"): "ext_def_exp",
-        ("chatgpt", "time expressions"): "ext",
-
-        ("gpt3", "event triggers"): "ext_exp",
-        ("gpt3", "participants"): "cls_exp",
-        ("gpt3", "time expressions"): "ext_exp",
-
-        ("gpt4", "event triggers"): "ext_def_exp",
-        ("gpt4", "participants"): "ext_def_exp",
-        ("gpt4", "time expressions"): "ext_exp",
-
-        ("llama2-7b", "event triggers"): "ext_exp",
-        ("llama2-7b", "participants"): "cls_def_exp",
-        ("llama2-7b", "time expressions"): "cls_exp",
-
-        ("llama2-7b-chat", "event triggers"): "cls_exp",
-        ("llama2-7b-chat", "participants"): "cls_def_exp",
-        ("llama2-7b-chat", "time expressions"): "cls_def_exp",
-
-        ("llama2-13b", "event triggers"): "ext_def_exp",
-        ("llama2-13b", "participants"): "ext_exp",
-        ("llama2-13b", "time expressions"): "ext",
-
-        ("llama2-13b-chat", "event triggers"): "cls_def_exp",
-        ("llama2-13b-chat", "participants"): "cls_exp",
-        ("llama2-13b-chat", "time expressions"): "ext",
-
-        ("llama2-70b", "event triggers"): "ext_exp",
-        ("llama2-70b", "participants"): "ext_def_exp",
-        ("llama2-70b", "time expressions"): "ext_exp",
-
-        ("llama2-70b-chat", "event triggers"): "cls_def_exp",
-        ("llama2-70b-chat", "participants"): "ext_def_exp",
-        ("llama2-70b-chat", "time expressions"): "ext_exp",
-<<<<<<< HEAD
                
         # ("gemini", "event triggers"): "ext_exp",
         ("gemini", "participants"): "ext_exp",
         # ("gemini", "time expressions"): "ext_exp",
-=======
->>>>>>> origin/main
     },
 
     "english": {
-        ("chatgpt", "event triggers"): "cls_def_exp",
-        ("chatgpt", "time expressions"): "ext_def_exp",
-
-        ("gpt3", "event triggers"): "ext_def_exp",
-        ("gpt3", "time expressions"): "ext_def_exp",
-
-        ("gpt4", "event triggers"): "cls_def_exp",
-        ("gpt4", "time expressions"): "cls_def",
-
-        ("llama2-7b", "event triggers"): "ext_def_exp",
-        ("llama2-7b", "time expressions"): "ext_def_exp",
-
-        ("llama2-7b-chat", "event triggers"): "ext_def_exp",
-        ("llama2-7b-chat", "time expressions"): "ext_def",
-
-        ("llama2-13b", "event triggers"): "ext_def_exp",
-        ("llama2-13b", "time expressions"): "ext_def",
-
-        ("llama2-13b-chat", "event triggers"): "ext_exp",
-        ("llama2-13b-chat", "time expressions"): "ext_def",
-
-        ("llama2-70b", "event triggers"): "ext_exp",
-        ("llama2-70b", "time expressions"): "ext_exp",
 
         ("llama2-70b-chat", "event triggers"): "ext_def_exp",
         ("llama2-70b-chat", "time expressions"): "ext",

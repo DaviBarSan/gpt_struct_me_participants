@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
 from src.models import (
     chatgpt,
     gpt3,
@@ -9,12 +5,9 @@ from src.models import (
     Falcon,
     Llama2InferenceAPI,
     HFInferenceLocal,
-<<<<<<< HEAD
     llama2_70b,
-    gemini
-=======
-    llama2_70b
->>>>>>> origin/main
+    gemini,
+    qwen3_4b,
 )
 
 
@@ -60,3 +53,5 @@ def mid2model(mid: str):
     
     elif mid == "gemini":
         return gemini
+    elif mid == "qwen3_4b":
+        return qwen3_4b

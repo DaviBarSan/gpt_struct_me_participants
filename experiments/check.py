@@ -26,15 +26,7 @@ def main():
     """Main script."""
 
     models = [
-        "chatgpt",
-        "gpt3",
-        "gpt4",
-        "llama2-7b",
-        "llama2-7b-chat",
-        "llama2-13b",
-        "llama2-13b-chat",
-        "llama2-70b",
-        "llama2-70b-chat",
+        "gemini"
     ]
 
     templates = [

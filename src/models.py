@@ -6,26 +6,15 @@ import logging
 import requests
 from pathlib import Path
 
-<<<<<<< HEAD
 # import replicate
 # import boto3
 import dotenv
 # import openai
 # import transformers
-# from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import AutoTokenizer, AutoModelForCausalLM
 # import torch
 # from text_generation import Client
 # from transformers import pipeline
-=======
-import replicate
-import boto3
-import dotenv
-import openai
-import transformers
-from transformers import AutoTokenizer
-import torch
-from text_generation import Client
->>>>>>> origin/main
 
 from src.utils import is_json
 
@@ -37,13 +26,8 @@ MODELS_PATH = ROOT / "resources" / "models"
 
 dotenv.load_dotenv(ROOT / ".env")
 
-<<<<<<< HEAD
-# HF_KEY = os.getenv("HF_KEY")
-# os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
-=======
 HF_KEY = os.getenv("HF_KEY")
-os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
->>>>>>> origin/main
+# os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
 
 
 class Falcon:
@@ -243,13 +227,36 @@ def llama2_70b(prompt: str, max_tokens: int = 800) -> str:
         if is_json(answer):
             return answer
     return answer
-<<<<<<< HEAD
 
-def roberta_ner(prompt: str):
-    tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
-    model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
-    nlp = pipeline("ner", model=model, tokenizer=tokenizer)
-    
+def qwen3_4b(prompt: str):
+    from transformers import pipeline
+    # 1. Define the relative path you used
+    relative_path = "C:\\Users\davib\Desktop\\MSc_DataScience\\thesis\gpt_struct_me\\resources\models\Qwen3-4B"
+
+    # # 2. Convert the relative path to an absolute path
+    # os.path.abspath() handles relative parts like '..'
+    absolute_model_path = os.path.abspath(relative_path)
+    # absolute_model_path = 'C:/Users/davib/Desktop/MSc_DataScience/thesis/resources/models/Qwen3-4B'
+    print(f"Loading model from absolute path: {relative_path}")
+
+    # 3. Pass the ABSOLUTE path to the pipeline
+    pipe = pipeline("text-generation", model=relative_path)
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+    # 2. Call the pipeline and store the result
+# Crucial Argument: return_full_text=False
+    output = pipe(
+        messages,
+        max_new_tokens=16384,
+        return_full_text=False      # Tells the pipeline to return ONLY the generated text
+    )
+
+    # 3. Extract the final text
+    # The output is a list of dictionaries, so we need to drill down.
+    generated_text = output[0]['generated_text']
+    print(generated_text)
+    return generated_text
 
 
 def gemini(prompt: str) -> str:
@@ -286,5 +293,3 @@ def gemini(prompt: str) -> str:
 
 # Example Usage (assuming you have your API key set as an environment variable)
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
-=======
->>>>>>> origin/main
