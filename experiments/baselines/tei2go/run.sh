@@ -1,1 +1,0 @@
-python -m experiments.baselines.tei2go.annotate
