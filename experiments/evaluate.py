@@ -6,7 +6,7 @@ from pathlib import Path
 import fire
 import pandas as pd
 
-from constants import RESOURCE_PATH, ROOT
+from experiments.constants import RESOURCE_PATH, ROOT
 
 from src.reader import read_lusa, read_timebank
 from src.evaluate import strict_metrics, relaxed_metrics
