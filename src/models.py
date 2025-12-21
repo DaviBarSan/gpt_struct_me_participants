@@ -106,8 +106,6 @@ def gemini(prompt: str) -> str:
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
 
 def mistral_7b(prompt: str) -> str:    
-
-
     relative_path = "C:\\Users\davib\Desktop\\MSc_DataScience\\thesis\gpt_struct_me\\resources\\models\\Mistral-7B"
 
     tokenizer = MistralTokenizer.from_file(f"{relative_path}\\tokenizer.model.v3")
