@@ -7,7 +7,7 @@ import chardet
 import fire
 from src.utils import is_json
 
-from constants import ROOT
+from experiments.constants import ROOT
 
 logging.basicConfig(level=logging.INFO)
 

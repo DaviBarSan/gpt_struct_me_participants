@@ -16,14 +16,6 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # from text_generation import Client
 from transformers import pipeline
 
-##MISTRAL
-from mistral_inference.transformer import Transformer
-from mistral_inference.generate import generate
-
-from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
-from mistral_common.protocol.instruct.messages import UserMessage
-from mistral_common.protocol.instruct.request import ChatCompletionRequest
-
 
 from src.utils import is_json
 
@@ -42,7 +34,7 @@ HF_KEY = os.getenv("HF_KEY")
 def qwen3_4b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "C:\\Users\davib\Desktop\\MSc_DataScience\\thesis\gpt_struct_me\\resources\models\Qwen3-4B"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen3-4B/Qwen3_4B"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
@@ -106,6 +98,14 @@ def gemini(prompt: str) -> str:
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
 
 def mistral_7b(prompt: str) -> str:    
+
+   ##MISTRAL
+    from mistral_inference.transformer import Transformer
+    from mistral_inference.generate import generate
+
+    from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
+    from mistral_common.protocol.instruct.messages import UserMessage
+    from mistral_common.protocol.instruct.request import ChatCompletionRequest
     relative_path = "C:\\Users\davib\Desktop\\MSc_DataScience\\thesis\gpt_struct_me\\resources\\models\\Mistral-7B"
 
     tokenizer = MistralTokenizer.from_file(f"{relative_path}\\tokenizer.model.v3")
