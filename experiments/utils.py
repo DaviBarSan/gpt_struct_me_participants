@@ -2,7 +2,8 @@ from src.models import (
     gemini,
     qwen3_4b,
     mistral_7b,
-    phi_4_6b
+    phi_4mm_6b,
+    phi_4_15b,
 )
 
 
@@ -14,4 +15,6 @@ def mid2model(mid: str):
     elif mid == "mistral_7b":
         return mistral_7b
     elif mid == "phi_4_6b":
-        return phi_4_6b
+        return phi_4mm_6b
+    elif mid == "phi_4_15b":
+        return phi_4_15b
