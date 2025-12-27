@@ -184,7 +184,7 @@ def gemma3_1b(prompt : str):
 	return response
 
 def llama32_3b(prompt:str) -> str:
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Llama-32-3b"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Llama-32-3b/llama32-3b"
 
     tokenizer = AutoTokenizer.from_pretrained(relative_path)
     model = AutoModelForCausalLM.from_pretrained(relative_path)
