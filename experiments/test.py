@@ -7,7 +7,7 @@ import logging
 import fire
 import dotenv
 import openai
-from constants import (
+from experiments.constants import (
     BEST_TEMPLATES,
     ENTITIES,
     EXAMPLERS,
@@ -19,7 +19,7 @@ from constants import (
 from src.prompts import Prompter
 from src.reader import read_lusa, read_timebank
 
-from utils import mid2model
+from experiments.utils import mid2model
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
