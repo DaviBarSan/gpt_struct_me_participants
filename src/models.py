@@ -182,3 +182,23 @@ def gemma3_1b(prompt : str):
 	outputs = model.generate(**inputs, max_new_tokens=4096)
 	response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:])
 	return response
+
+def llama32_3b(prompt:str) -> str:
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Llama-32-3b"
+
+    tokenizer = AutoTokenizer.from_pretrained(relative_path)
+    model = AutoModelForCausalLM.from_pretrained(relative_path)
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+    inputs = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+
+    outputs = model.generate(**inputs, max_new_tokens=4096)
+    result = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:])
+    return result
