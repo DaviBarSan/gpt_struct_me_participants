@@ -169,7 +169,7 @@ def gemma3_1b(prompt : str):
 	tokenizer = AutoTokenizer.from_pretrained(path_to_model)
 	model = AutoModelForCausalLM.from_pretrained(path_to_model)
 	messages = [
-	    {"role": "user", "content": "Who are you?"},
+	    {"role": "user", "content": prompt},
 	]
 	inputs = tokenizer.apply_chat_template(
 		messages,

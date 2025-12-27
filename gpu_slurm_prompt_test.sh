@@ -15,5 +15,4 @@ export PYTHONPATH=/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_
 
 source /projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/venv_39/bin/activate
 
-python3.9 -m experiments.prompt_selection --mid phi_4_6b --language portuguese
-
+python3.9 -m experiments.prompt_selection --mid gemma3_1b --language portuguese
