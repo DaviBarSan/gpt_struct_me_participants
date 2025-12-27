@@ -162,6 +162,7 @@ def phi_4_6b(prompt: str):
     generated_text = output[0]["generated_text"]
     return generated_text
 
+
 def gemma3_1b(prompt : str):
 
 	path_to_model = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/gemma3-1b"
@@ -178,6 +179,6 @@ def gemma3_1b(prompt : str):
 		return_tensors="pt",
 	).to(model.device)
 
-	outputs = model.generate(**inputs, max_new_tokens=40)
+	outputs = model.generate(**inputs, max_new_tokens=4096)
 	response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:])
 	return response
