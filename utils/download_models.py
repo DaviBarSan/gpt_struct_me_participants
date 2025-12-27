@@ -1,7 +1,16 @@
 # download_script.py
 import argparse
 import os
-from huggingface_hub import snapshot_download
+import dotenv
+from pathlib import Path
+from huggingface_hub import snapshot_download, login
+
+ROOT = Path(__file__).parent.parent
+dotenv.load_dotenv(ROOT / ".env")
+
+HF_KEY = os.getenv("HF_KEY")
+login(token=HF_KEY)
+
 
 def download_model(model_full_name: str, model_folder_name: str, local_dir: str = None):
     """

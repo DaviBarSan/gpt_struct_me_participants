@@ -12,7 +12,7 @@ import dotenv
 # import openai
 # import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM
-# import torch
+import torch
 # from text_generation import Client
 from transformers import pipeline
 
@@ -29,7 +29,9 @@ dotenv.load_dotenv(ROOT / ".env")
 
 HF_KEY = os.getenv("HF_KEY")
 # os.environ["REPLICATE_API_TOKEN"] = os.getenv("REPLICATE_KEY")
-
+# Hard-disable FlashAttention
+os.environ["TRANSFORMERS_NO_FLASH_ATTN"] = "1"
+os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 
 def qwen3_4b(prompt: str):
     from transformers import pipeline
@@ -117,32 +119,65 @@ def mistral_7b(prompt: str) -> str:
     result = tokenizer.instruct_tokenizer.tokenizer.decode(out_tokens[0])
 
     print(result)
-    return result
-
+    return  result
+ 
 def phi_4_6b(prompt: str):
-    # 1. Define the relative path you used
-    relative_path = "C:\\Users\davib\Desktop\\MSc_DataScience\\thesis\gpt_struct_me\\resources\models\Phi4-6B"
-
-    # # 2. Convert the relative path to an absolute path
-    # os.path.abspath() handles relative parts like '..'
+    # 1. Path to the locally downloaded model
+    relative_path = r"/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Phi4-6B/Phi4_6b"
     absolute_model_path = os.path.abspath(relative_path)
-    print(f"Loading model from absolute path: {relative_path}")
 
-    # 3. Pass the ABSOLUTE path to the pipeline
-    pipe = pipeline("text-generation", model=relative_path)
-    messages = [
-        {"role": "user", "content": prompt},
-    ]
-    # 2. Call the pipeline and store the result
-# Crucial Argument: return_full_text=False
-    output = pipe(
-        messages,
-        max_new_tokens=16384,
-        return_full_text=False      # Tells the pipeline to return ONLY the generated text
+    print(f"Loading model from: {absolute_model_path}")
+
+    # 2. Create text-generation pipeline
+    # IMPORTANT:
+    # - Use text-generation (NOT vision2seq)
+    # - Do NOT use AutoProcessor
+    # - trust_remote_code=True is required for Phi models
+    pipe = pipeline(
+        task="text-generation",
+        model=absolute_model_path,
+        tokenizer=absolute_model_path,
+        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        device_map="auto",
+        trust_remote_code=True,
+	model_kwargs={
+        	"attn_implementation": "sdpa"
+    	}
     )
 
-    # 3. Extract the final text
-    # The output is a list of dictionaries, so we need to drill down.
-    generated_text = output[0]['generated_text']
-    print(generated_text)
+    # 3. Chat-style messages (Phi-4 supports this natively)
+    messages = [
+        {"role": "user", "content": prompt}
+    ]
+
+    # 4. Run generation
+    output = pipe(
+        messages,
+        max_new_tokens=2048,
+        return_full_text=False,   # return only the assistant answer
+        do_sample=False
+    )
+
+    # 5. Extract generated text
+    generated_text = output[0]["generated_text"]
     return generated_text
+
+def gemma3_1b(prompt : str):
+
+	path_to_model = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/gemma3-1b"
+	tokenizer = AutoTokenizer.from_pretrained(path_to_model)
+	model = AutoModelForCausalLM.from_pretrained(path_to_model)
+	messages = [
+	    {"role": "user", "content": "Who are you?"},
+	]
+	inputs = tokenizer.apply_chat_template(
+		messages,
+		add_generation_prompt=True,
+		tokenize=True,
+		return_dict=True,
+		return_tensors="pt",
+	).to(model.device)
+
+	outputs = model.generate(**inputs, max_new_tokens=40)
+	response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:])
+	return response
