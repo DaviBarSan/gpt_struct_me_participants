@@ -1,0 +1,81 @@
+Para resolver o problema, podemos criar um algoritmo que leia a entrada e identifique os participantes. Neste caso, vamos considerar os seguintes participantes:
+
+- Personas
+- Organizações
+- Locais
+- Objetos
+- Natures
+- Facilidades
+- Outros
+
+Aqui está a solução:
+
+```python
+def extract_and_classify_participants(text):
+    # List of classes
+    classes = ['Person', 'Organization', 'Object', 'Location', 'Nature', 'Facility', 'Other']
+
+    # List to store the participants
+    participants = []
+
+    # List of stop words
+    stop_words = ['de', 'no', 'na', 'em', 'com', 'ao', 'da', 'dos', 'das', 'à', 'do', 'dois', 'da', 'dois', 'a', 'as']
+
+    # Tokenize the text
+    tokens = text.split()
+
+    # Iterate over the tokens
+    for token in tokens:
+        # Remove stop words
+        if token.lower() in stop_words:
+            continue
+
+        # Check if the token is a person
+        if token.lower().startswith('um homem') or token.lower().startswith('uma mulher'):
+            participant = [token, 'Person']
+        # Check if the token is an organization
+        elif token.lower().startswith('a psa') or token.lower().startswith('o comando'):
+            participant = [token, 'Organization']
+        # Check if the token is a location
+        elif token.lower().startswith('bairro') or token.lower().startswith('município'):
+            participant = [token, 'Location']
+        # Check if the token is an object
+        elif token.lower().startswith('uma arma') or token.lower().startswith('uma coluna'):
+            participant = [token, 'Object']
+        # Check if the token is a nature
+        elif token.lower().startswith('violência') or token.lower().startswith('crime'):
+            participant = [token, 'Nature']
+        # Check if the token is a facility
+        elif token.lower().startswith('um “tablet”'):
+            participant = [token, 'Facility']
+        # Check if the token is something else
+        else:
+            participant = [token, 'Other']
+
+        # Add the participant to the list
+        participants.append(participant)
+
+    # Return the list of participants
+    return participants
+
+# Test the function
+text = """
+Sicários com ligações ao narcotráfico matam sete pessoas no estado mexicano de Michoacán
+Assassinos contratados (sicários) possivelmente com ligações ao narcotráfico mataram a tiro sete pessoas no estado mexicano de Michoacán, informaram na quarta-feira as autoridades locais, precisando que os corpos das vítimas foram abandonados numa estrada rural.
+Os corpos das vítimas foram encontrados por um grupo de trabalhadores agrícolas numa estrada do município de Tangamandapio, informou o Ministério Público local, num comunicado.
+Na mesma nota informativa, o Ministério Público precisou que as vítimas – seis homens e uma mulher – apresentavam, a par dos ferimentos de bala, sinais graves de tortura.
+Pelo menos três dos corpos estavam desmembrados.
+A identidade das vítimas é, até ao momento, desconhecida.
+As autoridades estão a considerar várias linhas de investigação, mas admitem a possibilidade deste incidente estar relacionado com o narcotráfico e com questões de vingança entre cartéis rivais.
+A violência com ligações ao crime organizado é um dos grandes flagelos do México, sendo responsável por várias centenas de homicídios por ano naquele país.
+"""
+
+# Call the function
+participants = extract_and_classify_participants(text)
+
+# Print the participants
+for participant in participants:
+    print(participant)
+```
+
+Esse código irá extrair os participantes do texto e classificá-los em suas respectivas categorias.<|eot_id|>

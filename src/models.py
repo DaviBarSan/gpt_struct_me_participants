@@ -187,7 +187,11 @@ def llama32_3b(prompt:str) -> str:
     relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Llama-32-3b/llama32-3b"
 
     tokenizer = AutoTokenizer.from_pretrained(relative_path)
-    model = AutoModelForCausalLM.from_pretrained(relative_path)
+    model = AutoModelForCausalLM.from_pretrained(relative_path,    
+    device_map="auto",
+    torch_dtype=torch.float16,   # or bfloat16 if supported
+    trust_remote_code=True
+))
     messages = [
         {"role": "user", "content": prompt},
     ]
