@@ -141,6 +141,7 @@ def read_json(filepath: Path) -> dict:
             return {}
         except Exception as e:
             print(f"Unexpected error during JSON parsing: {e}")
+            raise e
 
 
 def read_predictions(path: Path):
