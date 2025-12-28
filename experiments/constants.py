@@ -81,6 +81,8 @@ BEST_TEMPLATES = {
         # ("gemini", "event triggers"): "ext_exp",
         ("gemini", "participants"): "ext_exp",
         ("qwen3_4b", "participants"): "cls_exp",
+        ("gemma3_1b", "participants"): "ext_exp",
+        ("llama32_3b", "participants"): "cls_def",
         # ("gemini", "time expressions"): "ext_exp",
     },
 
