@@ -137,7 +137,10 @@ def read_json(filepath: Path) -> dict:
             return answer
         
         except ValueError:
-            raise
+            print("Failed to parse JSON content after sanitization. Invalid response from model. Returning empty dict.")
+            return {}
+        except Exception as e:
+            print(f"Unexpected error during JSON parsing: {e}")
 
 
 def read_predictions(path: Path):
