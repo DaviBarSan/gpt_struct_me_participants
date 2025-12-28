@@ -191,7 +191,7 @@ def llama32_3b(prompt:str) -> str:
     device_map="auto",
     torch_dtype=torch.float16,   # or bfloat16 if supported
     trust_remote_code=True
-))
+    )
     messages = [
         {"role": "user", "content": prompt},
     ]
