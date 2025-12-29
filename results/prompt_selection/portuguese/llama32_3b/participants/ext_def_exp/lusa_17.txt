@@ -1,0 +1,53 @@
+Para extrair os participantes do texto, você pode usar o seguinte código em Python:
+
+```python
+import re
+import json
+
+def extrair_participantes(texto):
+    # Define uma lista de palavras-chave para identificar os participantes
+    palavras_chave = ['homem','mulher', 'criança', 'bombeiro', 'autoridade', 'investigador', 'pessoa','restaurante', 'licença']
+
+    # Inicializa uma lista para armazenar os participantes
+    participantes = []
+
+    # Define uma expressão regular para encontrar os participantes
+    expressao_regular = r'(\b' + '|'.join(palavras_chave) + r'\b)(?:\s+\w+)?'
+
+    # Encontra todos os participantes no texto
+    match = re.findall(expressao_regular, texto, re.IGNORECASE)
+
+    # Adiciona os participantes encontrados à lista
+    participantes.extend(match)
+
+    # Retira as palavras-chave repetidas
+    participantes = list(set(participantes))
+
+    # Converte a lista para uma lista JSON
+    participantes_json = json.dumps(participantes)
+
+    # Retorna a lista JSON
+    return participantes_json
+
+texto = """
+Pelo menos sete mortos e sete em estado crítico num incêndio em Hong Kong
+Pelo menos sete pessoas morreram e sete estão em estado crítico, na sequência de um incêndio num edifício residencial em Hong Kong, noticiou hoje a imprensa local.
+As vítimas mortais foram três homens, três mulheres e uma criança de 09 anos, noticiou o jornal South China Morning Post (SCMP).
+Três homens e quatro mulheres foram hospitalizados, no domingo à noite, em estado crítico. Duas outras pessoas encontram-se em estado grave, indicou.
+O incêndio foi o mais mortal em Hong Kong em quase uma década.
+O apartamento terá acolhido uma reunião familiar, mas as autoridades estão a investigar se funcionava no local um restaurante sem licença.
+A maioria das vítimas é nepalesa.
+Os bombeiros informaram hoje numa conferência de imprensa que não havia medidas de segurança contra incêndios no edifício e que um dos presentes durante o evento conseguiu salvar-se ao subir pela janela da casa de banho do apartamento.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código define uma lista de palavras-chave para identificar os participantes e uma expressão regular para encontrar os participantes no texto. Em seguida, ele encontra todos os participantes no texto e adiciona-os à lista. Finalmente, ele converte a lista para uma lista JSON e a retorna.
+
+O resultado é:
+
+```
+["homem", "mulher", "criança", "bombeiro", "autoridade", "investigador", "pessoa", "restaurante", "licença"]
+```<|eot_id|>

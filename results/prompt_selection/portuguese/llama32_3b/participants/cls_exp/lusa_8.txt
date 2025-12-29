@@ -1,0 +1,43 @@
+Aqui está o código em Python para resolver o problema:
+
+```python
+import re
+import json
+
+def extract_and_classify(text):
+    # Defina as classes
+    classes = ["Person", "Organization", "Object", "Location", "Nature", "Facility", "Other"]
+
+    # Defina as palavras-chave para cada classe
+    class_map = {
+        "Person": ["homem", "mulher", "menino", "menina", "adulto", "desempregado"],
+        "Organization": ["PSP", "Comando Metropolitano", "Equipes de Prevenção e Reação Imediata", "Administração", "Município"],
+        "Object": ["droga", "arma de fogo", "heroína", "cocaína", "tablet", "coluna de som", "munições", "embarcação artesanal"],
+        "Location": ["Porto", "bairro da Pasteleira Nova", "Camacupa", "rio Kwanza", "Bié"],
+        "Nature": ["hipopótamo"],
+        "Facility": ["ponte"],
+        "Other": ["comunicado", "ataque", "incidente", "travessia", "município", "administração", "comunal", "municipal"]
+    }
+
+    # Tokenize o texto
+    tokens = re.findall(r'\w+', text)
+
+    # Classifique cada token
+    classified_tokens = []
+    for token in tokens:
+        for class_name, class_words in class_map.items():
+            if token.lower() in class_words:
+                classified_tokens.append([token, class_name])
+                break
+
+    return classified_tokens
+
+# Teste o código
+text1 = "PSP detém suspeito de tráfico de droga e apreende arma de fogo no Porto"
+text2 = "Três mortos em ataque de hipopótamo durante travessia de rio na província angolana do Bié"
+
+print(json.dumps(extract_and_classify(text1)))
+print(json.dumps(extract_and_classify(text2)))
+```
+
+Essa solução utiliza regular expressions para tokenizar o texto e uma mapeamento de classes para classificar cada token. O código também inclui um exemplo de uso com dois textos diferentes.<|eot_id|>

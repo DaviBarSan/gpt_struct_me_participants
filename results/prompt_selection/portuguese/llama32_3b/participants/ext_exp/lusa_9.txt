@@ -1,0 +1,39 @@
+Para resolver esse problema, podemos usar um algoritmo que analise a entrada e extraia todos os participantes mencionados no texto. Aqui está um exemplo de como você pode fazer isso em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Regra para extrair nomes de pessoas
+    nome_pessoa = r"Um( homem|mulher|mulheres|homens|homem|mulher) de ([0-9]+) anos"
+    # Regra para extrair organizações
+    organizacao = r"(PSP|GNR|Guarda|Tribunal|Comando|Esquadra|Equipas|Prevenção|Reação|Imediata)"
+    # Regra para extrair veículos
+    veiculo = r"veículo|carro|motor|motorcycle"
+
+    # Extrae participantes de nome de pessoa
+    pessoas = re.findall(nome_pessoa, texto)
+    pessoas = [pessoa[2] for pessoa in pessoas]
+
+    # Extrae participantes de organizações
+    organizacoes = re.findall(organizacao, texto)
+    organizacoes = list(set(organizações))  # Remove repetições
+
+    # Extrae participantes de veículos
+    veiculos = re.findall(veiculo, texto)
+    veiculos = [veiculo for veiculo in veiculos if veiculo!='veículo']
+
+    # Combina todos os participantes em uma lista
+    participantes = pessoas + organizacoes + veiculos
+
+    return participantes
+
+# Teste a função
+texto1 = "PSP detém suspeito de tráfico de droga e aprende arma de fogo no Porto"
+texto2 = "GNR detém condenado a prisão durante fiscalização rodoviária em Vila do Conde"
+
+print(extrair_participantes(texto1))
+print(extrair_participantes(texto2))
+```
+
+Este código utiliza regular expressions para extrair participantes de diferentes tipos (nome de pessoa, organizações, veículos) do texto. Em seguida, combina todos os participantes em uma lista e a retorna.<|eot_id|>

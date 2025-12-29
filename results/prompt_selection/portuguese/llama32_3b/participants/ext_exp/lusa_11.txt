@@ -1,0 +1,32 @@
+Para extrair os participantes do texto, precisamos identificar as pessoas, organizações e entidades mencionadas no texto. Aqui está o código em Python para fazer isso:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    participantes = re.findall(r'\b[A-Z][a-z]*\s[A-Z][a-z]*\b', texto)
+    return participantes
+
+texto = """
+Mulher atropelada durante protesto de mariscadores na Murtosa
+Uma mulher de 44 anos foi hoje atropelada sem gravidade na Murtosa, distrito de Aveiro, durante um protesto com cerca de dezenas de mariscadores, informaram os Bombeiros e a GNR.
+O caso ocorreu cerca das 12:50, junto ao cais da Torreira.
+Em declarações à Lusa, fonte da GNR disse que o condutor da viatura era um homem que transportava bivalves e que estaria a tentar sair do local.
+“Os pescadores tentaram evitar que ele saísse de lá. A situação incendiou-se um bocadinho e o senhor forçou a saída com a viatura, tendo atropelado uma senhora”, disse a mesma fonte.
+Segundo os Bombeiros, a mulher sofreu ferimentos ligeiros, tendo sido transportada para o Hospital de Aveiro.
+A GNR referiu ainda que o condutor se colocou em fuga, mas, entretanto, já foi identificado.
+Os mariscadores da Torreira estão em protesto há mais de uma semana, devido ao facto de não poderem trabalhar, por terem sido detetadas percentagens excessivas de coliformes fecais nas águas da ria de Aveiro.
+"""
+
+participantes = extrair_participantes(texto)
+
+# Remover repetições
+participantes = list(set(participantes))
+
+# Remover palavras que não são nomes de pessoas ou organizações
+participantes = [participante for participante in participantes if participante not in ["Bombeiros", "GNR", "Lusa", "Hospital de Aveiro", "Torreira", "Ria de Aveiro"]]
+
+print(participantes)
+```
+
+Este código usa a função `findall` da biblioteca `re` para encontrar todas as palavras que começam com uma letra maiúscula e seguem uma sequência de letras minúsculas, o que é um indicativo de que são nomes de pessoas ou organizações. Em seguida, remove as repetições e as palavras que não são nomes de pessoas ou organizações. O resultado é uma lista de strings que representam os participantes do texto.<|eot_id|>

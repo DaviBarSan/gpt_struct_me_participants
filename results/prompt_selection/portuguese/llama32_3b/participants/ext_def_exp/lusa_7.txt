@@ -1,0 +1,33 @@
+Para extrair os participantes do texto, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Expressão regular para encontrar palavras que possam ser participantes
+    pattern = r'\b[a-zA-Z0-9\s.,!?]+(?:de|para|com|com a|com os|dos|da|da s|do|dos)\b'
+
+    # Encontrar todas as palavras que atendem ao padrão
+    participantes = re.findall(pattern, texto, flags=re.IGNORECASE)
+
+    # Remover palavras que não sejam nomes de pessoas, lugares ou entidades
+    participantes = [p for p in participantes if re.match(r'^[a-zA-Z0-9\s]+$', p)]
+
+    return participantes
+
+texto1 = "PSP detém suspeito de tráfico de droga e apreende arma de fogo no Porto"
+texto2 = "Detido pai que matou filhos para se vingar da mulher no México"
+
+participantes1 = extrair_participantes(texto1)
+participantes2 = extrair_participantes(texto2)
+
+print("Participantes do primeiro texto:")
+print(json.dumps(participantes1, indent=4))
+
+print("\nParticipantes do segundo texto:")
+print(json.dumps(participantes2, indent=4))
+```
+
+Esse código usa uma expressão regular para encontrar palavras que possam ser participantes do texto. Em seguida, remove palavras que não sejam nomes de pessoas, lugares ou entidades. O resultado é uma lista de participantes que são identificados com base na relevância e importância para o contexto do texto.
+
+O código também usa a função `re.findall` com o flag `re.IGNORECASE` para encontrar todas as palavras que atendem ao padrão, independentemente do caso.<|eot_id|>

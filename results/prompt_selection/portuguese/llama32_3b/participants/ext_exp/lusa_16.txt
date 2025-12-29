@@ -1,0 +1,42 @@
+```python
+import json
+
+def extract_participants(text):
+    # List of participants
+    participants = []
+    
+    # Split the text into sentences
+    sentences = text.replace('...', '.').replace('?', '.').split('.')
+    
+    # Iterate over each sentence
+    for sentence in sentences:
+        # Remove leading/trailing spaces
+        sentence = sentence.strip()
+        
+        # If the sentence is not empty
+        if sentence:
+            # Split the sentence into words
+            words = sentence.split()
+            
+            # Iterate over each word
+            for word in words:
+                # Remove leading/trailing quotes
+                word = word.strip('"')
+                
+                # Add the word to the list of participants
+                participants.append(word)
+    
+    # Remove duplicates
+    participants = list(set(participants))
+    
+    # Sort the list of participants
+    participants.sort()
+    
+    return participants
+
+text = """Governo: Ricardo Pinheiro substitui José Mendes como secretário de Estado do Planeamento
+O deputado socialista Ricardo Pinheiro vai substituir José Mendes no cargo de secretário de Estado do Planeamento, mudança que foi hoje anunciada através de uma nota divulgada no portal da Presidência da República.
+"""
+participants = extract_participants(text)
+print(json.dumps(participants, indent=4))
+```<|eot_id|>

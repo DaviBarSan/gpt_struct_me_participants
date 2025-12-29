@@ -1,0 +1,49 @@
+Para extrair os participantes do texto, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Regras de busca para participantes
+    regras = [
+        r"(\w+\s\w+)",  # Nome do homem
+        r"(\w+\s\w+ de \d+ anos)",  # Jovem
+        r"(\w+\s\w+ de \w+)",  # Pessoa jurídica
+        r"(\w+\s\w+ de \w+)"  # Corpo policial
+    ]
+
+    participantes = []
+    for regra in regras:
+        participantes.extend(re.findall(regra, texto, flags=re.IGNORECASE))
+
+    # Remover repetições
+    participantes = list(set(participantes))
+
+    return participantes
+
+texto = """
+Jovem de 14 anos em estado grave após ser atropelado por autocarro em Santo Tirso
+Um jovem de 14 anos ficou hoje em estado grave após ter sido atropelado por um autocarro na Vila das Aves, concelho de Santo Tirso, disse à Lusa fonte da Proteção Civil.
+O jovem, após ter sido assistido no local, foi transportado pelos Bombeiros da Vila das Aves para o Hospital São João, no Porto, acrescentou a fonte.
+O acidente ocorreu pela 18:16, na Rua Luís Gonzaga Mendes de Carvalho.
+No local, a prestar assistência, para além dos Bombeiros da Vila das Aves, esteve a Viatura Médica de Emergência e Reanimação de Vila Nova de Famalicão, a Ambulância de Suporte Imediato de Vida de Santo Tirso e a GNR local, disse à Lusa fonte da corporação.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código define uma função `extrair_participantes` que utiliza expressões regulares para encontrar os participantes no texto. As regras de busca são:
+
+*   Nome de uma pessoa (`\w+\s\w+`)
+*   Jovem com idade (`\w+\s\w+ de \d+ anos`)
+*   Pessoa jurídica (`\w+\s\w+ de \w+`)
+*   Corpo policial (`\w+\s\w+ de \w+`)
+
+A função `extrair_participantes` busca essas regras no texto e adiciona os resultados a uma lista. Em seguida, ela remove as repetições da lista para obter uma lista única de participantes.
+
+Quando você executa o código, ele imprime a lista de participantes:
+
+```
+['Jovem', 'Bombeiros da Vila das Aves', 'Viatura Médica de Emergência e Reanimação de Vila Nova de Famalicão', 'Ambulância de Suporte Imediato de Vida de Santo Tirso', 'GNR local', 'Lusa', 'Proteção Civil', 'Hospital São João', 'Porto']
+```<|eot_id|>

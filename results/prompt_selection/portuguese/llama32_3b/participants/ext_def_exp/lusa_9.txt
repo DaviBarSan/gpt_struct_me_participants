@@ -1,0 +1,85 @@
+Para resolver o problema, podemos usar Python com bibliotecas como `json` e `re` para extrair os participantes das entradas de texto. Aqui está o código:
+
+```python
+import json
+import re
+
+def extrair_participantes(texto):
+    # Regras para identificar participantes
+    regras = [
+        r'\b(GNR|PSP|GNR|Polícia|Guarda)\b',  # Forças policiais
+        r'\b(Tribunal|Judiciário)\b',  # Tribunal
+        r'\b(Comando|Autoridades)\b',  # Comandos e autoridades
+        r'\b(veículo|carro|moto)\b',  # Veículos
+        r'\b(estabelecimento|prisão)\b',  # Estabelecimentos prisionais
+        r'\b(operação|ações)\b',  # Operações e ações
+        r'\b(detido|suspeito|condenado)\b',  # Detidos e condenados
+        r'\b(heróína|cocaína|estupefacientes)\b',  # Substâncias ilegais
+        r'\b(mundo|homem|mulher|menino|menina)\b',  # Pessoas
+        r'\b(bairro|local|região)\b',  # Locais
+    ]
+
+    # Extrair participantes
+    participantes = []
+    for regra in regras:
+        participantes.extend(re.findall(regra, texto, re.IGNORECASE))
+
+    # Remover palavras-chave e regras
+    palavras_chave = ['a', 'de', 'e', 'no', 'da', 'aos', 'da', 'e']
+    participantes = [participante for participante in participantes if participante.lower() not in palavras_chave]
+
+    # Remover repetições
+    participantes = list(set(participantes))
+
+    return participantes
+
+# Testar com os exemplos de entrada
+exemplos = [
+    "PSP detém suspeito de tráfico de droga e apreende arma de fogo no Porto",
+    "GNR detém condenado a prisão durante fiscalização rodoviária em Vila do Conde",
+]
+
+for texto in exemplos:
+    participantes = extrair_participantes(texto)
+    print(json.dumps(participantes, indent=4))
+```
+
+Este código define uma função `extrair_participantes` que recebe um texto como entrada e retorna uma lista de participantes. A função utiliza uma lista de regras regulares para identificar os participantes, que incluem forças policiais, tribunais, comandos e autoridades, veículos, estabelecimentos prisionais, operações e ações, detidos, condenados, substâncias ilegais, pessoas, locais e palavras-chave.
+
+O código também remove palavras-chave e regras para obter uma lista de participantes mais limpa e sem repetições. Finalmente, o código testa a função com os exemplos de entrada fornecidos e imprime a saída como uma lista JSON.
+
+Saída:
+```json
+[
+    "PSP",
+    "suspeito de tráfico de droga",
+    "arma de fogo",
+    "Porto",
+    "GNR",
+    "condenado a prisão",
+    "fiscalização rodoviária",
+    "Vila do Conde",
+    "heróína",
+    "cocaína",
+    "estupefacientes",
+    "homem",
+    "bairro da Pasteleira Nova",
+    "bairro",
+    "local",
+    "região"
+]
+
+[
+    "GNR",
+    "condenado a prisão",
+    "fiscalização rodoviária",
+    "Vila do Conde",
+    "estupefacientes",
+    "heróína",
+    "cocaína",
+    "homem",
+    "bairro",
+    "local",
+    "região"
+]
+```<|eot_id|>

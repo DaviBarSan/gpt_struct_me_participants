@@ -1,0 +1,57 @@
+Para resolver esse problema, podemos criar um algoritmo que analise a texto e identifique as entidades e suas classes. Aqui está um exemplo de como você pode fazer isso em Python:
+
+```python
+import re
+
+def classificar_participantes(texto):
+    # Defina as classes
+    classes = ['Person', 'Organization', 'Object', 'Location', 'Nature', 'Facility', 'Other']
+
+    # Defina as palavras-chave para cada classe
+    palavras_chave = {
+        'Person': ['homem','mulher', 'detido', 'condenado','suspeito'],
+        'Organization': ['PSP', 'GNR', 'Tribunal Judicial', 'Estabelecimento Prisional'],
+        'Object': ['droga', 'arma de fogo', 'cocaína', 'heroína','veículo'],
+        'Location': ['Porto', 'Vila do Conde', 'bairro', 'posse'],
+        'Nature': ['estupefacientes', 'tráfico', 'fiscalização', 'condenação'],
+        'Facility': ['prisão', 'estabelecimento', 'comando'],
+        'Other': ['comunicado', 'nota de imprensa', 'fiscalização', 'busca']
+    }
+
+    # Inicialize a lista de participantes
+    participantes = []
+
+    # Divida o texto em frases
+    frases = re.split(r'[.!?]', texto)
+
+    # Analise cada frase
+    for frase in frases:
+        # Remove espaços em branco e quebras de linha
+        frase = frase.strip()
+
+        # Analise cada palavra da frase
+        for palavra in re.split(r'\s+', frase):
+            # Verifique se a palavra é uma palavra-chave
+            for classe, palavras in palavras_chave.items():
+                if palavra.lower() in palavras:
+                    # Adicione a palavra e a classe à lista de participantes
+                    participantes.append([f'{palavra} ({classe})', classe])
+
+    # Retorne a lista de participantes
+    return participantes
+
+# Teste a função
+texto = """GNR detém condenado a prisão durante fiscalização rodoviária em Vila do Conde
+Um homem de 38 anos, condenado a uma pena de seis anos e seis meses de prisão efetiva, foi detido pela GNR em Vila do Conde na posse de estupefacientes, revelou hoje aquela força policial.
+Em comunicado, a GNR refere que a detenção ocorreu no domingo durante uma ação de fiscalização rodoviária, tendo apreendido, após a busca realizada ao veículo " 12 doses de heroína e nove doses de cocaína".
+Feita a identificação do suspeito, a GNR apurou que tinha "antecedentes criminais por tráfico de estupefacientes, furtos e roubos".
+A Guarda verificou ainda que o homem "tinha pendente um mandado de condução a estabelecimento prisional emitido pelo Tribunal Judicial de Vila do Conde, para cumprimento de uma pena de seis anos e seis meses de prisão efetiva".
+O detido foi conduzido ao Estabelecimento Prisional do Porto e os factos remetidos ao Tribunal Judicial de Vila do Conde, lê-se ainda na nota de imprensa."""
+
+# Exiba a lista de participantes
+participantes = classificar_participantes(texto)
+for participante in participantes:
+    print(participante)
+```
+
+Esse script analisa o texto e identifica as entidades e suas classes. Ele utiliza uma lista de palavras-chave para cada classe e verifica se cada palavra é uma das palavras-chave da classe. Se for, ele adiciona a palavra e a classe à lista de participantes. O script também remove espaços em branco e quebras de linha dos textos antes de analisá-los.<|eot_id|>

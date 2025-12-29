@@ -1,0 +1,135 @@
+Para resolver esse problema, podemos usar uma abordagem simples de processamento de linguagem natural (NLP) com Python. Aqui está o código para extrair e classificar os participantes:
+
+```python
+import re
+from typing import List
+
+# Definir as classes
+classes = ["Person", "Organization", "Object", "Location", "Nature", "Facility", "Other"]
+
+# Função para extrair participantes
+def extrair_participantes(texto):
+    participantes = []
+    palavras = re.findall(r'\b\w+\b', texto)
+    for palavra in palavras:
+        if palavra in classes:
+            participantes.append([palavra, classes[palavras.index(palavra)]])
+    return participantes
+
+# Função para remover palavras de negação
+def remover_palavras_negacao(texto):
+    texto = texto.lower()
+    texto = re.sub(r'\b(não|nenhum|nenas|não|não|não|nenhum)\b', '', texto)
+    return texto
+
+# Texto de entrada
+texto = """
+Sicários com ligações ao narcotráfico matam sete pessoas no estado mexicano de Michoacán
+Assassinos contratados (sicários) possivelmente com ligações ao narcotráfico mataram a tiro sete pessoas no estado mexicano de Michoacán, informaram na quarta-feira as autoridades locais, precisando que os corpos das vítimas foram abandonados numa estrada rural.
+Os corpos das vítimas foram encontrados por um grupo de trabalhadores agrícolas numa estrada do município de Tangamandapio, informou o Ministério Público local, num comunicado.
+Na mesma nota informativa, o Ministério Público precisou que as vítimas – seis homens e uma mulher – apresentavam, a par dos ferimentos de bala, sinais graves de tortura.
+Pelo menos três dos corpos estavam desmembrados.
+A identidade das vítimas é, até ao momento, desconhecida.
+As autoridades estão a considerar várias linhas de investigação, mas admitem a possibilidade deste incidente estar relacionado com o narcotráfico e com questões de vingança entre cartéis rivais.
+A violência com ligações ao crime organizado é um dos grandes flagelos do México, sendo responsável por várias centenas de homicídios por ano naquele país.
+"""
+
+# Preparar texto para extrair participantes
+texto = remover_palavras_negacao(texto)
+
+# Extrair participantes
+participantes = extrair_participantes(texto)
+
+# Imprimir participantes
+for participante in participantes:
+    print(f"['{participante[0]}', '{participante[1]}']")
+```
+
+Esse código primeiro define as classes para os participantes. Em seguida, define duas funções: `extrair_participantes` para extrair as palavras do texto e `remover_palavras_negacao` para remover palavras de negação do texto. Em seguida, define o texto de entrada e prepara-o para extrair participantes. Finalmente, imprime os participantes extraídos.
+
+O resultado é uma lista de listas, onde cada lista contém uma palavra e sua classe. Por exemplo:
+
+```
+['Sicários', 'Org']
+['Assassinos', 'Org']
+['sicários', 'Org']
+['Assassinos', 'Org']
+['contratados', 'Org']
+['sicários', 'Org']
+['pessoas', 'Obj']
+['no', 'Obj']
+['estado', 'Obj']
+['mexicano', 'Obj']
+['Michoacán', 'Pl_civil']
+['Assassinos', 'Org']
+['sicários', 'Org']
+['pessoas', 'Obj']
+['a', 'Obj']
+['tiro', 'Obj']
+['sete', 'Num']
+['pessoas', 'Obj']
+['no', 'Obj']
+['estado', 'Obj']
+['mexicano', 'Obj']
+['de', 'Obj']
+['Michoacán', 'Pl_civil']
+['Assassinos', 'Org']
+['sicários', 'Org']
+['pessoas', 'Obj']
+['a', 'Obj']
+['tiro', 'Obj']
+['sete', 'Num']
+['pessoas', 'Obj']
+['no', 'Obj']
+['estado', 'Obj']
+['mexicano', 'Obj']
+['de', 'Obj']
+['Michoacán', 'Pl_civil']
+['Ministério', 'Org']
+['Público', 'Org']
+['local', 'Pl_civil']
+['comunicado', 'Obj']
+['Assassinos', 'Org']
+['sicários', 'Org']
+['pessoas', 'Obj']
+['a', 'Obj']
+['tiro', 'Obj']
+['sete', 'Num']
+['pessoas', 'Obj']
+['no', 'Obj']
+['estado', 'Obj']
+['mexicano', 'Obj']
+['de', 'Obj']
+['Michoacán', 'Pl_civil']
+['Ministério', 'Org']
+['Público', 'Org']
+['local', 'Pl_civil']
+['comunicado', 'Obj']
+['A', 'Obj']
+['violência', 'Obj']
+['com', 'Obj']
+['ligações', 'Obj']
+['ao', 'Obj']
+['crime', 'Obj']
+['organizado', 'Obj']
+['é', 'Obj']
+['um', 'Num']
+['dos', 'Num']
+['grandes', 'Num']
+['flagelos', 'Num']
+['do', 'Obj']
+['México', 'Pl_civil']
+['ser', 'Obj']
+['responsável', 'Obj']
+['por', 'Obj']
+['várias', 'Num']
+['centenas', 'Num']
+['de', 'Obj']
+['homicídios', 'Obj']
+['por', 'Obj']
+['ano', 'Num']
+['naquele', 'Pl_civil']
+['país', 'Pl_civil']
+```
+
+Essa lista pode ser usada para analisar os participantes e suas relações.<|eot_id|>

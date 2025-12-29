@@ -1,0 +1,46 @@
+Para extrair os participantes do texto fornecido, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Regras para extrair participantes
+    regras = [
+        r'(\w+\s\w+)',  # Pessoas
+        r'(\w+\s\w+ de)',  # Organizações
+        r'(\w+\s\w+\.?)',  # Entidades
+        r'(\w+\s\w+\.?\'s?)'  # Entidades com possessividade
+    ]
+
+    participantes = []
+    for regra in regras:
+        participantes.extend(re.findall(regra, texto))
+
+    # Remover repetições
+    participantes = list(set(participantes))
+
+    # Remover palavras irrelevantes
+    participantes = [participante for participante in participantes if len(participante.split()) > 1]
+
+    return participantes
+
+texto = """
+Governo: Ricardo Pinheiro substitui José Mendes como secretário de Estado do Planeamento
+O deputado socialista Ricardo Pinheiro vai substituir José Mendes no cargo de secretário de Estado do Planeamento, mudança que foi hoje anunciada através de uma nota divulgada no portal da Presidência da República.
+O Presidente da República aceitou a proposta do primeiro-ministro de exoneração, a seu pedido, de José Fernandes Gomes Mendes, como secretário de Estado do Planeamento, e a nomeação, para o mesmo cargo, de Ricardo Miguel Furtado Pinheiro", lê-se na nota.
+A posse do novo secretário de Estado do ministro do Planeamento, Nelson de Sousa, terá lugar ainda hoje, pelas 20:30, no Palácio de Belém.
+Ricardo Pinheiro foi presidente da Câmara de Campo Maior, distrito de Portalegre, círculo pelo qual foi eleito deputado nas últimas eleições legislativas.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código utiliza regular expressões para identificar e extrair os participantes do texto. As regras utilizadas incluem:
+
+*   Pessoas: `(\w+\s\w+)`
+*   Organizações: `(\w+\s\w+ de)`
+*   Entidades: `(\w+\s\w+)`
+*   Entidades com possessividade: `(\w+\s\w+\'s?)`
+
+O código também remove repetições e palavras irrelevantes, como "de", "do", "e" para obter uma lista mais clara de participantes.<|eot_id|>

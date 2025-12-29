@@ -1,0 +1,46 @@
+Para resolver esse problema, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Expressões regulares para extrair nomes de pessoas, locais, entidades, etc.
+    nomes_pessoas = r'\b([A-Za-z]+ [A-Za-z]+)\b'
+    locais = r'\b(Porto|Hong Kong)\b'
+    entidades = r'\b(PSP|Comando Metropolitano|South China Morning Post|SCMP|Equipas de Prevenção e Reação Imediata|EPRI)\b'
+    objetos = r'\b(arma de fogo|heroína|cocaína|tablet|coluna de som|dinheiro)\b'
+
+    # Compila as expressões regulares
+    nomes_pessoas_compilado = re.compile(nomes_pessoas)
+    locais_compilado = re.compile(locais)
+    entidades_compilado = re.compile(entidades)
+    objetos_compilado = re.compile(objetos)
+
+    # Extrai os participantes do texto
+    participantes = []
+    texto = texto.lower()
+    for match in (nomes_pessoas_compilado.finditer(texto), locais_compilado.finditer(texto), entidades_compilado.finditer(texto), objetos_compilado.finditer(texto)):
+        participantes.append(match.group())
+
+    # Retira repetições e ordens
+    participantes = list(set(participantes))
+    participantes.sort()
+
+    return participantes
+
+texto = """
+Pelo menos sete mortos e sete em estado crítico num incêndio em Hong Kong
+Pelo menos sete pessoas morreram e sete estão em estado crítico, na sequência de um incêndio num edifício residencial em Hong Kong, noticiou hoje a imprensa local.
+As vítimas mortais foram três homens, três mulheres e uma criança de 09 anos, noticiou o jornal South China Morning Post (SCMP).
+Três homens e quatro mulheres foram hospitalizados, no domingo à noite, em estado crítico. Duas outras pessoas encontram-se em estado grave, indicou.
+O incêndio foi o mais mortal em Hong Kong em quase uma década.
+O apartamento terá acolhido uma reunião familiar, mas as autoridades estão a investigar se funcionava no local um restaurante sem licença.
+A maioria das vítimas é nepalesa.
+Os bombeiros informaram hoje numa conferência de imprensa que não havia medidas de segurança contra incêndios no edifício e que um dos presentes durante o evento conseguiu salvar-se ao subir pela janela da casa de banho do apartamento.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código utiliza expressões regulares para extrair nomes de pessoas, locais, entidades e objetos do texto. Em seguida, ele compila essas expressões regulares e usa elas para encontrar todos os matches no texto. Os participantes são armazenados em uma lista, que é então limpa e ordenada para remover repetições e ordens.<|eot_id|>

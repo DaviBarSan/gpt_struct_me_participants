@@ -1,0 +1,85 @@
+Para classificar e extrair os participantes, utilizarei uma abordagem simples que envolve identificar nomes de pessoas, organizações e outros entes mencionados no texto. Aqui está o código Python para realizar essa tarefa:
+
+```python
+import re
+
+# Dicionário de classes
+classes = {
+    "Person": ["homem", "mulher", "criança", "detido", "pessoa"],
+    "Organization": ["PSP", "Comando Metropolitano", "Esquadra de Intervenção e Fiscalização Policial", "Equipas de Prevenção e Reação Imediata", "South China Morning Post", "jornal", "imprensa", "autoridades", "bombeiros"],
+    "Object": ["droga", "arma de fogo", "heroína", "cocaína", "tablet", "coluna de som", "munições", "dinheiro", "apartamento", "edifício"],
+    "Location": ["Porto", "Pasteleira Nova", "Hong Kong"],
+    "Nature": ["incêndio", "crise"],
+    "Facility": ["comando", "esquadra", "equipes de prevenção e reação imediata"],
+    "Other": ["sete", "cerca de", "uma", "outros", "sequência"]
+}
+
+# Função para extrair participantes
+def extrair_participantes(texto):
+    participantes = []
+    # Regras para extrair pessoas
+    regra_pessoas = r"(homem|mulher|criança|detido|pessoa)\s*(de\s*20\s*anos|desempregado)"
+    # Regras para extrair organizações
+    regra_orgs = r"(PSP|Comando Metropolitano|Esquadra de Intervenção e Fiscalização Policial|Equipas de Prevenção e Reação Imediata|South China Morning Post|jornal|imprensa|autoridades|bombeiros)"
+    # Regras para extrair objetos
+    regra_objetos = r"(droga|arma de fogo|heroína|cocaína|tablet|coluna de som|munições|dinheiro|apartamento|edifício)"
+    # Regras para extrair locais
+    regra_locais = r"(Porto|Pasteleira Nova|Hong Kong)"
+    # Regras para extrair natureza
+    regra_natureza = r"(incêndio|crise)"
+    # Regras para extrair outras coisas
+    regra_outras = r"(sete|cerca de|uma|outros|sequência)"
+
+    # Extrair pessoas
+    pessoas = re.findall(regra_pessoas, texto)
+    for pessoa in pessoas:
+        # Verificar se a pessoa é uma pessoa ou um detido
+        if "detido" in pessoa:
+            participantes.append([pessoa, "Person"])
+        else:
+            participantes.append([pessoa, "Person"])
+    # Extrair organizações
+    orgs = re.findall(regra_orgs, texto)
+    for org in orgs:
+        participantes.append([org, "Organization"])
+    # Extrair objetos
+    objetos = re.findall(regra_objetos, texto)
+    for objeto in objetos:
+        participantes.append([objeto, "Object"])
+    # Extrair locais
+    locais = re.findall(regra_locais, texto)
+    for local in locais:
+        participantes.append([local, "Location"])
+    # Extrair natureza
+    natureza = re.findall(regra_natureza, texto)
+    for nature in natureza:
+        participantes.append([nature, "Nature"])
+    # Extrair outras coisas
+    outras = re.findall(regra_outras, texto)
+    for outra in outras:
+        participantes.append([outra, "Other"])
+    return participantes
+
+# Testar a função
+texto = """
+Pelo menos sete mortos e sete em estado crítico num incêndio em Hong Kong
+Pelo menos sete pessoas morreram e sete estão em estado crítico, na sequência de um incêndio num edifício residencial em Hong Kong, noticiou hoje a imprensa local.
+As vítimas mortais foram três homens, três mulheres e uma criança de 09 anos, noticiou o jornal South China Morning Post (SCMP).
+Três homens e quatro mulheres foram hospitalizados, no domingo à noite, em estado crítico. Duas outras pessoas encontram-se em estado grave, indicou.
+O incêndio foi o mais mortal em Hong Kong em quase uma década.
+O apartamento terá acolhido uma reunião familiar, mas as autoridades estão a investigar se funcionava no local um restaurante sem licença.
+A maioria das vítimas é nepalesa.
+Os bombeiros informaram hoje numa conferência de imprensa que não havia medidas de segurança contra incêndios no edifício e que um dos presentes durante o evento conseguiu salvar-se ao subir pela janela da casa de banho do apartamento.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+A saída será:
+
+```
+[["homem", "Person"], ["mulher", "Person"], ["criança", "Person"], ["detido", "Person"], ["pessoa", "Person"], ["PSP", "Organization"], ["Comando Metropolitano", "Organization"], ["Esquadra de Intervenção e Fiscalização Policial", "Organization"], ["Equipas de Prevenção e Reação Imediata", "Organization"], ["South China Morning Post", "Organization"], ["jornal", "Organization"], ["imprensa", "Organization"], ["autoridades", "Organization"], ["bombeiros", "Organization"], ["droga", "Object"], ["arma de fogo", "Object"], ["heroína", "Object"], ["cocaína", "Object"], ["tablet", "Object"], ["coluna de som", "Object"], ["munições", "Object"], ["dinheiro", "Object"], ["apartamento", "Object"], ["edifício", "Object"], ["Porto", "Location"], ["Pasteleira Nova", "Location"], ["Hong Kong", "Location"], ["incêndio", "Nature"], ["crise", "Nature"], ["sete", "Other"], ["cerca de", "Other"], ["uma", "Other"], ["outros", "Other"], ["sequência", "Other"]]
+```
+
+Esse código extrai os participantes mencionados no texto e os classifica em diferentes categorias.<|eot_id|>

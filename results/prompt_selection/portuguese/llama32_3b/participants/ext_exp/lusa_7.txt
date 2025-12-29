@@ -1,0 +1,34 @@
+Para resolver esse problema, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Regra para extrair nomes de pessoas
+    nome_re = r'([A-Z][a-z]+ [A-Z][a-z]+)'
+    # Regra para extrair locais
+    local_re = r'(Porto|norte do México|Sonora|Hidalgo|mexico|bairro)'
+    # Regra para extrair objetos
+    objeto_re = r'(herói|droga|cocaína|arma de fogo|tablet|coluna de som|euros)'
+    # Regra para extrair organizações
+    organizacao_re = r'(PSP|comando|gabinete|polícia|procuradores|avô|mãe|mulher|homem)'
+    # Regra para extrair ações
+    acao_re = r'(detido|apreendido|fugiu|matou|tingir|acusa|disseram|dizem|publicado|declarou|acrescentou|discutiu|causar-lhe|vingança|contou|chamou|telefonou)'
+    
+    # Regras para extrair todos os participantes
+    participantes_re = r'(' + nome_re + r'|' + local_re + r'|' + objeto_re + r'|' + organizacao_re + r'|' + acao_re + r'|' + re.escape(texto) + r'|"([A-Z][a-z]+)"|'" + re.escape(texto) + "'"
+    
+    # Extrair todas as partes do texto que atendem às regras
+    participantes = re.findall(participantes_re, texto, re.IGNORECASE)
+    
+    # Retirar repetições e espaços em branco
+    participantes = [participante.strip() for participante in participantes if participante.strip()]
+    participantes = list(set(participantes))
+    
+    return participantes
+
+texto = "Detido pai que matou filhos para se vingar da mulher no México"
+print(extrair_participantes(texto))
+```
+
+Esse código utiliza regular expressões para extrair todos os participantes do texto, incluindo nomes de pessoas, locais, objetos, organizações e ações. Em seguida, ele retira repetições e espaços em branco para obter uma lista única de participantes.<|eot_id|>

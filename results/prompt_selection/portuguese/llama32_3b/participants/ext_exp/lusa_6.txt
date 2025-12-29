@@ -1,0 +1,35 @@
+Para resolver esse problema, podemos usar um código em Python que extraia todos os participantes mencionados no texto. Aqui está um exemplo de como você pode fazer isso:
+
+```python
+import re
+
+def extract_participants(text):
+    # Define uma lista de palavras-chave que podem indicar participantes
+    participants = ["homem", "mulher", "pessoa", "suspeito", "vítima", "autor", "comandante", "policia", "bombeiro", "judiciário"]
+
+    # Use uma regularização para encontrar todas as palavras que sejam nomes próprios ou descrições de pessoas
+    matches = re.findall(r'\b\w+(?: \w+)*\b', text, re.IGNORECASE)
+
+    # Filtrar os resultados para incluir apenas as palavras que sejam nomes próprios ou descrições de pessoas
+    filtered_matches = [match for match in matches if any(participant in match.lower() for participant in participants)]
+
+    # Excluir palavras que não sejam nomes próprios ou descrições de pessoas
+    participants_list = [match for match in filtered_matches if match.lower() not in participants]
+
+    return participants_list
+
+text1 = """
+PSP detém suspeito de tráfico de droga e aprende arma de fogo no Porto
+Um homem de 20 anos suspeito de tráfico de droga foi detido pela PSP no bairro da Pasteleira Nova, no Porto, tendo também sido apreendida heroína, cocaína e uma arma de fogo, informou hoje aquela força policial.
+"""
+
+text2 = """
+Homem detido por suspeita de fogo posto em prédio em Espinho
+Um homem de 54 anos foi detido pela PSP devido às suspeitas de ter ateado fogo a um prédio habitacional em Espinho, no distrito de Aveiro, que causou 16 feridos por inalação de fumo, informou hoje aquela força policial.
+"""
+
+print(extract_participants(text1))
+print(extract_participants(text2))
+```
+
+Este código utiliza uma regularização para encontrar todas as palavras que sejam nomes próprios ou descrições de pessoas no texto. Em seguida, ele filtra os resultados para incluir apenas as palavras que sejam nomes próprios ou descrições de pessoas, e finalmente retorna uma lista de palavras que sejam nomes próprios ou descrições de pessoas.<|eot_id|>

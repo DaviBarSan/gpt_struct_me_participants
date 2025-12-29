@@ -1,0 +1,41 @@
+Para extrair os participantes do texto fornecido, podemos usar uma abordagem que inclui a identificação de entidades, indivíduos e grupos mencionados no texto. Aqui está o código Python para realizar essa tarefa:
+
+```python
+import re
+import json
+
+def extrair_participantes(texto):
+    # Regras de busca para entidades, indivíduos e grupos
+    regras = [
+        r'\b(Agente|Polícia|PSP|PRM|Departamento|Proteção|Recursos|Naturais|Meio|Ambiente|Magude|Maputo|Moçambique)\b',
+        r'\b( homem|mulher|colega|discussão|atividade|patrulha|zona|provincia|distrito|acampamento|zona protegida|comando|interesse|autor|crime|tiro|processo|disciplinar|criminal)\b',
+        r'\b( Lusa|fonte|corporação|porta-voz|fonte| corporação| autor| crime| tiro| processo| disciplinar| criminal)\b',
+    ]
+
+    # Busca por palavras-chave nos regras
+    participantes = []
+    for regra in regras:
+        participantes.extend(re.findall(regra, texto, flags=re.IGNORECASE))
+
+    # Elimina palavras-chave repetidas
+    participantes = list(set(participantes))
+
+    return participantes
+
+# Teste com os textos fornecidos
+texto1 = "PSP detém suspeito de tráfico de droga e aprende arma de fogo no Porto"
+texto2 = "Agente da polícia baleado mortalmente por colega durante discussão em Maputo"
+
+participantes1 = extrair_participantes(texto1)
+participantes2 = extrair_participantes(texto2)
+
+print("Participantes do primeiro texto:")
+print(json.dumps(participantes1, indent=4))
+
+print("\nParticipantes do segundo texto:")
+print(json.dumps(participantes2, indent=4))
+```
+
+Este código define uma função `extrair_participantes` que busca por palavras-chave nos textos fornecidos e extrai os participantes mencionados. As palavras-chave são armazenadas em uma lista de regras, que incluem entidades, indivíduos e grupos. O código usa a função `findall` da biblioteca `re` para encontrar todas as ocorrencias das palavras-chave nos textos. Em seguida, o código elimina as palavras-chave repetidas usando a função `set` e converte o resultado de volta para uma lista.
+
+Os resultados são impressos como uma lista de strings JSON--parseáveis.<|eot_id|>

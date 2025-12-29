@@ -1,0 +1,46 @@
+Para classificar e extrair os participantes, podemos usar o seguinte código em Python:
+
+```python
+import json
+
+def classificar_participantes(texto):
+    # Entidades mencionadas no texto
+    entidades = ["PSP", "GNR", "Comando Metropolitano do Porto", "Comando Territorial de Faro", "Posto Territorial de São de Alportel", "São Brás de Alportel", "Corotelo", "Faro", "Covid-19", "Estupefacientes", "Drogas", "Heroína", "Cocaína", "Arma de fogo", "Música ao vivo", "Bebidas", "Pessoas", "Proprietário", "Militares", "Denúncia", "Auto de contraordenação"]
+
+    # Classificação das entidades
+    classificacao = []
+    for entidade in entidades:
+        classificacao.append([entidade, "Org"])
+
+    # Extrair participantes
+    participantes = []
+    # Buscar pessoas mencionadas no texto
+    pessoas = ["Um homem de 20 anos", "desempregado"]
+    for pessoa in pessoas:
+        participantes.append([pessoa, "Per"])
+    
+    # Buscar organizações mencionadas no texto
+    orgs = ["PSP", "GNR", "Comando Metropolitano do Porto", "Comando Territorial de Faro", "Posto Territorial de São de Alportel", "São Brás de Alportel", "Corotelo", "Faro", "Covid-19"]
+    for org in orgs:
+        participantes.append([org, "Org"])
+    
+    # Buscar outros participantes
+    outros = ["a PSP", "o Comando Metropolitano do Porto", "o Comando Territorial de Faro", "o Posto Territorial de São de Alportel", "o proprietário", "militares", "denúncia", "auto de contraordenação"]
+    for outro in outros:
+        participantes.append([outro, "Org"])
+
+    return participantes
+
+texto = """
+Covid-19: GNR acabou com festa ilegal com 50 pessoas em São Brás de Alportel
+A GNR acabou no sábado com uma festa ilegal num bar em Corotelo, concelho de São Brás de Alportel, que reunia cerca de 50 pessoas, foi hoje anunciado.
+Em comunicado, o Comando Territorial de Faro da GNR adianta que, na sequência de uma denúncia a informar sobre a existência de “uma festa com música ao vivo num estabelecimento de bebidas”, militares do Posto Territorial de São de Alportel deslocaram-se ao local para fiscalizar a ocorrência.
+Os militares desmobilizaram as pessoas para “cumprimento das normas referentes à pandemia de covid-19”.
+Na nota é ainda referido que o proprietário foi identificado e foi elaborado “um auto de contraordenação”.
+"""
+
+participantes = classificar_participantes(texto)
+print(json.dumps(participantes, indent=4))
+```
+
+Esse código irá classificar e extrair todos os participantes mencionados no texto, incluindo pessoas, organizações, outros participantes e locais. O resultado será uma lista em formato JSON, onde cada elemento é uma lista com dois strings: o nome do participante e sua classe.<|eot_id|>

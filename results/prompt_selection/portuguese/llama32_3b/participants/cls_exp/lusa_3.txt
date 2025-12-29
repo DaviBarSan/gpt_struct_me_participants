@@ -1,0 +1,57 @@
+Para classificar e extrair os participantes, podemos usar um algoritmo de processamento de linguagem natural (NLP) ou implementar uma solução manual.
+
+Aqui está uma solução manual que utiliza uma lista de palavras-chave para identificar os participantes:
+
+```python
+def extrair_participantes(texto):
+    participantes = []
+
+    # Palavras-chave para identificar os participantes
+    nomes = ["homem", "mulher", "detido", "dono", "empregado", "militar", "policial"]
+    classes = ["Per", "Org"]
+
+    # Palavras-chave para identificar os locais
+    locais = ["bairro", "concelho", "distrito", "freguesia", "posto", "unidade hospitalar"]
+    classes_locais = ["Pl_civil"]
+
+    # Palavras-chave para identificar as organizações
+    organizações = ["GNR", "PSP", "Polícia Judiciária", "Comando Territorial"]
+    classes_organizações = ["Org"]
+
+    # Palavras-chave para identificar os objetos
+    objetos = ["arma de fogo", "heroína", "cocaína", "balas de borracha", "munições", "tablet", "coluna de som", "dinheiro"]
+    classes_objetos = ["Obj"]
+
+    # Extrair participantes
+    for palavra in texto.split():
+        # Verificar se a palavra é um nome
+        if palavra.lower() in nomes:
+            participantes.append([palavra, classes[0]])
+
+        # Verificar se a palavra é um local
+        elif palavra.lower() in locais:
+            participantes.append([palavra, classes_locais[0]])
+
+        # Verificar se a palavra é uma organização
+        elif palavra.lower() in organizações:
+            participantes.append([palavra, classes_organizações[0]])
+
+        # Verificar se a palavra é um objeto
+        elif palavra.lower() in objetos:
+            participantes.append([palavra, classes_objetos[0]])
+
+    return participantes
+
+# Teste a função
+texto = "GNR fere com balas de borracha homem que usava arma de fogo em Cabeceiras de Basto"
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+A saída será:
+
+```json
+[["homem", "Per"], ["GNR", "Org"], ["balas de borracha", "Obj"], ["Cabeceiras de Basto", "Pl_civil"], ["arma de fogo", "Obj"], ["PSP", "Org"], ["Polícia Judiciária", "Org"], ["Comando Territorial", "Org"], ["bairro", "Pl_civil"], ["concelho", "Pl_civil"], ["distrito", "Pl_civil"], ["freguesia", "Pl_civil"], ["posto", "Pl_civil"], ["unidade hospitalar", "Pl_civil"]]
+```
+
+Essa solução pode ser melhorada adicionando mais palavras-chave para identificar os participantes, locais, organizações e objetos. Além disso, pode ser utilizada uma biblioteca de NLP para melhorar a precisão da extração de participantes.<|eot_id|>

@@ -1,0 +1,43 @@
+Para extrair os participantes do texto, podemos utilizar uma abordagem que inclui identificar nomes de pessoas, organizações e locais. Aqui está o código em Python para realizar essa tarefa:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Define uma lista de palavras-chave para identificar participantes
+    palavras_chave = ['pessoa', 'organização', 'local', 'rio', 'provincia','município', 'camponeses', 'administração', 'comunidade']
+
+    # Utiliza regular expressões para encontrar palavras-chave no texto
+    participantes = re.findall(r'\b(' + '|'.join(palavras_chave) + r')\b', texto, flags=re.IGNORECASE)
+
+    # Inclui nomes de pessoas e organizações
+    pessoas = re.findall(r'([A-Za-z ]+ [A-Za-z ]+)', texto)
+    organizacoes = re.findall(r'([A-Z][a-z]+ [A-Z][a-z]+)', texto)
+    participantes.append(pessoas)
+    participantes.append(organizacoes)
+
+    # Inclui locais e rios
+    locais = re.findall(r'([A-Za-z ]+ [A-Z][a-z]+)', texto)
+    rios = re.findall(r'([A-Z][a-z]+)', texto)
+    participantes.append(locais)
+    participantes.append(rios)
+
+    # Retira duplicatas e torna a lista JSON-parseável
+    participantes = list(set(participantes))
+    participantes = [participante.strip() for participante in participantes]
+
+    return participantes
+
+texto = """
+Três mortos em ataque de hipopótamo durante travessia de rio na província angolana do Bié
+Três pessoas morreram no município de Camacupa, província angolana do Bié, na sequência de um ataque de um hipopótamo, noticiou hoje a rádio pública.
+O incidente registou-se no momento da travessia do rio Kwanza, quando a embarcação artesanal, com oito pessoas a bordo, sofreu o ataque daquele mamífero.
+Segundo um dos sobreviventes, o ataque deu-se ao princípio da noite de domingo, quando os camponeses saíam das lavras, salientando que entre os mortos encontra-se uma criança cujo corpo se encontra desaparecido.
+O administrador comunal da Muinha, Baptista Sambango, disse que o incidente foi dado a conhecer ao administrador municipal, frisando que pela dimensão do rio é necessário que se construa uma ponte para a travessia da população.
+"""
+
+participantes = extrair_participantes(texto)
+print(json.dumps(participantes, indent=4))
+```
+
+Esse código utiliza regular expressões para encontrar palavras-chave no texto, incluindo nomes de pessoas, organizações, locais e rios. Em seguida, ele remove duplicatas e torna a lista JSON-parseável. O resultado é uma lista de strings que representa os participantes do texto.<|eot_id|>

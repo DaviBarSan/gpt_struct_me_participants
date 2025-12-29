@@ -1,0 +1,111 @@
+Para classificar e extrair os participantes, você pode usar o seguinte código em Python:
+
+```python
+import re
+import json
+
+def extract_entities(text):
+    entities = []
+    # Regras para extrair pessoas
+    patterns = [
+        r"Um homem de (\d+) anos",  # homem
+        r"uma mulher de (\d+) anos",  # mulher
+        r"o detido",  # detido
+        r"a vítima",  # vítima
+        r"o homem",  # homem
+        r"uma pessoa",  # pessoa
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            entities.append([match.group(1) if match.group(1) else "desconhecido", "Per"])
+    
+    # Regras para extrair organizações
+    patterns = [
+        r"PSP",  # PSP
+        r"GNR",  # GNR
+        r"Comando Metropolitano do Porto",  # Comando Metropolitano do Porto
+        r"Equipas de Prevenção e Reação Imediata",  # Equipas de Prevenção e Reação Imediata
+        r"Esquadra de Intervenção e Fiscalização Policial da 2.ª Divisão",  # Esquadra de Intervenção e Fiscalização Policial da 2.ª Divisão
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            entities.append([pattern, "Org"])
+    
+    # Regras para extrair objetos
+    patterns = [
+        r"heroína",  # heroína
+        r"cocaína",  # cocaína
+        r"uma arma de fogo",  # arma de fogo
+        r"um ‘tablet'",  # tablet
+        r"uma coluna de som",  # coluna de som
+        r"222 euros em dinheiro",  # dinheiro
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            entities.append([pattern, "Obj"])
+    
+    # Regras para extrair localizações
+    patterns = [
+        r"bairro da Pasteleira Nova",  # bairro da Pasteleira Nova
+        r"Penafiel",  # Penafiel
+        r"Porto",  # Porto
+        r"Porto",  # Porto
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            entities.append([pattern, "Pl_civil"])
+    
+    return entities
+
+def classify_entities(entities):
+    classified_entities = []
+    for entity in entities:
+        if entity[1] == "Per":
+            if "detido" in entity[0].lower():
+                classified_entities.append([entity[0], "Per"])
+            elif "vítima" in entity[0].lower():
+                classified_entities.append([entity[0], "Per"])
+            elif "homem" in entity[0].lower() or "mulher" in entity[0].lower():
+                classified_entities.append([entity[0], "Per"])
+            else:
+                classified_entities.append([entity[0], "Per"])
+        elif entity[1] == "Org":
+            if "PSP" in entity[0].lower() or "GNR" in entity[0].lower():
+                classified_entities.append([entity[0], "Org"])
+            elif "Comando Metropolitano do Porto" in entity[0].lower() or "Equipas de Prevenção e Reação Imediata" in entity[0].lower() or "Esquadra de Intervenção e Fiscalização Policial da 2.ª Divisão" in entity[0].lower():
+                classified_entities.append([entity[0], "Org"])
+            else:
+                classified_entities.append([entity[0], "Org"])
+        elif entity[1] == "Obj":
+            classified_entities.append([entity[0], "Obj"])
+        elif entity[1] == "Pl_civil":
+            classified_entities.append([entity[0], "Pl_civil"])
+        elif entity[1] == "Nature":
+            classified_entities.append([entity[0], "Nature"])
+        elif entity[1] == "Facility":
+            classified_entities.append([entity[0], "Facility"])
+        elif entity[1] == "Other":
+            classified_entities.append([entity[0], "Other"])
+    return classified_entities
+
+text = """
+PSP detém suspeito de tráfico de droga e apreende arma de fogo no Porto
+Um homem de 20 anos suspeito de tráfico de droga foi detido pela PSP no bairro da Pasteleira Nova, no Porto, tendo também sido apreendida heroína, cocaína e uma arma de fogo, informou hoje aquela força policial.
+Em comunicado, o Comando Metropolitano do Porto da PSP esclarece que a detenção ocorreu na quarta-feira, no decurso de uma ação policial no âmbito do combate ao crime de tráfico de estupefacientes.
+Durante uma busca domiciliária, a PSP apreendeu ao desempregado heroína suficiente para cerca de 599 doses individuais e cocaína suficiente para cerca de 235 doses individuais.
+Foi ainda apreendida uma arma de fogo, quatro munições, um ‘tablet', uma coluna de som e 222 euros em dinheiro, descreve aquela força policial.
+A operação foi efetuada pelo efetivo da Esquadra de Intervenção e Fiscalização Policial da 2.ª Divisão e das Equipas de Prevenção e Reação Imediata (EPRI), refere a PSP
+Segundo a PSP, o detido é hoje presente às Autoridades Judiciárias.
+"""
+
+entities = extract_entities(text)
+classified_entities = classify_entities(entities)
+
+print(json.dumps(classified_entities, indent=4))
+```
+
+Este código primeiro extrai as entidades do texto usando regras de busca para pessoas, organizações, objetos, localizações e outras categorias. Em seguida, classifica as entidades em suas categorias correspondentes. O resultado é um lista JSON que contém as entidades classificadas, onde cada elemento da lista é uma lista que contém o nome da entidade e sua categoria.<|eot_id|>

@@ -1,0 +1,55 @@
+Para resolver esse problema, podemos usar uma abordagem de processamento de linguagem natural (NLP) com Python. Vamos usar a biblioteca NLTK para tokenizar a texto e a biblioteca spaCy para identificar as entidades.
+
+```python
+import nltk
+from nltk.tokenize import word_tokenize
+import spacy
+
+# Carregar o modelo de entity recognition
+nlp = spacy.load("pt_core_news_sm")
+
+# Função para extrair as entidades
+def extract_entities(text):
+    doc = nlp(text)
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    return entities
+
+# Texto de entrada
+text = """
+Homem detido por suspeita de fogo posto em prédio em Espinho
+Um homem de 54 anos foi detido pela PSP devido às suspeitas de ter ateado fogo a um prédio habitacional em Espinho, no distrito de Aveiro, que causou 16 feridos por inalação de fumo, informou hoje aquela força policial.
+Em comunicado, a PSP esclarece que o alegado autor do incêndio, ali residente, se encontrava no interior do prédio, tendo no momento da sua interceção confirmado ter colocado algumas das suas peças de roupa no hall de entrada do referido prédio, ateando-lhes fogo.
+Segundo a PSP, 16 pessoas receberam assistência médica no local, devido à inalação de fumo, não carecendo, contudo, de transporte a qualquer unidade hospitalar.
+"Do incêndio, não se registaram danos materiais de relevo, pelo que o prédio ficou habitável, não havendo necessidade de realojamentos", refere a mesma nota.
+O fogo, que deflagrou pelas 19:55 de sábado, foi extinto pelas 20:20, pelos Bombeiros Voluntários de Espinho.
+A PSP deu conhecimento deste caso à Polícia Judiciária, que prosseguirá com a respetiva investigação.
+"""
+
+# Extrair as entidades
+entities = extract_entities(text)
+
+# Classificar as entidades
+classes = {
+    "Person": ["homem", "mulher", "detido", "autor", "residente", "pessoa"],
+    "Organization": ["PSP", "Polícia Judiciária", "Bombeiros Voluntários"],
+    "Object": ["prédio", "fogo", "roupa", "peças", "roupa", "fumo", "incêndio"],
+    "Location": ["Espinho", "Aveiro"],
+    "Nature": ["suspeita", "ataque", "incêndio"],
+    "Facility": ["prédio habitacional"],
+    "Other": ["comunicado", "nota", "caso", "investigação"]
+}
+
+# Classificar as entidades
+classifications = []
+for entity in entities:
+    for cls in classes.values():
+        if entity[0] in cls:
+            classifications.append((entity[0], cls))
+
+# Imprimir as classificações
+print(classifications)
+```
+
+Essa script irá extrair as entidades do texto e classificá-las em diferentes categorias. A saída será uma lista de listas, onde cada lista contém a entidade e a classe associada.
+
+Observação: A classificação das entidades pode variar dependendo do contexto e da linguagem utilizada. A lista de classes acima é apenas um exemplo e pode precisar ser adaptada para atender às necessidades específicas do seu projeto.<|eot_id|>

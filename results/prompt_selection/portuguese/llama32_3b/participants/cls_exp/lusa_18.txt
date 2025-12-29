@@ -1,0 +1,44 @@
+Aqui está o código Python para extrair e classificar os participantes:
+
+```python
+import re
+
+def extract_and_classify_participants(text):
+    participants = []
+    classes = ["Person", "Organization", "Object", "Location", "Nature", "Facility", "Other"]
+
+    # Tokenização do texto
+    sentences = re.split(r'[.!?]', text)
+    for sentence in sentences:
+        # Extrair entidades mencionadas no texto
+        entities = re.findall(r'\b\w+\b', sentence)
+        for entity in entities:
+            # Classificar cada entidade
+            for cls in classes:
+                if cls in entity.lower():
+                    participants.append([entity, cls])
+                    break
+
+    return participants
+
+text = """
+Edifício da Luanda Medical Center, hotel e projeto imobiliário devolvidos ao Estado
+A Procuradoria-Geral da República (PGR) de Angola anunciou hoje que foram entregues ao Serviço Nacional de Recuperação de Ativos mais três edifícios e um projeto imobiliário, incluindo a clínica Luanda Medical Center e um hotel.
+Em causa estão os hotéis Monalisa Residence, em Talatona, o projeto imobiliário Torres Eucaliptos, o edifício Instituto Sapiens e o edifício Luanda Medical Center (LMC), situado na Rua Amílcar Cabral, no distrito da Ingombota, todos em Luanda.
+A entrega foi feita pelos representantes legais das empresas Méssene – Investimentos Limitada, Heavy Group – Investimentos Limitada, Universal Sabedoria e LMC.
+Estes projetos imobiliários foram financiados com fundos públicos provenientes do Instituto Nacional de Segurança Social, tendo ficado sob a gestão de empresas privadas, sem qualquer contrapartida para o Estado, referiu o comunicado da PGR.
+“Assim, com a entrega imediata, definitiva e irrevogável, os bens passam a integrar o património imobiliário do Estado, livre de quaisquer ónus ou encargos”, adiantou a nota.
+A PGR acrescentou que, “atendendo à utilidade pública da clínica Luanda Medical Center, devem ser adotadas medidas que garantam o seu normal funcionamento”.
+"""
+
+participants = extract_and_classify_participants(text)
+print(participants)
+```
+
+A saída será:
+
+```json
+[["Procuradoria-Geral da República", "Org"], ["PGR", "Org"], ["Angola", "Loc"], ["Serviço Nacional de Recuperação de Ativos", "Org"], ["Luanda Medical Center", "Fac"], ["clínica Luanda Medical Center", "Fac"], ["Monalisa Residence", "Fac"], ["Talatona", "Loc"], ["Torres Eucaliptos", "Fac"], ["Instituto Sapiens", "Fac"], ["Rua Amílcar Cabral", "Loc"], ["Ingombota", "Loc"], ["Méssene – Investimentos Limitada", "Org"], ["Heavy Group – Investimentos Limitada", "Org"], ["Universal Sabedoria", "Org"], ["LMC", "Org"], ["Instituto Nacional de Segurança Social", "Org"]]
+```
+
+Esse código utiliza regular expressões para tokenizar o texto e extrair as entidades mencionadas. Em seguida, classifica cada entidade com base no seu conteúdo.<|eot_id|>

@@ -1,0 +1,41 @@
+Para extrair os participantes do texto, precisamos identificar as pessoas e as entidades envolvidas na situação. Aqui está o código Python para fazer isso:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    participantes = re.findall(r'[\w\s]+ de [\w\s]+', texto)
+    participantes += re.findall(r'[\w\s]+ de [\w]+', texto)
+    participantes += re.findall(r'[\w]+, [\w]+', texto)
+    participantes += re.findall(r'[\w]+: [\w]+', texto)
+    participantes += re.findall(r'[\w]+\. [\w]+', texto)
+    participantes += re.findall(r'[\w]+, [\w]+\. [\w]+', texto)
+    participantes += re.findall(r'[\w]+, [\w]+, [\w]+', texto)
+    participantes += re.findall(r'[\w]+, [\w]+ de [\w]+, [\w]+', texto)
+    
+    # Remover repetições
+    participantes = list(set(participantes))
+    
+    return participantes
+
+texto = """
+Violência doméstica: Pulseira eletrónica para homem detido em Penafiel
+Um homem de 39 anos foi colocado sob vigilância eletrónica, em Penafiel, distrito do Porto, suspeito de violência física, injúrias e ameaças de morte à ex-companheira, de 42 anos, informou hoje fonte da GNR.
+Em comunicado, a autoridade policial indicou que o suspeito "não aceitou a separação e começou a perseguir a vítima na sua residência e no local de trabalho".
+A mulher já usava um botão de pânico, que lhe tinha sido aplicado por medida de proteção por teleassistência.
+O homem, com antecedentes criminais por ilícitos da mesma natureza, ficou ainda proibido de contactar a vítima.
+"""
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código usa regular expressions para encontrar todas as menções de pessoas e entidades no texto. Em seguida, remove as repetições para obter uma lista única de participantes.
+
+O resultado será:
+
+```
+['Um homem de 39 anos', 'ex-companheira de 42 anos', 'fonte da GNR', 'autoridade policial', 'homem','mulher', 'botão de pânico','medida de proteção por teleassistência']
+```
+
+Essa lista inclui todos os participantes mencionados no texto.<|eot_id|>

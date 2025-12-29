@@ -1,0 +1,60 @@
+Para resolver este problema, podemos usar uma abordagem simples que envolve a extração de palavras-chave e nomes de entidades do texto. Aqui está um exemplo de como você pode fazer isso em Python:
+
+```python
+import re
+import json
+
+def extract_participants(text):
+    # Regras para extrair nomes de pessoas e entidades
+    rules = [
+        r"(\w+ de \w+ anos)",  # Nome de pessoa com idade
+        r"(\w+) de (\w+)",  # Nome de pessoa com localização
+        r"(\w+) da (\w+)",  # Nome de entidade
+        r"(\w+) em (\w+)",  # Nome de entidade com localização
+        r"(\w+) da (\w+ Polícia)",  # Nome de entidade policial
+        r"(\w+) da (\w+ Judiciária)",  # Nome de entidade judiciária
+        r"(\w+) da (\w+ Bombeiros)",  # Nome de entidade de bombeiros
+    ]
+
+    # Regras para extrair palavras-chave
+    keyword_rules = [
+        r"(\w+) de (\w+)",  # Palavra-chave com localização
+        r"(\w+) em (\w+)",  # Palavra-chave com localização
+        r"(\w+) da (\w+)",  # Palavra-chave com localização
+    ]
+
+    # Extração de participantes e palavras-chave
+    participants = set()
+    keywords = set()
+    for rule in rules + keyword_rules:
+        matches = re.findall(rule, text, re.IGNORECASE)
+        for match in matches:
+            if isinstance(match, tuple):
+                if len(match) == 2:
+                    participants.add(match[0])
+                elif len(match) == 3:
+                    participants.add(match[0])
+                    participants.add(match[2])
+            elif isinstance(match, str):
+                keywords.add(match)
+
+    # Remoção de palavras-chave redundantes
+    keywords = list(keywords)
+    for keyword in keywords[:]:
+        if any(keyword in p for p in keywords):
+            keywords.remove(keyword)
+
+    # Retorno como lista JSON
+    return json.dumps(list(participants))
+
+# Exemplo de uso
+text = """
+Homem detido por suspeita de fogo posto em prédio em Espinho
+Um homem de 54 anos foi detido pela PSP devido às suspeitas de ter ateado fogo a um prédio habitacional em Espinho, no distrito de Aveiro, que causou 16 feridos por inalação de fumo, informou hoje aquela força policial.
+...
+"""
+
+print(extract_participants(text))
+```
+
+Este código define regras para extrair nomes de pessoas e entidades, bem como palavras-chave, do texto. Em seguida, ele aplica essas regras para extrair os participantes e palavras-chave do texto. Finalmente, ele retorna a lista de participantes como uma lista JSON.<|eot_id|>

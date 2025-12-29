@@ -1,0 +1,45 @@
+import json
+
+def extract_participants(text):
+    # Tokenize the text into sentences
+    sentences = text.split('. ')
+
+    # Initialize an empty list to store the participants
+    participants = []
+
+    # Loop through each sentence
+    for sentence in sentences:
+        # Tokenize the sentence into words
+        words = sentence.split()
+
+        # Loop through each word
+        for word in words:
+            # Check if the word is a person (e.g. "homem", "desempregado")
+            if word in ["homem", "desempregado"]:
+                # Add the person to the list of participants
+                participants.append(word)
+
+            # Check if the word is a location (e.g. "Porto", "bairro da Pasteleira Nova")
+            elif word in ["Porto", "bairro da Pasteleira Nova"]:
+                # Add the location to the list of participants
+                participants.append(word)
+
+            # Check if the word is an organization (e.g. "PSP", "Comando Metropolitano do Porto")
+            elif word in ["PSP", "Comando Metropolitano do Porto"]:
+                # Add the organization to the list of participants
+                participants.append(word)
+
+            # Check if the word is a type of object (e.g. "arma de fogo", "heroína")
+            elif word in ["arma de fogo", "heroína", "cocaína", "tablet", "coluna de som", "euros em dinheiro"]:
+                # Add the object to the list of participants
+                participants.append(word)
+
+    # Remove duplicates from the list of participants
+    participants = list(set(participants))
+
+    # Return the list of participants as a JSON string
+    return json.dumps(participants)
+
+text = "PSP detém suspeito de tráfico de droga e apreende arma de fogo no Porto\nUm homem de 20 anos suspeito de tráfico de droga foi detido pela PSP no bairro da Pasteleira Nova, no Porto, tendo também sido apreendida heroína, cocaína e uma arma de fogo, informou hoje aquela força policial.\nEm comunicado, o Comando Metropolitano do Porto da PSP esclarece que a detenção ocorreu na quarta-feira, no decurso de uma ação policial no âmbito do combate ao crime de tráfico de estupefacientes.\nDurante uma busca domiciliária, a PSP apreendeu ao desempregado heroína suficiente para cerca de 599 doses individuais e cocaína suficiente para cerca de 235 doses individuais.\nFoi ainda apreendida uma arma de fogo, quatro munições, um ‘tablet', uma coluna de som e 222 euros em dinheiro, descreve aquela força policial.\nA operação foi efetuada pelo efetivo da Esquadra de Intervenção e Fiscalização Policial da 2.ª Divisão e das Equipas de Prevenção e Reação Imediata (EPRI), refere a PSP\nSegundo a PSP, o detido é hoje presente às Autoridades Judiciárias."
+
+print(extract_participants(text))<|eom_id|>

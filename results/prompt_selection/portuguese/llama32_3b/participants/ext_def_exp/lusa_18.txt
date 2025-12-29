@@ -1,0 +1,25 @@
+Para extrair os participantes do texto, você pode usar o seguinte código em Python:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    # Define uma lista de palavras-chave para identificar participantes
+    palavras_chave = ["PSP", "Procuradoria-Geral da República", "PGR", "Angola", "Serviço Nacional de Recuperação de Ativos", "Estado", " empresas", "representantes legais", "Instituto Nacional de Segurança Social", "Universidade", "clínica", "hotel", "projeto imobiliário", "distrito", "Rua", "comunicado", "nota", "PGR"]
+
+    # Use uma regular expressão para encontrar palavras-chave em todo o texto
+    participantes = re.findall(r'\b(' + '|'.join(palavras_chave) + r')\b', texto)
+
+    # Remova repetições e palavras-chave com acentos
+    participantes = list(set(participantes))
+    participantes = [participante.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u') for participante in participantes]
+
+    return participantes
+
+texto = "Edifício da Luanda Medical Center, hotel e projeto imobiliário devolvidos ao Estado\nA Procuradoria-Geral da República (PGR) de Angola anunciou hoje que foram entregues ao Serviço Nacional de Recuperação de Ativos mais três edifícios e um projeto imobiliário, incluindo a clínica Luanda Medical Center e um hotel.\nEm causa estão os hotéis Monalisa Residence, em Talatona, o projeto imobiliário Torres Eucaliptos, o edifício Instituto Sapiens e o edifício Luanda Medical Center (LMC), situado na Rua Amílcar Cabral, no distrito da Ingombota, todos em Luanda.\nA entrega foi feita pelos representantes legais das empresas Méssene – Investimentos Limitada, Heavy Group – Investimentos Limitada, Universal Sabedoria e LMC.\nEstes projetos imobiliários foram financiados com fundos públicos provenientes do Instituto Nacional de Segurança Social, tendo ficado sob a gestão de empresas privadas, sem qualquer contrapartida para o Estado, referiu o comunicado da PGR.\n“Assim, com a entrega imediata, definitiva e irrevogável, os bens passam a integrar o património imobiliário do Estado, livre de quaisquer ónus ou encargos”, adiantou a nota.\nA PGR acrescentou que, “atendendo à utilidade pública da clínica Luanda Medical Center, devem ser adotadas medidas que garantam o seu normal funcionamento”
+
+participantes = extrair_participantes(texto)
+print(participantes)
+```
+
+Esse código define uma lista de palavras-chave para identificar participantes e usa uma regular expressão para encontrar essas palavras-chave em todo o texto. Em seguida, remove repetições e palavras-chave com acentos para obter uma lista de participantes únicos.<|eot_id|>

@@ -1,0 +1,43 @@
+Para resolver esse problema, podemos usar um conjunto de regras para identificar os participantes em cada frase. Aqui está um exemplo de como podemos fazer isso:
+
+```python
+import re
+
+def extrair_participantes(texto):
+    participantes = set()
+    regras = [
+        r"(\w+) (de|do|da|para|com|em) (\w+)",  # Nome + adjetivo + substantivo
+        r"(\w+), (\w+)",  # Nome 1, Nome 2
+        r"(\w+) (no|na|do) (\w+)",  # Nome 1 no/na/do Nome 2
+        r"(\w+) (da|do) (\w+)",  # Nome 1 da/do Nome 2
+        r"(\w+) (com|em) (\w+)",  # Nome 1 com/em Nome 2
+        r"(\w+) (para|para) (\w+)",  # Nome 1 para para Nome 2
+        r"(\w+) (à|à) (\w+)",  # Nome 1 à à Nome 2
+        r"(\w+), (\w+), (\w+)",  # Nome 1, Nome 2, Nome 3
+        r"(\w+), (\w+), (\w+), (\w+)",  # Nome 1, Nome 2, Nome 3, Nome 4
+    ]
+
+    for regra in regras:
+        participantes.update(re.findall(regra, texto, flags=re.IGNORECASE))
+
+    return list(participantes)
+
+texto = """
+Três mortos em ataque de hipopótamo durante travessia de rio na província angolana do Bié
+Três pessoas morreram no município de Camacupa, província angolana do Bié, na sequência de um ataque de um hipopótamo, noticiou hoje a rádio pública.
+O incidente registou-se no momento da travessia do rio Kwanza, quando a embarcação artesanal, com oito pessoas a bordo, sofreu o ataque daquele mamífero.
+Segundo um dos sobreviventes, o ataque deu-se ao princípio da noite de domingo, quando os camponeses saíam das lavras, salientando que entre os mortos encontra-se uma criança cujo corpo se encontra desaparecido.
+O administrador comunal da Muinha, Baptista Sambango, disse que o incidente foi dado a conhecer ao administrador municipal, frisando que pela dimensão do rio é necessário que se construa uma ponte para a travessia da população.
+"""
+
+participantes = extrair_participantes(texto)
+print(json.dumps(participantes, indent=4))
+```
+
+Esse código define uma função `extrair_participantes` que recebe um texto como entrada e retorna uma lista de participantes extraídos do texto. A função usa uma lista de regras para identificar os participantes, e cada regra é usada para encontrar os participantes em uma frase. Os participantes são armazenados em um conjunto para evitar duplicados.
+
+O código também define uma lista de regras para identificar os participantes em diferentes formatos, como "Nome 1 (de/do/na/para/com) Nome 2" ou "Nome 1, Nome 2, Nome 3". Cada regra é usada para encontrar os participantes em uma frase, e os participantes são armazenados em um conjunto para evitar duplicados.
+
+O código final chama a função `extrair_participantes` com o texto como entrada e imprime a lista de participantes em formato JSON.
+
+Lembre-se de que essa é apenas uma solução básica e pode precisar ser adaptada para atender às necessidades específicas do seu problema.<|eot_id|>

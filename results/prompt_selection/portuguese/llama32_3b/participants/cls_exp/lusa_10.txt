@@ -1,0 +1,89 @@
+Aqui está o código em Python que pode ser usado para extrair e classificar os participantes:
+
+```python
+import re
+import json
+
+def extract_entities(text):
+    entities = []
+    # Regras para extrair pessoas
+    regra_pessoas = r"um( homem|mulher|desempregado|detido|condutor|autoridade|policial|ferido|transportado|porte-voz)"
+    pessoas = re.findall(regra_pessoas, text)
+    for pessoa in pessoas:
+        if "de" in pessoa or "do" in pessoa:
+            entities.append([pessoa, "Per"])
+        else:
+            entities.append([pessoa, "Per"])
+
+    # Regras para extrair organizações
+    regra_orgs = r"PSP|NYPD|France-Presse|Big Apple|As Vidas Negras Importam|Black Lives Matter"
+    orgs = re.findall(regra_orgs, text)
+    for org in orgs:
+        if org not in entities:
+            entities.append([org, "Org"])
+
+    # Regras para extrair objetos
+    regra_objetos = r"heroína|cocaína|arma de fogo|tablet|coluna de som|automóvel|manifestação|bombeiro|ambulância"
+    objetos = re.findall(regra_objetos, text)
+    for objeto in objetos:
+        if objeto not in entities:
+            entities.append([objeto, "Obj"])
+
+    # Regras para extrair locais
+    regra_locais = r"Manhattan|Nova Iorque|Estados Unidos|Lisboa"
+    locais = re.findall(regra_locais, text)
+    for local in locais:
+        if local not in entities:
+            entities.append([local, "Pl_civil"])
+
+    # Regras para extrair naturezas
+    regra_naturezas = r"tráfico de droga|tráfico de estupefacientes|acidente|ação intencional"
+    naturezas = re.findall(regra_naturezas, text)
+    for natureza in naturezas:
+        if natureza not in entities:
+            entities.append([natureza, "Fac"])
+
+    return entities
+
+def classificar_entities(entities):
+    # Classificar as entidades
+    classificacao = {}
+    for entity in entities:
+        if entity[1] == "Per":
+            if "de" in entity[0] or "do" in entity[0]:
+                classificacao[entity[0]] = "Pessoa Física"
+            else:
+                classificacao[entity[0]] = "Pessoa Jurídica"
+        elif entity[1] == "Org":
+            if "PSP" in entity[0] or "NYPD" in entity[0]:
+                classificacao[entity[0]] = "Organização Pública"
+            else:
+                classificacao[entity[0]] = "Organização Privada"
+        elif entity[1] == "Obj":
+            classificacao[entity[0]] = "Objeto"
+        elif entity[1] == "Pl_civil":
+            classificacao[entity[0]] = "Local"
+        elif entity[1] == "Fac":
+            classificacao[entity[0]] = "Natureza"
+
+    return classificacao
+
+def main():
+    text = "Automóvel atropela várias pessoas durante manifestação "Black Lives Matter" em Manhattan
+Um automobilista atropelou hoje várias pessoas durante uma manifestação do movimento “Black Lives Matter” (“As Vidas Negras Importam”), em Manhattan, Nova Iorque, nos Estados Unidos, mas as autoridades ainda não especificaram se foi um acidente ou ação intencional.
+O incidente provocou vários feridos, alguns dos quais tiveram se ser transportados para vários hospitais da 'Big Apple', explicou à agência France-Presse (AFP) a polícia de Nova Iorque (NYPD).
+O condutor do automóvel foi detido no local, de acordo com a mesma fonte.
+O porta-voz da polícia avançou que o incidente, que ocorreu pelas 16:00 locais (21:00 em Lisboa) não provocou mortos até agora.
+Várias corporações de bombeiros e ambulâncias estão no local."
+
+    entities = extract_entities(text)
+    classificacao = classificar_entities(entities)
+
+    print(json.dumps(entities, indent=4))
+    print(json.dumps(classificacao, indent=4))
+
+if __name__ == "__main__":
+    main()
+```
+
+Esse código irá extrair as entidades do texto e classificá-las em diferentes categorias. A saída será um JSON com as entidades e suas classificações.<|eot_id|>

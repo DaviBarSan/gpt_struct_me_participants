@@ -1,0 +1,53 @@
+Para resolver esse problema, podemos criar um modelo que identifique os participantes em cada frase e os classifique em suas categorias respectivas. Vamos utilizar Python com bibliotecas como `re` para processar a linguagem natural e `json` para formatar o resultado.
+
+```python
+import re
+import json
+
+def classify_entities(text):
+    entities = []
+    words = re.findall(r'\b[A-Z][a-z]+\b', text)
+    for word in words:
+        # Verifica se o termo é um nome próprio ou uma organização
+        if word in ['PSP', 'GNR', 'Bombeiros', 'Lusa', 'Hospital de Aveiro']:
+            entities.append([word, 'Org'])
+        # Verifica se o termo é um lugar
+        elif word in ['Murtosa', 'Aveiro', 'Torreira', 'Porto']:
+            entities.append([word, 'Pl_civil'])
+        # Verifica se o termo é um objeto ou uma natureza
+        elif word in ['droga', 'cocaína', 'heroína', 'arma de fogo', 'estupefacientes', 'coliformes fecais']:
+            entities.append([word, 'Obj'])
+        # Verifica se o termo é um evento ou uma pessoa
+        elif word in ['mulher', 'homem', 'condutor','senhora', 'pescadores']:
+            entities.append([word, 'Per'])
+        # Verifica se o termo é uma organização ou um evento
+        elif word in ['comunicado', 'operação', 'protesto']:
+            entities.append([word, 'Obj'])
+        # Verifica se o termo é uma pessoa ou um evento
+        elif word in ['desempregado', 'efetivo','Equipas de Prevenção e Reação Imediata', 'EPRI']:
+            entities.append([word, 'Per'])
+        # Verifica se o termo é uma organização ou um evento
+        elif word in ['Comando Metropolitano', 'Esquadra de Intervenção e Fiscalização Policial', 'GNR']:
+            entities.append([word, 'Org'])
+    return entities
+
+def format_entities(entities):
+    return json.dumps(entities, indent=4)
+
+text = """
+Mulher atropelada durante protesto de mariscadores na Murtosa
+Uma mulher de 44 anos foi hoje atropelada sem gravidade na Murtosa, distrito de Aveiro, durante um protesto com cerca de dezenas de mariscadores, informaram os Bombeiros e a GNR.
+O caso ocorreu cerca das 12:50, junto ao cais da Torreira.
+Em declarações à Lusa, fonte da GNR disse que o condutor da viatura era um homem que transportava bivalves e que estaria a tentar sair do local.
+“Os pescadores tentaram evitar que ele saísse de lá. A situação incendiou-se um bocadinho e o senhor forçou a saída com a viatura, tendo atropelado uma senhora”, disse a mesma fonte.
+Segundo os Bombeiros, a mulher sofreu ferimentos ligeiros, tendo sido transportada para o Hospital de Aveiro.
+A GNR referiu ainda que o condutor se colocou em fuga, mas, entretanto, já foi identificado.
+Os mariscadores da Torreira estão em protesto há mais de uma semana, devido ao facto de não poderem trabalhar, por terem sido detetadas percentagens excessivas de coliformes fecais nas águas da ria de Aveiro.
+"""
+
+entities = classify_entities(text)
+formatted_entities = format_entities(entities)
+print(formatted_entities)
+```
+
+Esse código irá identificar os participantes em cada frase e os classificar em suas categorias respectivas. O resultado será um lista em formato JSON onde cada elemento é uma lista com dois strings, o primeiro string é o participante e o segundo string é a sua classe.<|eot_id|>
