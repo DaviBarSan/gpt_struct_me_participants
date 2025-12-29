@@ -66,7 +66,7 @@ def qwen3_4b(prompt: str):
 def qwen3_30b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen3-4B/Qwen3_30B"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen3-30B/qwen3_30b"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
