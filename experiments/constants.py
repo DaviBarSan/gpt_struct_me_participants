@@ -83,6 +83,7 @@ BEST_TEMPLATES = {
         ("qwen3_4b", "participants"): "cls_exp",
         ("gemma3_1b", "participants"): "ext_exp",
         ("llama32_3b", "participants"): "cls_def",
+        ("qwen25_14b", "participants"): "cls_exp",
         # ("gemini", "time expressions"): "ext_exp",
     },
 
