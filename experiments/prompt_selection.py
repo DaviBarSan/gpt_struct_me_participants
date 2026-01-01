@@ -11,7 +11,7 @@ import fire
 
 
 from src.prompts import Prompter
-from src.reader import read_lusa, read_timebank
+from src.reader import read_lusa, read_lusa_en
 
 from experiments.utils import mid2model
 from experiments.constants import (
@@ -42,7 +42,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
     if language == "portuguese":
         dataset = read_lusa(RESOURCE_PATH / "lusa_news")
     elif language == "english":
-        dataset = read_timebank(RESOURCE_PATH / "timebank")
+        dataset = read_lusa_en(RESOURCE_PATH / "lusa_en")
 
     docs = [doc for doc in dataset if doc.id in sample_docs]
     tids = ["cls", "cls_def", "cls_def_exp", "cls_exp", "ext", "ext_def", "ext_def_exp", "ext_exp"]

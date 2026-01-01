@@ -78,6 +78,7 @@ class LusaDocument(Document):
                 break
 
         # Remove metadata from text and fix the annotation offsets.
+        print("Original text:", text)
         title, author, *lines = text.split("\n")
         metadata_offset = len(title) + len(author) + 2
         for annotation in annotations:

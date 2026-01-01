@@ -7,7 +7,7 @@ import tieval
 from tieval import datasets
 
 from src.base import LusaDocument, TimebankDocument, Document
-from src.parser import AnnParser
+from src.parser import AnnParser, InceptionParser
 
 
 def read_lusa(dirpath: Path) -> List[Document]:
@@ -27,7 +27,24 @@ def read_lusa(dirpath: Path) -> List[Document]:
         documents.append(document)
     return documents
 
+    
+def read_lusa_en(dirpath: Path) -> List[Document]:
+    """Read English Lusa news dataset."""                
+    incp_parser = InceptionParser()
 
+    documents = []
+    for filepath in dirpath.glob("*.json"):
+        print(f"Reading {filepath}...")        
+        # annpath = filepath.with_suffix(".json")
+        # ann = annpath.read_text(encoding='utf-8')
+        text_content, annotations = incp_parser.parse(filepath)
+        print("text_content:", text_content)
+        print("annotations:", annotations)
+        document = LusaDocument(id=filepath.stem, text=text_content, annotations=annotations)
+        documents.append(document)
+    return documents
+    
+    
 def read_timebank(dirpath: Path) -> List[Document]:
     """Read TimeBank corpus."""
     timebank = datasets.read("timebank", dirpath.parent)

@@ -1,6 +1,7 @@
 """Parser Lusa news dataset annotations."""
 
 import re
+import json
 from collections import defaultdict
 
 from src.base import LusaDocument
@@ -72,3 +73,74 @@ class AnnParser:
             type_, value = attrib.split("=")
             attributes.append({"attrib": type_, "value": value, "id": id_})
         return attributes
+
+class InceptionParser:
+    """Parse Inception annotation format."""
+
+    def parse(self, file_path: str) -> (str, list):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # 1. Flatten the list of objects
+        # Depending on the specific export setting, objects might be in a root list 
+        # or inside a specific key. This handles the structure shown in your snippet.
+        # If 'data' is a dict, we look for a list inside, otherwise we assume data is the list.
+        objects = data if isinstance(data, list) else list(data.values())
+
+        # We need a lookup dictionary to find objects by their %ID easily
+        # (Though in your snippet, the objects are in a list, so we can iterate)
+        
+        text_content = ""
+        gold_annotations = []
+
+        # 2. Find the Text (Sofa)
+        # We iterate through everything to find the "uima.cas.Sofa"
+        for item in objects:
+            # print("Item:", item)  # Debug print to see the structure of each item
+            # print(isinstance(item, dict))  # Check if item is a dict
+            if isinstance(item, list):
+                for sub_item in item:
+                    if isinstance(sub_item, dict) and sub_item.get("%TYPE") == "uima.cas.Sofa":
+                        text_content = sub_item.get("sofaString")
+                        break
+            if isinstance(item, dict) and item.get("%TYPE") == "uima.cas.Sofa":
+                text_content = item.get("sofaString")
+                break
+                
+        # 3. Find the Gold Annotations (custom.Span)
+        if text_content:
+            for item in objects:
+                if isinstance(item, list):
+                    for sub_item in item:
+                        # Check if this sub_item is the annotation type we care about
+                        if isinstance(sub_item, dict) and sub_item.get("%TYPE") == "custom.Span":
+                            begin = sub_item.get("begin")
+                            end = sub_item.get("end")
+                            label = sub_item.get("label")
+                            
+                            # Extract the actual text snippet using offsets
+                            entity_text = text_content[begin:end]
+                            
+                            gold_annotations.append({
+                                "text": entity_text,
+                                "label": label,
+                                "start": begin,
+                                "end": end
+                            })
+                # Check if this item is the annotation type we care about
+                if isinstance(item, dict) and item.get("%TYPE") == "custom.Span":
+                    begin = item.get("begin")
+                    end = item.get("end")
+                    label = item.get("label")
+                    
+                    # Extract the actual text snippet using offsets
+                    entity_text = text_content[begin:end]
+                    
+                    gold_annotations.append({
+                        "text": entity_text,
+                        "label": label,
+                        "start": begin,
+                        "end": end
+                    })
+        return text_content, gold_annotations
+                
