@@ -118,6 +118,7 @@ class InceptionParser:
                             end = sub_item.get("end")
                             label = sub_item.get("label")
                             _id = sub_item.get("%ID")
+                            participant_type_domain = sub_item.get("Participant_Type_Domain")
                             
                             # Extract the actual text snippet using offsets
                             entity_text = text_content[begin:end]
@@ -128,7 +129,8 @@ class InceptionParser:
                                 "type": label,
                                 "start": begin,
                                 "end": end,
-                                "offset": f"{begin} {end}"
+                                "offset": f"{begin} {end}",
+                                "participant_type_domain": participant_type_domain
                             })
                 # Check if this item is the annotation type we care about
                 if isinstance(item, dict) and item.get("%TYPE") == "custom.Span":
