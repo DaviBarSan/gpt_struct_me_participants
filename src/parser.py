@@ -117,15 +117,18 @@ class InceptionParser:
                             begin = sub_item.get("begin")
                             end = sub_item.get("end")
                             label = sub_item.get("label")
+                            _id = sub_item.get("%ID")
                             
                             # Extract the actual text snippet using offsets
                             entity_text = text_content[begin:end]
                             
                             gold_annotations.append({
+                                "id": _id,
                                 "text": entity_text,
                                 "type": label,
                                 "start": begin,
-                                "end": end
+                                "end": end,
+                                "offset": (begin, end)
                             })
                 # Check if this item is the annotation type we care about
                 if isinstance(item, dict) and item.get("%TYPE") == "custom.Span":
