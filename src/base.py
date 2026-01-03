@@ -13,8 +13,9 @@ class Document:
 
     def _get_annotation_object(self, obj):
         print(self.annotations)
-        print([obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag])
-        #return [obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag]
+        # print([obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag])
+        return [obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag]
+    
 
     @property
     def timexs(self):
