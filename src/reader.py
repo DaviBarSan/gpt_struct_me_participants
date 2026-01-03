@@ -38,8 +38,8 @@ def read_lusa_en(dirpath: Path) -> List[Document]:
         # annpath = filepath.with_suffix(".json")
         # ann = annpath.read_text(encoding='utf-8')
         text_content, annotations = incp_parser.parse(filepath)
-        print("text_content:", text_content)
-        print("annotations:", annotations)
+        # print("text_content:", text_content)
+        # print("annotations:", annotations)
         document = LusaDocument(id=filepath.stem, text=text_content, annotations=annotations)
         documents.append(document)
     return documents
