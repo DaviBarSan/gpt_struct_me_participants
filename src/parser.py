@@ -128,7 +128,7 @@ class InceptionParser:
                                 "type": label,
                                 "start": begin,
                                 "end": end,
-                                "offset": (begin, end)
+                                "offset": f"{begin},{end}"
                             })
                 # Check if this item is the annotation type we care about
                 if isinstance(item, dict) and item.get("%TYPE") == "custom.Span":
