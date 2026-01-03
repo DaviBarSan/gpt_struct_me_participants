@@ -165,6 +165,7 @@ class Prompter:
                             f"{ENTITIES[self.entity]['definition']}")
 
         if example is not None:
+            print("example is not nonde:", example is not None)
             example_text = example.text.replace("$", "$$") # Escape $ for Template
 
             example_annt = self.annotation_extraction(example)  
