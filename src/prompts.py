@@ -166,6 +166,7 @@ class Prompter:
                             f"{ENTITIES[self.entity]['definition']}")
 
         if example is not None:
+            print("example is not nonde:", example is not None)
             example_text = example.text.replace("$", "$$") # Escape $ for Template
 
             example_annt = self.annotation_extraction(example)  
@@ -210,6 +211,7 @@ class Prompter:
                 for ent in doc.timexs
             ]
         elif self.entity == "participants":
+            print(doc.participants)
             return [
                 (ent.text, ent.participant_type_domain) if hasattr(ent, "participant_type_domain")
                 else (ent.text, None)

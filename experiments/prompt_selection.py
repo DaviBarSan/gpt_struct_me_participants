@@ -62,7 +62,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
             task = "classification" if "cls" in tid else "extraction"
             example = example_doc if "exp" in tid else None
             definition = "def" in tid
-
+            print("Example:", example)
             prompter = Prompter(
                 entity=entity,
                 task=task,
@@ -74,6 +74,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
                 logger.info(f"Iteration {iter}/{n_iter}")
 
                 prompt = prompter.generate(doc.text)
+                print("Generated prompt:", prompt)
             
                 answer_path = RESULTS_PATH / language / mid / entity / tid / f"{doc.id}.txt"
                 if not answer_path.exists():

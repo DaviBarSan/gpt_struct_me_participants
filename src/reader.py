@@ -41,6 +41,7 @@ def read_lusa_en(dirpath: Path) -> List[Document]:
         # print("text_content:", text_content)
         # print("annotations:", annotations)
         document = LusaDocument(id=filepath.stem, text=text_content, annotations=annotations)
+        print("Annotations:", annotations)
         documents.append(document)
     return documents
     
