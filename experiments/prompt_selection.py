@@ -62,7 +62,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
             task = "classification" if "cls" in tid else "extraction"
             example = example_doc if "exp" in tid else None
             definition = "def" in tid
-
+            print(example)
             prompter = Prompter(
                 entity=entity,
                 task=task,
