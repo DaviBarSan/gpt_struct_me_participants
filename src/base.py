@@ -12,7 +12,9 @@ class Document:
         return self.text
 
     def _get_annotation_object(self, obj):
-        return [obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag]
+        print(self.annotations)
+        print([obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag])
+        #return [obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag]
 
     @property
     def timexs(self):

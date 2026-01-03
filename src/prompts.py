@@ -54,6 +54,7 @@ class Prompter:
 
         if example is not None:
             example_text = example.text.replace("$", "$$") # Escape $ for Template
+            print(example)
 
             example_annt = self.annotation_extraction(example)  
             example_annt_str = json.dumps(example_annt, ensure_ascii=False).replace("$", "$$")
