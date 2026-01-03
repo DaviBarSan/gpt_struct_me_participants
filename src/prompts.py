@@ -209,6 +209,7 @@ class Prompter:
                 for ent in doc.timexs
             ]
         elif self.entity == "participants":
+            print(doc.participants)
             return [
                 (ent.text, ent.participant_type_domain) if hasattr(ent, "participant_type_domain")
                 else (ent.text, None)
