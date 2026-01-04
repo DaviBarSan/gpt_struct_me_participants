@@ -42,7 +42,7 @@ def read_predicions(path: Path) -> dict:
 
 def read_annoations(path: Path) -> dict:
     """Read and structure the annotations of the corpus."""
-    if path.name == "timebank":
+    if path.name == "lusa_en":
         documents = read_lusa_en(path)
     elif path.name == "lusa_news":
         documents = read_lusa(path)
@@ -106,9 +106,9 @@ def main(mode: str = "test", language: str = "portuguese", store_table: bool = T
     predictions = read_predicions(path)
 
     if language == "portuguese":
-        ann_path = RESOURCE_PATH / "lusa_news" 
+        ann_path = RESOURCE_PATH / "lusa_news"
     elif language == "english":
-        ann_path =  RESOURCE_PATH / "timebank"
+        ann_path =  RESOURCE_PATH / "lusa_en"
     print(ann_path)
     annotations = read_annoations(ann_path)
 
