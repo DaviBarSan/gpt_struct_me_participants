@@ -8,7 +8,7 @@ import pandas as pd
 
 from experiments.constants import RESOURCE_PATH, ROOT
 
-from src.reader import read_lusa, read_timebank
+from src.reader import read_lusa, read_timebank, read_lusa_en
 from src.evaluate import strict_metrics, relaxed_metrics
 
 RESULTS_PATH = ROOT / "results"
@@ -43,7 +43,7 @@ def read_predicions(path: Path) -> dict:
 def read_annoations(path: Path) -> dict:
     """Read and structure the annotations of the corpus."""
     if path.name == "timebank":
-        documents = read_timebank(path)
+        documents = read_lusa_en(path)
     elif path.name == "lusa_news":
         documents = read_lusa(path)
 
