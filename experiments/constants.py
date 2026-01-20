@@ -86,8 +86,9 @@ BEST_TEMPLATES = {
     },
 
     "english": {
-
-        ("llama2-70b-chat", "event triggers"): "ext_def_exp",
-        ("llama2-70b-chat", "time expressions"): "ext",
+        ("qwen3_4b", "participants"): "ext_def_exp",
+        ("qwen25_14b", "participants"): "ext_def_exp",
+        ("llama32_3b", "participants"): "cls_def",
+        ("gemma3_1b", "participants"): "ext_def_exp",
     }
 }
