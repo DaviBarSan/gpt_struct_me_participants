@@ -17,7 +17,7 @@ from experiments.constants import (
 )
 
 from src.prompts import Prompter
-from src.reader import read_lusa, read_timebank
+from src.reader import read_lusa, read_lusa_en
 
 from experiments.utils import mid2model
 
@@ -40,7 +40,7 @@ def main(mid: str = "chatgpt", language: str = "english"):
     if language == "portuguese":
         dataset = read_lusa(RESOURCE_PATH / "lusa_news")
     elif language == "english":
-        dataset = read_timebank(RESOURCE_PATH / "timebank")
+        dataset = read_lusa_en(RESOURCE_PATH / "lusa_en")
     
     docs2drop = sample_docs + list(examples.values())
     test_docs = [doc for doc in dataset if doc.id not in docs2drop]
