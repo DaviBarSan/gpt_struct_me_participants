@@ -86,7 +86,14 @@ BEST_TEMPLATES = {
     },
 
     "english": {
+<<<<<<< HEAD
 
         ("qwen3_4b", "participants"): "cls_def_exp",
+=======
+        ("qwen3_4b", "participants"): "ext_def_exp",
+        ("qwen25_14b", "participants"): "ext_def_exp",
+        ("llama32_3b", "participants"): "cls_def",
+        ("gemma3_1b", "participants"): "ext_def_exp",
+>>>>>>> 59b73e5e9960ce07aad7b318bddbcb5e6333f6ce
     }
 }
