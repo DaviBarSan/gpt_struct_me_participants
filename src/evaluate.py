@@ -22,19 +22,68 @@ def f1_score(tp: int, fp: int, fn: int) -> float:
     return 2 * (p * r) / (p + r) if p + r > 0 else 0
 
 
-def strict_metrics(prediction: list, annotation: list) -> dict:
-    """Compute micro-averaged metrics for a given entity."""
-
+def strict_metrics(prediction: list, annotation: list, template: str, modelo: str) -> dict:
+    """Compute micro-averaged metrics for a given entity.
+    ('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')
+    """
+    temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
     tps, fns, fps = 0, 0, 0
+    detailed_results = []
     for doc_id in prediction:
-        try:
-            pred = set(prediction[doc_id])
-            annt = set(annotation[doc_id])
-        except KeyError:
-            print(f"Missing doc_id {doc_id} in annotations.")
-            continue
-        tp, fp, fn = exact_match(pred, annt)
+        if "cls" in template:
+            print("Template with classification detected.")
+            preds = {(item[0]) for item in prediction[doc_id]}
+            preds_dicts = {item[0]: temp_dict.get(item[1], 'N/A') for item in prediction[doc_id]}
+            annts = {item[0] for item in annotation[doc_id]}            
+            annts_dict = {f'{item[0]}': item[1] for item in annotation[doc_id]}            
+        else:
+            print("Template of extraction detected.")
+            preds = {item for item in prediction[doc_id]}
+            preds_dicts = {}
+            annts = {item for item in annotation[doc_id]}
+            annts_dict = {item[0]: item[1] for item in annotation[doc_id]}            
+            
+        print(f"Evaluating document ID: {doc_id}")
+        print("Preds:", preds)
+        print("Annts:", annts)
+        print("TP:", preds.intersection(annts))
+        # print(f"prediction: {prediction}")
 
+        # True Positives: In both
+        for item in preds.intersection(annts):
+            if "cls" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item, preds_dicts.get(item, "N/A"), annts_dict.get(item, "N/A"), "tp", ""))
+            elif "ext" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item[0], "", annts_dict.get(item[0], "N/A"), "tp", ""))
+
+        # False Positives: In prediction but not in annotation
+        for item in preds.difference(annts):
+            if "cls" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item, preds_dicts.get(item, "N/A"), "", "fp", ""))
+            elif "ext" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item, "", "", "fp", ""))
+            
+        # False Negatives: In annotation but not in prediction
+        for item in annts.difference(preds):
+            if "cls" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item, "", annts_dict.get(item, "N/A"), "fn", ""))
+            elif "ext" in template:
+                detailed_results.append((modelo, 'participants', doc_id, template, item[0], "", annts_dict.get(item[0], "N/A"), "fn", ""))
+            
+        # Calculate counts for metrics
+        print("Detailed results for doc_id", doc_id, ":", detailed_results)
+        tp = len(preds.intersection(annts))
+        fp = len(preds.difference(annts))
+        fn = len(annts.difference(preds))
+        
+        # try:
+        #     pred = set(prediction[doc_id])
+        #     annt = set(annotation[doc_id])
+        # except KeyError:
+        #     print(f"Missing doc_id {doc_id} in annotations.")
+        #     continue
+        # tp, fp, fn = exact_match(pred, annt)
+        
         tps += tp
         fps += fp
         fns += fn
@@ -42,51 +91,113 @@ def strict_metrics(prediction: list, annotation: list) -> dict:
     recall = recall_score(tps, fns)
     precision = precision_score(tps, fps)
     f1 = f1_score(tps, fps, fns)
+    
+    # print("\n\n\nFalse Positives:")
+    # for item in fp_raw_list:
+    #     print(item)
+    # print("\n\n\nFalse Negatives:")
+    # for item in fn_raw_list:
+    #     print(item)
 
-    return {"recall": recall, "precision": precision, "f1": f1}
+    return {"recall": recall, "precision": precision, "f1": f1}, detailed_results
 
 
-def exact_match(prediction: set, annotation: set) -> tuple:
+def exact_match(prediction: set, annotation: set, template: str) -> tuple:
     """Compute the TP, FP, FN for a set of predictions and annotations."""
+    
+    #store the type of entity for FP and FN reporting
+    if "cls" in template:
+        print("Template with classification detected.")
+        type_entity = prediction[1]
+        prediction = prediction[0]   
+    print("Preds:", prediction)
+    print("Annts:", annotation)
+    print("TP:", prediction.intersection(annotation))
+    # print(f"prediction: {prediction}")    
+    
     tp = len(prediction.intersection(annotation))
     fp = len(prediction.difference(annotation))
     fn = len(annotation.difference(prediction))
     return tp, fp, fn
 
 
-def relaxed_metrics(prediction: Dict, annotation: Dict) -> dict:
+def relaxed_metrics(prediction: Dict, annotation: Dict, template: str) -> dict:
     """Compute micro-averaged metrics for a given entity."""
     f1 = 0
+    temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
+    print("Computing relaxed metrics...")
+    
     for doc_id in prediction:
-        try:
-            pred = set(prediction[doc_id])
-            annt = set(annotation[doc_id])
-        except KeyError:
-            print(f"Missing doc_id {doc_id} in annotations.")
-            continue
-        f1 += macro_averaged_f1_score(pred, annt)
+        print(f"prediction[doc_id]: {prediction[doc_id]}")
+        print(f"annotation[doc_id]: {annotation[doc_id]}")
+        if "cls" in template:
+            print("Template with classification detected. Relaxed metrics")
+            preds = {item[0] for item in prediction[doc_id]}
+            annts = {tuple(item) for item in annotation[doc_id]}
+            # print("Template with classification detected.")
+            preds = {(item[0], temp_dict.get(item[1], item[1])) for item in prediction[doc_id]}
+            
+        else:
+            print("Template of extraction detected. Relaxed metrics")
+            preds = {item for item in prediction[doc_id]}
+            annts = {item for item in annotation[doc_id]}
+                 
+        print(f"Evaluating document ID: {doc_id}")
+        print("Preds:", preds)
+        print("Annts:", annts)
+        # try:
+        #     pred = set(prediction[doc_id])
+        #     annt = set(annotation[doc_id])
+        # except KeyError:
+        #     print(f"Missing doc_id {doc_id} in annotations.")
+        #     continue
+        f1 += macro_averaged_f1_score(preds, annts, template)
     f1 /= len(prediction)
     return {"f1": f1}
 
 
-def macro_averaged_f1_score(pred: Set[str], annt: Set[str]) -> float:
+def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> float:
     """Compute the macro-averaged F1 score for a set of predictions and annotations."""
     f1 = 0
+    print("Complete pred:", pred)
     for pred_entity in pred:
-
+        print(f"Pred in macro avg f1:", pred_entity)
+        # print(f"Evaluating predicted entity: {pred_entity}")
+        # print (f"Against annotations: {annt}")
         # Tokens that are in the prediction.
-        tkns_pred = set(tokenize(pred_entity))
-
+        if 'cls' in template:
+            print("Tokenizing predicted entity:", pred_entity[0])
+            tkns_pred = set(tokenize(pred_entity[0]))
+            print(f"Tokens in prediction: {tkns_pred}")
         # Annotated tokens that overlap with the prediction.
-        match_entites = [
-            annt_entity
-            for annt_entity in annt
-            if string_overlap(pred_entity, annt_entity)
-        ]
-        tkns_match = set(tokenize(" ".join(match_entites)))
 
-        tp, fp, fn = exact_match(tkns_pred, tkns_match)
-        f1 += f1_score(tp, fp, fn)
+            match_entites = [
+                annt_entity[0]
+                for annt_entity in annt
+                if string_overlap(pred_entity[0], annt_entity[0])
+            ]
+            print(f"Matching annotated entities: {match_entites}")
+            tkns_match = set(tokenize(" ".join(match_entites)))
+            print(f"Tokens in matched: {tkns_match}")
+            tp, fp, fn = exact_match((tkns_pred, pred_entity[1]), tkns_match, template)
+            f1 += f1_score(tp, fp, fn)
+        # elif 'ext' in template:
+        #     print("Tokenizing predicted entity:", pred_entity)
+        #     tkns_pred = set(tokenize(pred_entity))
+        #     print(f"Tokens in prediction: {tkns_pred}")            
+        #     print(f"Evaluating predicted entity: {pred_entity}")
 
+        #     match_entites = [
+        #         annt_entity
+        #         for annt_entity in annt
+        #         if string_overlap(pred_entity, annt_entity)
+        #     ]
+        #     print(f"Matching annotated entities: {match_entites}")
+        #     tkns_match = set(tokenize(" ".join(match_entites)))
+        #     print(f"Tokens prediction: {tkns_pred}")
+        #     print(f"Tokens in matched: {tkns_match}")
+        #     tp, fp, fn = exact_match(tkns_pred, tkns_match, template)
+        #     f1 += f1_score(tp, fp, fn)            
+            
     macro_avg_f1 = f1 / len(pred) if len(pred) > 0 else 0
     return macro_avg_f1

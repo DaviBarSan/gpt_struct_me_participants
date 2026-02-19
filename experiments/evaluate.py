@@ -19,6 +19,7 @@ def read_predicions(path: Path) -> dict:
     predictions_path = path / "predictions.json"
     content = json.loads(predictions_path.read_text(encoding='utf-8'))
 
+    # print(f"Loaded prediction contents: {content}")
     predictions = {}
     for prediction in content:
         model = prediction["model"]
@@ -26,6 +27,7 @@ def read_predicions(path: Path) -> dict:
         doc = prediction["doc"]
         entity = prediction["entity"]
         pred = prediction["entities"]
+        answer = prediction["answer"]
 
         if model not in predictions:
             predictions[model] = {}
@@ -35,8 +37,13 @@ def read_predicions(path: Path) -> dict:
             predictions[model][template][entity] = {}
         if doc not in predictions[model][template][entity]:
             predictions[model][template][entity][doc] = []
+        
+        # predictions[model][template][entity][doc] = pred
+        # print(f"\n\nEntity: {entity}, template: {template}, Doc: {doc}\n Asnwer: {answer}\n")
+        predictions[model][template][entity][doc] = answer
 
-        predictions[model][template][entity][doc] = pred
+    
+    # print(f"Structured predictions: {predictions}")
     return predictions
 
 
@@ -45,7 +52,7 @@ def read_annoations(path: Path) -> dict:
     if path.name == "lusa_en":
         documents = read_lusa_en(path)
     elif path.name == "lusa_news":
-        documents = read_lusa(path)
+        documents = read_lusa(path)    
 
     annotations = {}
     annotations["event triggers"] = {
@@ -54,10 +61,11 @@ def read_annoations(path: Path) -> dict:
     }
 
     annotations["participants"] = {
-        doc.id: [participant.text for participant in doc.participants]
+        doc.id: [(annotation.get("text"), annotation.get("participant_type_domain")) for annotation in doc.annotations if annotation.get("type") == "Participant"]
         for doc in documents
     }
-
+    # print("Participant Annotations:", annotations["participants"])
+    
     annotations["time expressions"] = {
         doc.id: [timex.text for timex in doc.timexs]
         for doc in documents
@@ -68,15 +76,19 @@ def read_annoations(path: Path) -> dict:
 def evaluate(predicitons: dict, annotations: dict) -> list:
     """Evaluate the predictions of the models."""
     results = []
+    results_details = [('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')]
     for model, templates in predicitons.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
                 print(f"Evaluating {model} - {entity} - {template}")
-                print(f"Prediction: {prediction}")
-                print(f"Annotation: {annotations[entity]}")
+                # print(f"Prediction: {prediction}")
+                # print(f"Annotation: {annotations[entity]}")
                 annotation = annotations[entity]
-                strict = strict_metrics(prediction, annotation)
-                relaxed = relaxed_metrics(prediction, annotation)
+                # print(f"Predictions loaded for entity {entity}: {prediction}")
+                # print(f"Annotation loaded for entity {entity}: {annotations}")
+
+                strict, details = strict_metrics(prediction, annotation, template, model)
+                relaxed = relaxed_metrics(prediction, annotation, template)
                 results.append({
                     "model": model,
                     "template": template,
@@ -84,7 +96,19 @@ def evaluate(predicitons: dict, annotations: dict) -> list:
                     "strict": strict,
                     "relaxed": relaxed
                 })
-    return results
+                results_details.append(details)
+    #  = [item for sublist in results_details if isinstance(sublist, list) for item in sublist]
+    headers = list(results_details[0])
+
+    # 2. Flatten the remaining lists of sets into one list of sets
+    data_rows = [item for sublist in results_details[1:] for item in sublist]
+
+    # 3. Create the DataFrame
+    # Since the rows are sets (unordered), we convert them to lists.
+    # Note: This assumes the set elements match the header count.
+    df_results_details = pd.DataFrame([list(row) for row in data_rows], columns=headers)
+    # print("Detailed results:", results_details)
+    return results, df_results_details
 
 
 def make_results_table(results: list) -> pd.DataFrame:
@@ -104,19 +128,22 @@ def make_results_table(results: list) -> pd.DataFrame:
 def main(mode: str = "test", language: str = "portuguese", store_table: bool = True) -> None:
     path = RESULTS_PATH / mode / language
     predictions = read_predicions(path)
-
+    # print("Predictions loaded: ", predictions)
     if language == "portuguese":
         ann_path = RESOURCE_PATH / "lusa_news"
     elif language == "english":
         ann_path =  RESOURCE_PATH / "lusa_en"
-    print(ann_path)
+    # print(ann_path)
     annotations = read_annoations(ann_path)
-
-    results = evaluate(predictions, annotations)
+    results, details_df = evaluate(predictions, annotations)
 
     output_path = path / "results.json"
     json.dump(results, output_path.open("w"), indent=4)
-
+    
+    details_output_path = path / "detailed_results.csv"
+    # details_df = pd.DataFrame(details, columns=['modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score'])
+    details_df.to_csv(details_output_path, index=False)
+    
     if store_table:
         table = make_results_table(results)
         

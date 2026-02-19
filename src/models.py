@@ -138,6 +138,7 @@ def qwen25_14b(prompt: str):
 def gemini(prompt: str) -> str:
     from google import genai
     from google.genai import types
+    from time import sleep
     """Generate text with the Gemini API."""
     
     # 1. Initialize the client. The client will automatically look for the 
@@ -165,6 +166,8 @@ def gemini(prompt: str) -> str:
     # provides the text directly via the .text attribute.
     answer = response.text
     print(f"Gemini Response: {response}")
+    print("Sleeping for 10 seconds to avoid rate limits...")
+    sleep(10)
     return answer
 
 # Example Usage (assuming you have your API key set as an environment variable)

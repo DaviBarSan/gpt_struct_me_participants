@@ -16,13 +16,13 @@ def read_lusa(dirpath: Path) -> List[Document]:
 
     documents = []
     for filepath in dirpath.glob("*.txt"):
-        print(f"Reading {filepath}...")
+        # print(f"Reading {filepath}...")
         text = filepath.read_text(encoding='utf-8').strip()
         
         annpath = filepath.with_suffix(".ann")
         ann = annpath.read_text(encoding='utf-8')
         annotation = ann_parser.parse(ann)
-
+        
         document = LusaDocument(filepath.stem, text, annotation)
         documents.append(document)
     return documents
@@ -41,7 +41,7 @@ def read_lusa_en(dirpath: Path) -> List[Document]:
         # print("text_content:", text_content)
         # print("annotations:", annotations)
         document = LusaDocument(id=filepath.stem, text=text_content, annotations=annotations)
-        print("Annotations:", annotations)
+        # print("Annotations:", annotations)
         documents.append(document)
     return documents
     

@@ -12,7 +12,7 @@ class Document:
         return self.text
 
     def _get_annotation_object(self, obj):
-        print(self.annotations)
+        # print(self.annotations)
         # print([obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag])
         return [obj(**annotation) for annotation in self.annotations if annotation["type"] == obj._tag]
     

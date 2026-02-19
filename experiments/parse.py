@@ -126,7 +126,7 @@ def read_json(filepath: Path) -> dict:
     print(filepath.absolute)
     try:
         answer = json.loads(content)
-        print(f"Loaded JSON answer: {answer}")
+        # print(f"Loaded JSON answer: {answer}")
         return answer
 
     except json.decoder.JSONDecodeError:
