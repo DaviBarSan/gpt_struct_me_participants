@@ -2,6 +2,8 @@
 
 import json
 import re
+from difflib import SequenceMatcher
+
 
 
 def is_sublist(list1: list, list2: list) -> bool:
@@ -22,7 +24,8 @@ def string_overlap(source: str, target: str) -> bool:
 
     tkns_src = tokenize(source)
     tkns_tgt = tokenize(target)
-
+    # print(f"Tokenized source: {tkns_src}")
+    # print(f"Tokenized target: {tkns_tgt}")
     src_in_tgt = is_sublist(tkns_src, tkns_tgt)
     tgt_in_src = is_sublist(tkns_tgt, tkns_src)
     if src_in_tgt or tgt_in_src:
@@ -42,8 +45,12 @@ def string_overlap(source: str, target: str) -> bool:
 
 def tokenize(text):
     """Simple tokenizer."""
-    text = re.sub(r'[^\w\s]', ' ', text)
-    tokens = text.split()
+    try:
+        text = re.sub(r'[^\w\s]', ' ', text)
+    except TypeError:
+        print(f"Error tokenizing text: {text}")        
+    tokens = text.lower().split()
+    print(f"Tokens after tokenization: {tokens}")
     return tokens
 
 
@@ -54,3 +61,20 @@ def is_json(text: str) -> bool:
         return True
     except json.decoder.JSONDecodeError:
         return False
+
+def get_best_match(pred_tokens, annotations):
+    best_ratio = 0
+    best_anno = None
+    
+    pred_str = " ".join(pred_tokens).lower()
+    
+    for anno_text, label in annotations:
+        # Calculamos a similaridade entre a predição e cada anotação
+        ratio = SequenceMatcher(None, pred_str, anno_text.lower()).ratio()
+        
+        if ratio > best_ratio:
+            best_ratio = ratio
+            best_anno = anno_text
+            
+    # Definir um threshold mínimo (ex: 0.4) para evitar matches aleatórios
+    return best_anno if best_ratio > 0.4 else ""
