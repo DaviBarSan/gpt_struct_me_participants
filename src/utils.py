@@ -65,16 +65,15 @@ def is_json(text: str) -> bool:
 def get_best_match(pred_tokens, annotations):
     best_ratio = 0
     best_anno = None
-    
+    anno_type = None
     pred_str = " ".join(pred_tokens).lower()
-    
     for anno_text, label in annotations:
         # Calculamos a similaridade entre a predição e cada anotação
         ratio = SequenceMatcher(None, pred_str, anno_text.lower()).ratio()
-        
         if ratio > best_ratio:
             best_ratio = ratio
             best_anno = anno_text
-            
+            anno_type = label
     # Definir um threshold mínimo (ex: 0.4) para evitar matches aleatórios
-    return best_anno if best_ratio > 0.4 else ""
+    # print(f"Best match: '{best_anno}' with ratio {best_ratio} and type '{anno_type}'")
+    return (best_anno, anno_type) if best_ratio > 0.5 else ("", "")

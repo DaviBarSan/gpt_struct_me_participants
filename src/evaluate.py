@@ -122,12 +122,12 @@ def exact_match(prediction: set, annotation: set, template: str) -> tuple:
     return tp, fp, fn
 
 
-def relaxed_metrics(prediction: Dict, annotation: Dict, template: str) -> dict:
+def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: str) -> dict:
     """Compute micro-averaged metrics for a given entity."""
     f1 = 0
     temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
     print("Computing relaxed metrics...")
-    
+    detailed_results_token_level = []
     for doc_id in prediction:
         print(f"prediction[doc_id]: {prediction[doc_id]}")
         print(f"annotation[doc_id]: {annotation[doc_id]}")
@@ -152,13 +152,15 @@ def relaxed_metrics(prediction: Dict, annotation: Dict, template: str) -> dict:
         # except KeyError:
         #     print(f"Missing doc_id {doc_id} in annotations.")
         #     continue
-        f1 += macro_averaged_f1_score(preds, annts, template)
+        f1 += macro_averaged_f1_score(preds, annts, template, model, doc_id, detailed_results_token_level)
     f1 /= len(prediction)
-    return {"f1": f1}
+    return {"f1": f1}, detailed_results_token_level
 
 
-def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> float:
-    """Compute the macro-averaged F1 score for a set of predictions and annotations."""
+def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model: str, doc_id: str, detailed_results_token_level: list) -> float:
+    """Compute the macro-averaged F1 score for a set of predictions and annotations.
+    ('modelo', 'entity','doc_id','template','complete_prediction','token','pred_type','matched_annotation','annt_type','result')
+    """
     f1 = 0
     print("Complete pred:", pred)
     print("Complete annt:", annt)
@@ -179,7 +181,7 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> fl
             #     if string_overlap(pred_entity[0], annt_entity[0])
             # ]
             # print(f"Matching annotated entities: {match_entites}")
-            best_matched_annt = get_best_match(tkns_pred, annt)
+            (best_matched_annt, best_matched_anno_type) = get_best_match(tkns_pred, annt)
             print(f"Best matched annotated entity: {best_matched_annt}")
             # 2. Get the diff
             diff = list(difflib.ndiff(tkns_pred, tokenize(best_matched_annt)))
@@ -198,12 +200,21 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> fl
                     if tag == '  ':   # Match
                         tp_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, pred_entity[1], 
+                                                             best_matched_annt, best_matched_anno_type, "tp"))
                     elif tag == '- ': # In prediction only
                         fp_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, pred_entity[1],
+                                                             best_matched_annt, best_matched_anno_type, "fp"))
                     elif tag == '+ ': # In annotation only
                         fn_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, pred_entity[1],
+                                                             best_matched_annt, best_matched_anno_type, "fn"))
             print(f"TP: {tp_list}")
             print(f"FP: {fp_list}")
             print(f"FN: {fn_list}")
@@ -226,7 +237,7 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> fl
             #     for annt_entity in annt
             #     if string_overlap(pred_entity, annt_entity[0])
             # ]
-            best_matched_annt = get_best_match(tkns_pred, annt)
+            (best_matched_annt, best_matched_anno_type) = get_best_match(tkns_pred, annt)
             print(f"Best matched annotated entity: {best_matched_annt}")
             # 2. Get the diff
             diff = list(difflib.ndiff(tkns_pred, tokenize(best_matched_annt)))
@@ -247,19 +258,27 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str) -> fl
                     if tag == '  ':   # Match
                         tp_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, "", 
+                                                             best_matched_annt, best_matched_anno_type, "tp"))
                     elif tag == '- ': # In prediction only
                         fp_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, "",
+                                                             best_matched_annt, best_matched_anno_type, "fp"))
                     elif tag == '+ ': # In annotation only
                         fn_list.append(token)
                         seen.add(token)
+                        detailed_results_token_level.append((model, 'participants', doc_id, 
+                                                             template, tkns_pred, token, "",
+                                                             best_matched_annt, best_matched_anno_type, "fn"))
             print(f"TP: {tp_list}")
             print(f"FP: {fp_list}")
             print(f"FN: {fn_list}")
             tp = len(tp_list)
             fp = len(fp_list)
             fn = len(fn_list)
-            
             f1 += f1_score(tp, fp, fn)            
             
     macro_avg_f1 = f1 / len(pred) if len(pred) > 0 else 0

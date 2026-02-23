@@ -77,6 +77,8 @@ def evaluate(predicitons: dict, annotations: dict) -> list:
     """Evaluate the predictions of the models."""
     results = []
     results_details = [('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')]
+    result_detailts_token_level = [('modelo', 'entity','doc_id','template','complete_prediction'
+                                    ,'token','pred_type','matched_annotation','annt_type','result')]
     for model, templates in predicitons.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
@@ -88,7 +90,7 @@ def evaluate(predicitons: dict, annotations: dict) -> list:
                 # print(f"Annotation loaded for entity {entity}: {annotations}")
 
                 strict, details = strict_metrics(prediction, annotation, template, model)
-                relaxed = relaxed_metrics(prediction, annotation, template)
+                relaxed, token_details = relaxed_metrics(prediction, annotation, template, model)
                 results.append({
                     "model": model,
                     "template": template,
@@ -97,18 +99,22 @@ def evaluate(predicitons: dict, annotations: dict) -> list:
                     "relaxed": relaxed
                 })
                 results_details.append(details)
+                result_detailts_token_level.append(token_details)
     #  = [item for sublist in results_details if isinstance(sublist, list) for item in sublist]
     headers = list(results_details[0])
-
     # 2. Flatten the remaining lists of sets into one list of sets
     data_rows = [item for sublist in results_details[1:] for item in sublist]
-
     # 3. Create the DataFrame
     # Since the rows are sets (unordered), we convert them to lists.
     # Note: This assumes the set elements match the header count.
     df_results_details = pd.DataFrame([list(row) for row in data_rows], columns=headers)
     # print("Detailed results:", results_details)
-    return results, df_results_details
+    
+    headers_token_level = list(result_detailts_token_level[0])
+    data_rows_token_level = [item for sublist in result_detailts_token_level[1:] for item in sublist]
+    df_results_token_level = pd.DataFrame([list(row) for row in data_rows_token_level], columns=headers_token_level)
+    
+    return results, df_results_details, df_results_token_level
 
 
 def make_results_table(results: list) -> pd.DataFrame:
@@ -135,7 +141,7 @@ def main(mode: str = "test", language: str = "portuguese", store_table: bool = T
         ann_path =  RESOURCE_PATH / "lusa_en"
     # print(ann_path)
     annotations = read_annoations(ann_path)
-    results, details_df = evaluate(predictions, annotations)
+    results, details_df, details_token_level_df = evaluate(predictions, annotations)
 
     output_path = path / "results.json"
     json.dump(results, output_path.open("w"), indent=4)
@@ -143,6 +149,9 @@ def main(mode: str = "test", language: str = "portuguese", store_table: bool = T
     details_output_path = path / "detailed_results.csv"
     # details_df = pd.DataFrame(details, columns=['modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score'])
     details_df.to_csv(details_output_path, index=False)
+    
+    details_token_level_output_path = path / "detailed_results_token_level.csv"
+    details_token_level_df.to_csv(details_token_level_output_path, index=False)
     
     if store_table:
         table = make_results_table(results)
