@@ -36,7 +36,7 @@ os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 def qwen3_4b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_4B"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_4b"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
