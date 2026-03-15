@@ -36,7 +36,7 @@ os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 def qwen3_4b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen3-4B/Qwen3_4B"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_4B"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
@@ -66,7 +66,7 @@ def qwen3_4b(prompt: str):
 def qwen3_30b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen3-30B/qwen3_30b"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_30b"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
@@ -102,7 +102,7 @@ def qwen3_30b(prompt: str):
 def qwen25_14b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Qwen25_14b/qwen25_14b"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen25_14b"
 
     # # 2. Convert the relative path to an absolute path
     # os.path.abspath() handles relative parts like '..'
@@ -258,7 +258,7 @@ def gemma3_1b(prompt : str):
 	return response
 
 def llama32_3b(prompt:str) -> str:
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Llama-32-3b/llama32-3b"
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/llama32-3b"
 
     tokenizer = AutoTokenizer.from_pretrained(relative_path)
     model = AutoModelForCausalLM.from_pretrained(relative_path,    
