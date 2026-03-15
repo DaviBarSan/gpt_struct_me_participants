@@ -53,10 +53,10 @@ SAMPLE_DOCS_IDS = {
 }
 EXAMPLERS = {
     "portuguese": {
-        "participants": "lusa_2"
+        "participants": "lusa_117"
     },
     "english": {
-        "participants": "lusa_2"
+        "participants": "lusa_117"
     }
 }
 
