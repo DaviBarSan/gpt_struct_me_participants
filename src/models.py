@@ -63,6 +63,37 @@ def qwen3_4b(prompt: str):
     print(generated_text)
     return generated_text
 
+def qwen35_9b(prompt: str):
+    from transformers import pipeline
+    # 1. Define the relative path you used
+    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen35_9b"
+
+    # # 2. Convert the relative path to an absolute path
+    # os.path.abspath() handles relative parts like '..'
+    absolute_model_path = os.path.abspath(relative_path)
+    # absolute_model_path = 'C:/Users/davib/Desktop/MSc_DataScience/thesis/resources/models/Qwen3-4B'
+    print(f"Loading model from absolute path: {relative_path}")
+
+    # 3. Pass the ABSOLUTE path to the pipeline
+    pipe = pipeline("text-generation", model=relative_path)
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+    # 2. Call the pipeline and store the result
+# Crucial Argument: return_full_text=False
+    output = pipe(
+        messages,
+        max_new_tokens=16384,
+        return_full_text=False      # Tells the pipeline to return ONLY the generated text
+    )
+
+    # 3. Extract the final text
+    # The output is a list of dictionaries, so we need to drill down.
+    generated_text = output[0]['generated_text']
+    print(generated_text)
+    return generated_text
+
+
 def qwen3_30b(prompt: str):
     from transformers import pipeline
     # 1. Define the relative path you used
