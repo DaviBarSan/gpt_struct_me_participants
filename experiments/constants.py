@@ -76,18 +76,18 @@ BEST_TEMPLATES = {
                
         # ("gemini", "event triggers"): "ext_exp",
         ("gemini", "participants"): "ext_exp",
-        ("qwen3_4b", "participants"): "cls_exp",
-        ("gemma3_1b", "participants"): "ext_exp",
-        ("llama32_3b", "participants"): "cls_def",
+        ("qwen3_4b", "participants"): "cls_def_exp",
+        ("gemma3_1b", "participants"): "ext_def_exp",
+        # ("llama32_3b", "participants"): "cls_def",
         ("qwen25_14b", "participants"): "cls_exp",
         # ("gemini", "time expressions"): "ext_exp",
     },
 
     "english": {
-        ("qwen3_4b", "participants"): "ext_def_exp",
-        ("qwen25_14b", "participants"): "ext_def_exp",
-        ("llama32_3b", "participants"): "cls_def",
-        ("gemma3_1b", "participants"): "ext_def_exp",
+        ("qwen3_4b", "participants"): "cls_def_exp",
+        ("qwen25_14b", "participants"): "cls_exp",
+        ("llama32_3b", "participants"): "cls_exp",
+        ("gemma3_1b", "participants"): "gemma3_1b",
         ("gemini", "participants"): "cls_def_exp",
         
     }
