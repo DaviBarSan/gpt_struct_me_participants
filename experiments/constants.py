@@ -75,7 +75,7 @@ BEST_TEMPLATES = {
     "portuguese": {
                
         # ("gemini", "event triggers"): "ext_exp",
-        ("gemini", "participants"): "ext_exp",
+        ("gemini", "participants"): "cls_def_exp",
         ("qwen3_4b", "participants"): "cls_def_exp",
         ("gemma3_1b", "participants"): "ext_def_exp",
         # ("llama32_3b", "participants"): "cls_def",
@@ -87,7 +87,7 @@ BEST_TEMPLATES = {
         ("qwen3_4b", "participants"): "cls_def_exp",
         ("qwen25_14b", "participants"): "cls_exp",
         ("llama32_3b", "participants"): "cls_exp",
-        ("gemma3_1b", "participants"): "gemma3_1b",
+        ("gemma3_1b", "participants"): "ext_def_exp",
         ("gemini", "participants"): "cls_def_exp",
         
     }
