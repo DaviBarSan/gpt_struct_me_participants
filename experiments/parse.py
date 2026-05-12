@@ -3,6 +3,7 @@
 import json
 import logging
 from pathlib import Path
+import re
 import chardet
 import fire
 from src.utils import is_json
@@ -121,6 +122,15 @@ def read_json(filepath: Path) -> dict:
     """Read a JSON file."""
     encoding = detect_encoding(filepath)
     content = filepath.read_text(encoding=encoding)
+    print(f"{filepath}")
+    match = re.search(r"<Output>(.*?)</Output>", content, re.DOTALL)
+    if match:
+        content = match.group(1)
+        print("Extracted String:")
+        print(content)
+    else:
+        print("Output tag not found.")
+        
     content = sanitize_json_string(content)
     content = content.replace('\u00A0', ' ')
     print(filepath.absolute)
@@ -150,10 +160,12 @@ def read_predictions(path: Path):
     filepaths = path.glob("**/*.txt")
     
     for filepath in filepaths:
+        
         *_, model, entity, template, _ = filepath.parts
         doc = filepath.stem
 
         answer = read_json(filepath)
+        
         # print(f"Read answer from {filepath}: {answer}")
 
         if "ext" in template:

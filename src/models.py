@@ -33,7 +33,7 @@ HF_KEY = os.getenv("HF_KEY")
 os.environ["TRANSFORMERS_NO_FLASH_ATTN"] = "1"
 os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 
-def qwen3_4b(prompt: str):
+def qwen3_4b(prompt: str, temp: float):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_4b"
@@ -63,7 +63,7 @@ def qwen3_4b(prompt: str):
     print(generated_text)
     return generated_text
 
-def qwen35_9b(prompt: str):
+def qwen35_9b(prompt: str, temp: float):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen35_9b"
@@ -94,7 +94,7 @@ def qwen35_9b(prompt: str):
     return generated_text
 
 
-def qwen3_30b(prompt: str):
+def qwen3_30b(prompt: str, temp: float):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_30b"
@@ -130,7 +130,7 @@ def qwen3_30b(prompt: str):
     print(generated_text)
     return generated_text
 
-def qwen25_14b(prompt: str):
+def qwen25_14b(prompt: str, temp: float):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen25_14b"
@@ -166,7 +166,7 @@ def qwen25_14b(prompt: str):
     print(generated_text)
     return generated_text
 
-def gemini(prompt: str) -> str:
+def gemini(prompt: str, temp: float) -> str:
     from google import genai
     from google.genai import types
     from time import sleep
@@ -197,14 +197,14 @@ def gemini(prompt: str) -> str:
     # provides the text directly via the .text attribute.
     answer = response.text
     print(f"Gemini Response: {response}")
-    print("Sleeping for 10 seconds to avoid rate limits...")
-    sleep(10)
+    # print("Sleeping for 10 seconds to avoid rate limits...")
+    # sleep(10)
     return answer
 
 # Example Usage (assuming you have your API key set as an environment variable)
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
 
-def mistral_7b(prompt: str) -> str:    
+def mistral_7b(prompt: str, temp: float) -> str:    
 
    ##MISTRAL
     from mistral_inference.transformer import Transformer
@@ -226,7 +226,7 @@ def mistral_7b(prompt: str) -> str:
     print(result)
     return  result
  
-def phi_4_6b(prompt: str):
+def phi_4_6b(prompt: str, temp: float):
     # 1. Path to the locally downloaded model
     relative_path = r"/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/Phi4-6B/Phi4_6b"
     absolute_model_path = os.path.abspath(relative_path)

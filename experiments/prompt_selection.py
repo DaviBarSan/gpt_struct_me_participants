@@ -32,18 +32,23 @@ dotenv.load_dotenv(ROOT / ".env")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def main(mid: str = "llama2-7b", language: str = "english"):
+def main(mid: str = "llama2-7b", language: str = "english", shot_language: str = "english"):
     print(language)
     model = mid2model(mid)
     print(f"Model is {model}")
     entities = ENTITIES[language]
     sample_docs = SAMPLE_DOCS_IDS[language]
-    examples = EXAMPLERS[language]
+    examples = EXAMPLERS[shot_language]
     if language == "portuguese":
         dataset = read_lusa(RESOURCE_PATH / "lusa_news")
     elif language == "english":
         dataset = read_lusa_en(RESOURCE_PATH / "lusa_en")
 
+    if shot_language == "english":
+        shot_dataset = read_lusa_en(RESOURCE_PATH / "lusa_en")
+    elif shot_language == "portuguese":
+        shot_dataset = read_lusa(RESOURCE_PATH / "lusa_news")
+    
     docs = [doc for doc in dataset if doc.id in sample_docs]
     tids = ["cls", "cls_def", "cls_def_exp", "cls_exp", "ext", "ext_def", "ext_def_exp", "ext_exp"]
     print(entities)
@@ -53,8 +58,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
         logger.info(f"Entity: {entity}")
 
         example_doc_id = examples[entity]
-        example_doc = [doc for doc in dataset if doc.id == example_doc_id][0]
-        
+        example_doc = [doc for doc in shot_dataset if doc.id == example_doc_id][0]
 
         for tid in tids:
             logger.info(f"Template: {tid}")
@@ -84,7 +88,7 @@ def main(mid: str = "llama2-7b", language: str = "english"):
                     print(f"Writing answer to {answer_path}")
                     answer_path.write_text(answer, encoding='utf-8')
                     logger.info(f"{mid} Answer:\n{answer}")
-                    time.sleep(10)
+                    # time.sleep(10)
                 else:
                     logger.info(f"{mid} answer already exists.")
 
