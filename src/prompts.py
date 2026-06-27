@@ -19,7 +19,7 @@ class Prompter:
         delimiter: bool = False,
         role: bool = False,
         language: str = "english",
-        constraints: str = None,
+        constraints: bool = False,
         chain_of_thought: bool = False
     ):
         """Initialize the prompter.
@@ -98,7 +98,7 @@ class Prompter:
                 template.append(f"REASONING: Before generating the final JSON, you must analyze the text step-by-step. Identify potential entities, evaluate their context, and match them against the allowed Classes. Place this analysis inside <Thought> tags.")
             elif language == "portuguese":
                 template.append(f"RAZÃO: Antes de gerar o JSON final, você deve analisar o texto passo a passo. Identifique entidades potenciais, avalie seu contexto e compare-as com as Classes permitidas. Coloque essa análise dentro de tags <Thought>.")
-        if constraints is not None:
+        if constraints:
             if delimiter:
                 template.append(f"----------------------------------")
             if language == "english":

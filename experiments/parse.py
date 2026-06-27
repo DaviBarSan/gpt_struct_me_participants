@@ -154,14 +154,16 @@ def read_json(filepath: Path) -> dict:
             raise e
 
 
-def read_predictions(path: Path):
+def read_predictions(path: Path, prompt_name_variations: str = False) -> list:
     """Parse the prediction files."""
     predictions = []
     filepaths = path.glob("**/*.txt")
     
     for filepath in filepaths:
-        
         *_, model, entity, template, _ = filepath.parts
+        # if it is a prompt variation, the filepath is different. Set as template the prompt variation abreviations.
+        if prompt_name_variations in entity:
+            *_, model, entity, _, template, _ = filepath.parts
         doc = filepath.stem
 
         answer = read_json(filepath)
@@ -209,13 +211,13 @@ def read_predictions(path: Path):
     return predictions
 
 
-def main(mode: str = "prompt_selection", language: str = "portuguese") -> None:
+def main(mode: str = "prompt_selection", language: str = "portuguese", prompt_name_variations: str = None) -> None:
     """Run the script."""
     path = RESULTS_PATH / mode / language
 
     print(path)
 
-    predictions = read_predictions(path)
+    predictions = read_predictions(path, prompt_name_variations)
 
     predictions_path = path / "predictions.json"
     json.dump(predictions, predictions_path.open("w"), indent=4)
