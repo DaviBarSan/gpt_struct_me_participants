@@ -63,7 +63,7 @@ def qwen3_4b(prompt: str, temp: float):
     print(generated_text)
     return generated_text
 
-def qwen3_14b(prompt: str, temp = 0.0):
+def qwen3_14b(prompt: str, temp = 0.3):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/qwen3_14b"
