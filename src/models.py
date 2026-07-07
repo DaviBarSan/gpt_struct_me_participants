@@ -63,7 +63,7 @@ def qwen3_4b(prompt: str, temp: float):
     print(generated_text)
     return generated_text
 
-def qwen3_14b(prompt: str, temp: float):
+def qwen3_14b(prompt: str, temp = 0.0):
     from transformers import pipeline
     # 1. Define the relative path you used
     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/qwen3_14b"
@@ -82,9 +82,11 @@ def qwen3_14b(prompt: str, temp: float):
     # 2. Call the pipeline and store the result
 # Crucial Argument: return_full_text=False
     output = pipe(
-        messages,
+messages,
         max_new_tokens=16384,
-        return_full_text=False      # Tells the pipeline to return ONLY the generated text
+        temperature=temp,          # Apply the temperature parameter
+        do_sample=True,            # do_sample must be True to use temperature
+        return_full_text=False
     )
 
     # 3. Extract the final text
