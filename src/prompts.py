@@ -31,7 +31,6 @@ class Prompter:
         """
         self.task = task
         self.entity = entity
-
         template = []
         if role:
             if language == "english":
@@ -51,9 +50,8 @@ class Prompter:
                 template.append(f"----------------------------------")
             output_format = "JSON-parseable list of strings only with the JSON array and nothing else. Do not include any introductory text, explanation, or markdown code fences."
             self.annotation_extraction = self._get_extraction_annotation
-        if delimiter:
-            template.append(f"----------------------------------")
-        if task == "classification":
+
+        elif task == "classification":
             template.append(f"Task:\n")
             template.append(f"Extract and classify all {self.entity}\n\n"
                             f"Classes:\n"
