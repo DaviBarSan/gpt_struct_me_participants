@@ -45,10 +45,15 @@ for MID in "${MODELS[@]}"; do
             --data "{\"text\":\"Starting pipeline for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
             $SLACK_WEBHOOK
 
-            # Run the python script
-            echo "Executing: python -u -m $PHASE --mid $MID --language $LANG"
+            if [ "$PHASE" == "experiments.test" ]; then
+                echo "Executing: python -u -m $PHASE --mid $MID --language $LANG --shot_language $LANG --config_path experiments/exp_config.yaml"
+                python -u -m $PHASE --mid $MID --language $LANG --shot_language $LANG --config_path experiments/exp_config.yaml > "./logs/$LOG_FILE" 2>&1
+            else
+                # Run the python script
+                echo "Executing: python -u -m $PHASE --mid $MID --language $LANG"
+                python -u -m $PHASE --mid $MID --language $LANG > "./logs/$LOG_FILE" 2>&1
+            fi
             echo "Logging output to: ./logs/$LOG_FILE"
-            python -u -m $PHASE --mid $MID --language $LANG > "./logs/$LOG_FILE" 2>&1
 
             # 1. Grab the very last iteration log line printed in the file
             LAST_ITER=$(grep 'INFO:__main__:Iteration' "./logs/$LOG_FILE" | tail -n 1)
