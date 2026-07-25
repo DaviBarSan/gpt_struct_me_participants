@@ -216,8 +216,8 @@ def read_json(filepath: Path) -> tuple:
     return {}, False
 
 
-def read_predictions(path: Path, prompt_name_variations: str = False) -> tuple:
-    """Parse the prediction files. Returns (predictions, failed_filepaths)."""
+def read_predictions(path: Path, prompt_name_variations: str = "False") -> list:
+    """Parse the prediction files."""
     predictions = []
     failed_filepaths = []
     filepaths = path.glob("**/*.txt")
