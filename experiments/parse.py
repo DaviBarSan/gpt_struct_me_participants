@@ -89,6 +89,20 @@ def read_text_safe(filepath: Path) -> str:
     return filepath.read_text(encoding="latin1")
 
 
+def strip_thinking(content: str) -> str:
+    """Drop a leading reasoning block from `<think>` models, keeping only
+    what follows the last `</think>` tag.
+
+    Reasoning text routinely quotes or discusses JSON-shaped examples (e.g.
+    example arrays copied from the prompt), which throws off bracket-span
+    extraction if left in. The real answer always comes after the block.
+    """
+    matches = list(re.finditer(r"</think>", content, re.IGNORECASE))
+    if matches:
+        return content[matches[-1].end():]
+    return content
+
+
 def extract_json_span(content: str) -> str:
     """Return the substring from the first '[' or '{' to the last matching
     closing bracket, for models that skip the <Output> tag and emit the
@@ -169,6 +183,7 @@ def read_json(filepath: Path) -> tuple:
     """
     content = read_text_safe(filepath)
     print(f"{filepath}")
+    content = strip_thinking(content)
     match = re.search(r"<Output>(.*?)</Output>", content, re.DOTALL)
     if match:
         content = match.group(1)
