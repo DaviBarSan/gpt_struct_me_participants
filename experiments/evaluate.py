@@ -89,6 +89,9 @@ def evaluate(predictions: dict, annotations: dict, dict_words: dict) -> list:
     for model, templates in predictions.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
+                if entity not in annotations:
+                    print(f"Skipping unknown entity '{entity}' (model={model}, template={template}): not found in annotations.")
+                    continue
                 print(f"Evaluating {model} - {entity} - {template}")
                 annotation = annotations[entity]
                 strict, details = strict_metrics(prediction, annotation, template, model)

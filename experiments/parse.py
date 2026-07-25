@@ -249,6 +249,8 @@ def read_predictions(path: Path, prompt_name_variations: str = "False") -> list:
     filepaths = path.glob("**/*.txt")
 
     for filepath in filepaths:
+        if filepath.name == "parse_failures.txt":
+            continue
         *_, model, entity, template, _ = filepath.parts
         # if it is a prompt variation, the filepath is different. Set as template the prompt variation abreviations.
         if prompt_name_variations in entity:
