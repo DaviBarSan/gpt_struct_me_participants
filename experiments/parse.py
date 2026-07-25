@@ -104,18 +104,38 @@ def strip_thinking(content: str) -> str:
 
 
 def extract_json_span(content: str) -> str:
-    """Return the substring from the first '[' or '{' to the last matching
-    closing bracket, for models that skip the <Output> tag and emit the
-    JSON array/object directly, sometimes with prose before/after it."""
+    """Return the substring from the first '[' or '{' to its balanced
+    closing bracket, for models that skip the <Output> tag and/or emit
+    trailing garbage (stray extra brackets, end-of-turn tokens, prose)
+    after the JSON value. Tracks bracket depth (ignoring brackets inside
+    quoted strings) rather than jumping to the last bracket in the text,
+    so trailing garbage after a complete value doesn't get pulled in."""
     starts = [i for i in (content.find("["), content.find("{")) if i != -1]
     if not starts:
         return content
     start = min(starts)
-    closer = "]" if content[start] == "[" else "}"
-    end = content.rfind(closer)
-    if end == -1 or end < start:
-        return content
-    return content[start:end + 1]
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(content)):
+        ch = content[i]
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "[{":
+            depth += 1
+        elif ch in "]}":
+            depth -= 1
+            if depth == 0:
+                return content[start:i + 1]
+    return content[start:]
 
 
 def sanitize_json_string(raw_text: str) -> str:
@@ -195,13 +215,16 @@ def read_json(filepath: Path) -> tuple:
     content = sanitize_json_string(content)
     content = content.replace('\u00A0', ' ')
 
-    # Try the content as-is first, then fall back to just the outermost
-    # bracket span, for models that skip the <Output> tag and/or add
-    # leading/trailing prose around the JSON. Also try both wrapped in an
-    # outer "[...]", for models that emit comma-separated top-level arrays
-    # (e.g. ["a","b"],["c","d"]) without the enclosing list brackets.
+    # Try the content as-is, then wrapped in an outer "[...]" (for models
+    # that emit comma-separated top-level arrays, e.g. ["a","b"],["c","d"],
+    # without the enclosing list brackets), then the balanced bracket span
+    # (for models that add leading/trailing garbage around a complete JSON
+    # value) and that span wrapped too. The wrapped-content check must come
+    # before the span, since the span only recovers the first balanced
+    # value and would otherwise wrongly short-circuit on the missing-wrapper
+    # case.
     span = extract_json_span(content)
-    candidates = dict.fromkeys([content, span, f"[{content}]", f"[{span}]"])
+    candidates = dict.fromkeys([content, f"[{content}]", span, f"[{span}]"])
     for candidate in candidates:
         try:
             return json.loads(candidate), True
