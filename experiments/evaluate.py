@@ -73,13 +73,14 @@ def read_annoations(path: Path) -> dict:
     return annotations
 
 
-def evaluate(predicitons: dict, annotations: dict) -> list:
+def evaluate(predictions: dict, annotations: dict) -> list:
     """Evaluate the predictions of the models."""
     results = []
     results_details = [('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')]
     result_detailts_token_level = [('modelo', 'entity','doc_id','template','complete_prediction'
                                     ,'token','pred_type','matched_annotation','annt_type','result')]
-    for model, templates in predicitons.items():
+    print(predictions.items())
+    for model, templates in predictions.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
                 print(f"Evaluating {model} - {entity} - {template}")
