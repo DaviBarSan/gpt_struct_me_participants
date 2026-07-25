@@ -6,10 +6,11 @@ from pathlib import Path
 import fire
 import pandas as pd
 
-from experiments.constants import RESOURCE_PATH, ROOT
+from experiments.constants import RESOURCE_PATH, ROOT, WORD_CATEGORIES_EN, WORD_CATEGORIES_PT
 
 from src.reader import read_lusa, read_timebank, read_lusa_en
 from src.evaluate import strict_metrics, relaxed_metrics
+
 
 RESULTS_PATH = ROOT / "results"
 
@@ -61,7 +62,11 @@ def read_annoations(path: Path) -> dict:
     }
 
     annotations["participants"] = {
-        doc.id: [(annotation.get("text"), annotation.get("participant_type_domain")) for annotation in doc.annotations if annotation.get("type") == "Participant"]
+        doc.id: [(annotation.get("text"), 
+                  annotation.get("participant_type_domain"), 
+                  annotation.get("id"), 
+                  annotation.get("full_news_article"))
+        for annotation in doc.annotations if annotation.get("type") == "Participant"]
         for doc in documents
     }
     # print("Participant Annotations:", annotations["participants"])
@@ -73,24 +78,20 @@ def read_annoations(path: Path) -> dict:
     return annotations
 
 
-def evaluate(predicitons: dict, annotations: dict) -> list:
+def evaluate(predicitons: dict, annotations: dict, dict_words: dict) -> list:
     """Evaluate the predictions of the models."""
     results = []
     results_details = [('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')]
-    result_detailts_token_level = [('modelo', 'entity','doc_id','template','complete_prediction'
-                                    ,'token','pred_type','matched_annotation','annt_type','result')]
+    result_detailts_token_level = [('modelo', 'entity','doc_id','template','complete_prediction', 
+                                    'token','pred_type','matched_annotation', 'full_matched_sentence', 'ann_entity_id','annt_type','result',
+                                    'word_category', 'pct_tp_participant_level', 'result_type')]
     for model, templates in predicitons.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
                 print(f"Evaluating {model} - {entity} - {template}")
-                # print(f"Prediction: {prediction}")
-                # print(f"Annotation: {annotations[entity]}")
                 annotation = annotations[entity]
-                # print(f"Predictions loaded for entity {entity}: {prediction}")
-                # print(f"Annotation loaded for entity {entity}: {annotations}")
-
                 strict, details = strict_metrics(prediction, annotation, template, model)
-                relaxed, token_details = relaxed_metrics(prediction, annotation, template, model)
+                relaxed, token_details = relaxed_metrics(prediction, annotation, template, model, dict_words)
                 results.append({
                     "model": model,
                     "template": template,
@@ -137,11 +138,14 @@ def main(mode: str = "test", language: str = "portuguese", store_table: bool = T
     # print("Predictions loaded: ", predictions)
     if language == "portuguese":
         ann_path = RESOURCE_PATH / "lusa_news"
+        dict_words = WORD_CATEGORIES_PT
     elif language == "english":
         ann_path =  RESOURCE_PATH / "lusa_en"
+        dict_words = WORD_CATEGORIES_EN
+
     # print(ann_path)
     annotations = read_annoations(ann_path)
-    results, details_df, details_token_level_df = evaluate(predictions, annotations)
+    results, details_df, details_token_level_df = evaluate(predictions, annotations, dict_words)
 
     output_path = path / "results.json"
     json.dump(results, output_path.open("w"), indent=4)
