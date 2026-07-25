@@ -63,7 +63,7 @@ for MID in "${MODELS[@]}"; do
                 TOTAL=${BASH_REMATCH[2]}
 
                 # 3. Check if the current iteration matches the total (e.g., 152 == 152)
-                if [ "$CURRENT" -eq "$TOTAL" ]; then
+                if [ "$CURRENT" -eq $((TOTAL - 1)) ]; then
                     SUCCESS=1
                 fi
             fi
