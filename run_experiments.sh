@@ -9,6 +9,17 @@ else
     echo "[$(date)] No active Python job found for davibarrel. Proceeding with execution."
 fi
 
+# --- LOAD ENVIRONMENT VARIABLES ---
+if [ -f .env ]; then
+    source .env
+else
+    echo "Error: .env file not found!"
+    exit 1
+fi
+
+# Now use the variable
+SLACK_WEBHOOK=$SLACK_WEBHOOK_URL
+
 # Define your experiment variables
 PHASES=("experiments.prompt_selection" "experiments.test")
 MODELS=("qwen3_14b")  # Add all your model IDs here
@@ -30,6 +41,9 @@ for MID in "${MODELS[@]}"; do
 
             START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
             echo "[$START_TIME] Starting: Phase=$PHASE_NAME | Model=$MID | Language=$LANG"
+            curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Starting pipeline for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
+            $SLACK_WEBHOOK
 
             # Run the python script
             echo "Executing: python -u -m $PHASE --mid $MID --language $LANG"
@@ -58,6 +72,9 @@ for MID in "${MODELS[@]}"; do
             if [ "$SUCCESS" -eq 1 ]; then
                 END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
                 echo "[$END_TIME] Successfully finished $LOG_FILE ($CURRENT/$TOTAL)"
+                curl -X POST -H 'Content-type: application/json' \
+                --data "{\"text\":\"Succeeded pipeline :)\nExecution SUCCEEDED for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
+                $SLACK_WEBHOOK
                 echo "----------------------------------------"
 
                 # Required step: before the test phase can run, the best prompt
@@ -86,7 +103,9 @@ for MID in "${MODELS[@]}"; do
                 echo "[FATAL ERROR] Task crashed or OOM detected!"
                 echo "Last recorded log: ${LAST_ITER:-None found}"
                 echo "Aborting the entire batch script immediately."
-                
+                curl -X POST -H 'Content-type: application/json' \
+                --data "{\"text\":\"Failed pipeline :(\nExecution FAILED for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
+                $SLACK_WEBHOOK
                 # This instantly stops the Bash script. No further phases/models will run.
                 exit 1 
             fi
