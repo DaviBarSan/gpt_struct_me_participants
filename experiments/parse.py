@@ -70,6 +70,40 @@ def detect_encoding(file_path: str, buffer_size: int = 4096) -> str:
         print(f"An error occurred during file processing: {e}")
         return None
 
+def read_text_safe(filepath: Path) -> str:
+    """Read a text file's content, never raising on a bad/misdetected encoding.
+
+    `detect_encoding` is probabilistic and occasionally picks a codec (e.g.
+    cp1252) that can't actually decode the file, which used to crash the
+    whole parse run on a single bad prediction file. Falls through utf-8 and
+    finally latin1, which maps every byte 0-255 and therefore never raises.
+    """
+    hint = detect_encoding(filepath)
+    for encoding in dict.fromkeys([hint, "utf-8", "latin1"]):
+        if not encoding:
+            continue
+        try:
+            return filepath.read_text(encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+    return filepath.read_text(encoding="latin1")
+
+
+def extract_json_span(content: str) -> str:
+    """Return the substring from the first '[' or '{' to the last matching
+    closing bracket, for models that skip the <Output> tag and emit the
+    JSON array/object directly, sometimes with prose before/after it."""
+    starts = [i for i in (content.find("["), content.find("{")) if i != -1]
+    if not starts:
+        return content
+    start = min(starts)
+    closer = "]" if content[start] == "[" else "}"
+    end = content.rfind(closer)
+    if end == -1 or end < start:
+        return content
+    return content[start:end + 1]
+
+
 def sanitize_json_string(raw_text: str) -> str:
     """
     Limpa uma string que se espera ser um array ou objeto JSON:
@@ -107,21 +141,33 @@ def sanitize_json_string(raw_text: str) -> str:
 
 
 def json_loads_section(content: str) -> dict:
-    """Parse a section of a JSON file."""
+    """Parse a section of a JSON file.
+
+    Grows the candidate string line by line until it becomes valid JSON,
+    which recovers cases where the model appended trailing prose after a
+    complete JSON value. Lines are joined with a space (not concatenated
+    raw) so a literal newline inside a string value doesn't glue two
+    tokens together.
+    """
     content = content.strip()
     lines = content.split("\n")
     running_content = ""
     while lines:
-        running_content += lines.pop(0)
+        running_content += lines.pop(0) + " "
         if is_json(running_content):
             return json.loads(running_content)
     raise ValueError("Invalid JSON")
 
 
-def read_json(filepath: Path) -> dict:
-    """Read a JSON file."""
-    encoding = detect_encoding(filepath)
-    content = filepath.read_text(encoding=encoding)
+def read_json(filepath: Path) -> tuple:
+    """Read and parse a model's raw text output into JSON.
+
+    Returns (answer, ok). `ok` is False (and answer is {}) when every
+    parsing strategy below fails, so callers can report which files
+    couldn't be parsed instead of silently treating them like a
+    legitimate empty prediction.
+    """
+    content = read_text_safe(filepath)
     print(f"{filepath}")
     match = re.search(r"<Output>(.*?)</Output>", content, re.DOTALL)
     if match:
@@ -130,35 +176,37 @@ def read_json(filepath: Path) -> dict:
         print(content)
     else:
         print("Output tag not found.")
-        
+
     content = sanitize_json_string(content)
     content = content.replace('\u00A0', ' ')
-    print(filepath.absolute)
-    try:
-        answer = json.loads(content)
-        # print(f"Loaded JSON answer: {answer}")
-        return answer
 
-    except json.decoder.JSONDecodeError:
+    # Try the content as-is first, then fall back to just the outermost
+    # bracket span, for models that skip the <Output> tag and/or add
+    # leading/trailing prose around the JSON.
+    candidates = dict.fromkeys([content, extract_json_span(content)])
+    for candidate in candidates:
         try:
-            answer = json_loads_section(content)
+            return json.loads(candidate), True
+        except json.decoder.JSONDecodeError:
+            pass
+
+        try:
+            answer = json_loads_section(candidate)
             print(f"ERROR: but loaded JSON answer: {answer}")
-
-            return answer
-        
+            return answer, True
         except ValueError:
-            print("Failed to parse JSON content after sanitization. Invalid response from model. Returning empty dict.")
-            return {}
-        except Exception as e:
-            print(f"Unexpected error during JSON parsing: {e}")
-            raise e
+            continue
+
+    print("Failed to parse JSON content after sanitization. Invalid response from model. Returning empty dict.")
+    return {}, False
 
 
-def read_predictions(path: Path, prompt_name_variations: str = False) -> list:
-    """Parse the prediction files."""
+def read_predictions(path: Path, prompt_name_variations: str = False) -> tuple:
+    """Parse the prediction files. Returns (predictions, failed_filepaths)."""
     predictions = []
+    failed_filepaths = []
     filepaths = path.glob("**/*.txt")
-    
+
     for filepath in filepaths:
         *_, model, entity, template, _ = filepath.parts
         # if it is a prompt variation, the filepath is different. Set as template the prompt variation abreviations.
@@ -166,8 +214,10 @@ def read_predictions(path: Path, prompt_name_variations: str = False) -> list:
             *_, model, entity, _, template, _ = filepath.parts
         doc = filepath.stem
 
-        answer = read_json(filepath)
-        
+        answer, ok = read_json(filepath)
+        if not ok:
+            failed_filepaths.append(filepath)
+
         # print(f"Read answer from {filepath}: {answer}")
 
         if "ext" in template:
@@ -208,7 +258,7 @@ def read_predictions(path: Path, prompt_name_variations: str = False) -> list:
                 "classes": classes
             })
 
-    return predictions
+    return predictions, failed_filepaths
 
 
 def main(mode: str = "prompt_selection", language: str = "portuguese", prompt_name_variations: str = None) -> None:
@@ -217,10 +267,24 @@ def main(mode: str = "prompt_selection", language: str = "portuguese", prompt_na
 
     print(path)
 
-    predictions = read_predictions(path, prompt_name_variations)
+    predictions, failed_filepaths = read_predictions(path, prompt_name_variations)
 
     predictions_path = path / "predictions.json"
     json.dump(predictions, predictions_path.open("w"), indent=4)
+
+    total = len(predictions)
+    n_failed = len(failed_filepaths)
+    print(f"\nParse summary: {total - n_failed}/{total} files parsed successfully, {n_failed} failed.")
+    if failed_filepaths:
+        print("Failed files:")
+        for failed_path in failed_filepaths:
+            print(f"  - {failed_path}")
+
+        failures_path = path / "parse_failures.txt"
+        failures_path.write_text(
+            "\n".join(str(failed_path) for failed_path in failed_filepaths), encoding="utf-8"
+        )
+        print(f"List of failed files written to {failures_path}")
 
 
 if __name__ == "__main__":
