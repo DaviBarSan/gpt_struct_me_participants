@@ -32,7 +32,9 @@ for MID in "${MODELS[@]}"; do
             echo "[$START_TIME] Starting: Phase=$PHASE_NAME | Model=$MID | Language=$LANG"
 
             # Run the python script
-            python -u -m $PHASE --mid $MID --language $LANG > "./logs/$LOG_FILE" 2>&1 
+            echo "Executing: python -u -m $PHASE --mid $MID --language $LANG"
+            echo "Logging output to: ./logs/$LOG_FILE"
+            python -u -m $PHASE --mid $MID --language $LANG > "./logs/$LOG_FILE" 2>&1
 
             # 1. Grab the very last iteration log line printed in the file
             LAST_ITER=$(grep 'INFO:__main__:Iteration' "./logs/$LOG_FILE" | tail -n 1)
@@ -57,6 +59,28 @@ for MID in "${MODELS[@]}"; do
                 END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
                 echo "[$END_TIME] Successfully finished $LOG_FILE ($CURRENT/$TOTAL)"
                 echo "----------------------------------------"
+
+                # Required step: before the test phase can run, the best prompt
+                # template (highest F1) for this model/language must be selected
+                # and written into BEST_TEMPLATES in experiments/constants.py.
+                if [ "$PHASE" == "experiments.prompt_selection" ]; then
+                    PARSE_EVAL_LOG="prmpt_sel_parse_eval_${MID}_${LANG}_${TIMESTAMP}.log"
+                    BEST_TMPLT_LOG="best_tmplt_sel_${MID}_${LANG}_${TIMESTAMP}.log"
+
+                    echo "[$(date)] Parsing/evaluating prompt_selection results for $MID | $LANG"
+                    bash ./scripts/promp_selection_pos_exec_scripts.sh "$LANG" > "./logs/$PARSE_EVAL_LOG" 2>&1
+                    if [ $? -ne 0 ]; then
+                        echo "[FATAL ERROR] Failed to parse/evaluate prompt_selection results for $MID | $LANG. Aborting."
+                        exit 1
+                    fi
+
+                    echo "[$(date)] Selecting best prompt template (highest F1) for $MID | $LANG"
+                    python -u -m experiments.select_best_templates --mid "$MID" --language "$LANG" > "./logs/$BEST_TMPLT_LOG" 2>&1
+                    if [ $? -ne 0 ]; then
+                        echo "[FATAL ERROR] Failed to select best prompt template for $MID | $LANG. Aborting."
+                        exit 1
+                    fi
+                fi
             else
                 # If the numbers don't match, or if it crashed before printing any iterations
                 echo "[FATAL ERROR] Task crashed or OOM detected!"
