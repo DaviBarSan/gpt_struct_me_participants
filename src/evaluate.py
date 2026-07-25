@@ -3,7 +3,8 @@
 from typing import Dict, Set
 import difflib
 
-from src.utils import string_overlap, tokenize, get_best_match
+from src.utils import get_full_sentence, string_overlap, tokenize, get_best_match
+from experiments.constants import word_to_category
 
 
 def recall_score(tp: int, fn: int) -> float:
@@ -122,7 +123,7 @@ def exact_match(prediction: set, annotation: set, template: str) -> tuple:
     return tp, fp, fn
 
 
-def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: str) -> dict:
+def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: str, dict_words: dict) -> dict:
     """Compute micro-averaged metrics for a given entity."""
     f1 = 0
     temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
@@ -152,14 +153,16 @@ def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: st
         # except KeyError:
         #     print(f"Missing doc_id {doc_id} in annotations.")
         #     continue
-        f1 += macro_averaged_f1_score(preds, annts, template, model, doc_id, detailed_results_token_level)
+        f1 += macro_averaged_f1_score(preds, annts, template, model, doc_id, detailed_results_token_level, dict_words)
     f1 /= len(prediction)
     return {"f1": f1}, detailed_results_token_level
 
 
-def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model: str, doc_id: str, detailed_results_token_level: list) -> float:
+def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model: str, doc_id: str, detailed_results_token_level: list, dict_words: dict) -> float:
     """Compute the macro-averaged F1 score for a set of predictions and annotations.
-    ('modelo', 'entity','doc_id','template','complete_prediction','token','pred_type','matched_annotation','annt_type','result')
+            ('modelo', 'entity','doc_id','template','complete_prediction',
+            'token','pred_type','matched_annotation',  'full_matched_sentence', 'ann_entity_id','annt_type','result',
+            'word_category', 'pct_tp_participant_level', 'result_type')
     """
     f1 = 0
     print("Complete pred:", pred)
@@ -181,11 +184,22 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model
             #     if string_overlap(pred_entity[0], annt_entity[0])
             # ]
             # print(f"Matching annotated entities: {match_entites}")
-            (best_matched_annt, best_matched_anno_type) = get_best_match(tkns_pred, annt)
-            print(f"Best matched annotated entity: {best_matched_annt}")
+            (best_matched_annt, best_matched_anno_type, 
+             best_matched_entity_id, best_full_matched_sentence) = get_best_match(tkns_pred, annt)
+            print(f"Best matched annotated entity: {best_matched_annt} with has entity id {best_matched_entity_id}")
             # 2. Get the diff
             diff = list(difflib.ndiff(tkns_pred, tokenize(best_matched_annt)))
+            # Calcular o rácio nativo do difflib
+            matcher = difflib.SequenceMatcher(None, tkns_pred, tokenize(best_matched_annt))
+            pct_tp_participant_level = matcher.ratio()
+            if pct_tp_participant_level == 0:
+                result_type = 'MISS'
+            elif pct_tp_participant_level == 1:
+                result_type = 'EXACT'
+            else:
+                result_type = 'PARTIAL'
             print(f"Diff between prediction and matched annotations: {diff}")
+                        
             seen = set()
             tp_list = []
             fp_list = []
@@ -197,33 +211,38 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model
                 
                 # Only process if we haven't handled this specific token string yet
                 if token not in seen:
+                    word_category = word_to_category(token, dict_words)
                     if tag == '  ':   # Match
                         tp_list.append(token)
                         seen.add(token)
+                        # detailed_results_token_level.append((model, 'participants', doc_id, 
+                        #                                      template, tkns_pred, pred_entity[0], token, pred_entity[1], 
+                        #                                      best_matched_annt, best_matched_anno_type, "tp"))
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, pred_entity[1], 
-                                                             best_matched_annt, best_matched_anno_type, "tp"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "tp",
+                                                             word_category, pct_tp_participant_level, result_type))
                     elif tag == '- ': # In prediction only
                         fp_list.append(token)
                         seen.add(token)
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, pred_entity[1],
-                                                             best_matched_annt, best_matched_anno_type, "fp"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "fp",
+                                                             word_category, pct_tp_participant_level, result_type))
                     elif tag == '+ ': # In annotation only
                         fn_list.append(token)
                         seen.add(token)
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, pred_entity[1],
-                                                             best_matched_annt, best_matched_anno_type, "fn"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "fn",
+                                                             word_category, pct_tp_participant_level, result_type))
             print(f"TP: {tp_list}")
             print(f"FP: {fp_list}")
             print(f"FN: {fn_list}")
             tp = len(tp_list)
             fp = len(fp_list)
             fn = len(fn_list)
-            # tkns_match = set(tokenize(" ".join(match_entites)))
-            # print(f"Tokens in matched: {tkns_match}")
-            # tp, fp, fn = exact_match((tkns_pred, pred_entity[1]), tkns_match, template)
+
             f1 += f1_score(tp, fp, fn)
         elif 'ext' in template:
             print(">>>>Tokenizing predicted entity:", pred_entity)
@@ -237,13 +256,24 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model
             #     for annt_entity in annt
             #     if string_overlap(pred_entity, annt_entity[0])
             # ]
-            (best_matched_annt, best_matched_anno_type) = get_best_match(tkns_pred, annt)
+            (best_matched_annt, best_matched_anno_type, 
+             best_matched_entity_id, best_full_matched_sentence) = get_best_match(tkns_pred, annt)
             print(f"Best matched annotated entity: {best_matched_annt}")
             # 2. Get the diff
             diff = list(difflib.ndiff(tkns_pred, tokenize(best_matched_annt)))
+            # Calcular o rácio nativo do difflib
+            matcher = difflib.SequenceMatcher(None, tkns_pred, tokenize(best_matched_annt))
+            pct_tp_participant_level = matcher.ratio()
+            if pct_tp_participant_level == 0:
+                result_type = 'MISS'
+            elif pct_tp_participant_level == 1:
+                result_type = 'EXACT'
+            else:
+                result_type = 'PARTIAL'
             # tkns_match = set(tokenize(" ".join(match_entites)))
             print(f"Tokens prediction: {tkns_pred}")
             print(f"Diff between prediction and matched annotations: {diff}")
+            
             seen = set()
             tp_list = []
             fp_list = []
@@ -255,24 +285,28 @@ def macro_averaged_f1_score(pred: Set[str], annt: Set[str], template: str, model
                 
                 # Only process if we haven't handled this specific token string yet
                 if token not in seen:
+                    word_category = word_to_category(token, dict_words)
                     if tag == '  ':   # Match
                         tp_list.append(token)
                         seen.add(token)
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, "", 
-                                                             best_matched_annt, best_matched_anno_type, "tp"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "tp",
+                                                             word_category, pct_tp_participant_level, result_type))
                     elif tag == '- ': # In prediction only
                         fp_list.append(token)
                         seen.add(token)
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, "",
-                                                             best_matched_annt, best_matched_anno_type, "fp"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "fp",
+                                                             word_category, pct_tp_participant_level, result_type))
                     elif tag == '+ ': # In annotation only
                         fn_list.append(token)
                         seen.add(token)
                         detailed_results_token_level.append((model, 'participants', doc_id, 
                                                              template, tkns_pred, token, "",
-                                                             best_matched_annt, best_matched_anno_type, "fn"))
+                                                             best_matched_annt, best_full_matched_sentence, best_matched_entity_id, best_matched_anno_type, "fn",
+                                                             word_category, pct_tp_participant_level, result_type))
             print(f"TP: {tp_list}")
             print(f"FP: {fp_list}")
             print(f"FN: {fn_list}")

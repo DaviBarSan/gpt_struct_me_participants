@@ -91,9 +91,8 @@ class LusaDocument(Document):
                 # TODO: we are ignoring discontinuos offsets
                 ann_start = int(ann_offset[0])
                 ann_end = int(ann_offset[-1])
-
+                annotation['full_news_article'] = text
                 annotation["text"] = text[ann_start:ann_end]
-
                 annotation["offset"] = (
                     ann_start - metadata_offset,
                     ann_end - metadata_offset

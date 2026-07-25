@@ -66,14 +66,58 @@ def get_best_match(pred_tokens, annotations):
     best_ratio = 0
     best_anno = None
     anno_type = None
+    entity_id = None
     pred_str = " ".join(pred_tokens).lower()
-    for anno_text, label in annotations:
+    for anno_text, label, entity_id, full_sentence in annotations:
         # Calculamos a similaridade entre a predição e cada anotação
         ratio = SequenceMatcher(None, pred_str, anno_text.lower()).ratio()
         if ratio > best_ratio:
             best_ratio = ratio
             best_anno = anno_text
             anno_type = label
+            best_entity_id = entity_id
+            best_full_sentence, _ = get_full_sentence(full_sentence, best_anno)
     # Definir um threshold mínimo (ex: 0.4) para evitar matches aleatórios
     # print(f"Best match: '{best_anno}' with ratio {best_ratio} and type '{anno_type}'")
-    return (best_anno, anno_type) if best_ratio > 0.5 else ("", "")
+    return (best_anno, anno_type, best_entity_id, best_full_sentence) if best_ratio > 0.5 else ("", "", "", "")
+
+def get_full_sentence(full_text, search_part):
+    # Split by punctuation AND newlines
+    sentences = re.split(r'(?<=[.!?])\s+|\n+', full_text)
+    
+    best_sentence = None
+    highest_match_ratio = 0.0
+    
+    # Pre-calculate search part data for efficiency
+    search_lower = search_part.lower()
+    search_len = len(search_lower)
+    
+    print(f"Searching for: '{search_part}'")
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        sentence_lower = sentence.lower()
+        
+        # 1. Initialize the matcher
+        matcher = SequenceMatcher(None, search_lower, sentence_lower)
+        
+        # 2. Find the longest contiguous matching block
+        match = matcher.find_longest_match(0, search_len, 0, len(sentence_lower))
+        
+        # 3. Calculate score based ONLY on the search_part length
+        # E.g., if search_part is 20 chars, and it found a 19 char match inside a 500 char sentence,
+        # the ratio is 19/20 = 0.95 (95% match).
+        current_ratio = match.size / search_len
+        
+        if current_ratio > highest_match_ratio:
+            highest_match_ratio = current_ratio
+            best_sentence = sentence
+
+    print(f"Full sentence: '{full_text}'")
+    print(f"Best matched sentence: '{best_sentence}'")
+    print(f"Ratio: {highest_match_ratio:.2f}")
+    
+    return best_sentence, highest_match_ratio
