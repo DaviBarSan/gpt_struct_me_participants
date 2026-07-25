@@ -197,8 +197,11 @@ def read_json(filepath: Path) -> tuple:
 
     # Try the content as-is first, then fall back to just the outermost
     # bracket span, for models that skip the <Output> tag and/or add
-    # leading/trailing prose around the JSON.
-    candidates = dict.fromkeys([content, extract_json_span(content)])
+    # leading/trailing prose around the JSON. Also try both wrapped in an
+    # outer "[...]", for models that emit comma-separated top-level arrays
+    # (e.g. ["a","b"],["c","d"]) without the enclosing list brackets.
+    span = extract_json_span(content)
+    candidates = dict.fromkeys([content, span, f"[{content}]", f"[{span}]"])
     for candidate in candidates:
         try:
             return json.loads(candidate), True
