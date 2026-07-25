@@ -92,6 +92,7 @@ for MID in "${MODELS[@]}"; do
                     fi
 
                     echo "[$(date)] Selecting best prompt template (highest F1) for $MID | $LANG"
+
                     python -u -m experiments.select_best_templates --mid "$MID" --language "$LANG" > "./logs/$BEST_TMPLT_LOG" 2>&1
                     if [ $? -ne 0 ]; then
                         echo "[FATAL ERROR] Failed to select best prompt template for $MID | $LANG. Aborting."
