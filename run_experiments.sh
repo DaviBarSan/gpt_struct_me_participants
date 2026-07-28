@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# --- OVERLAP PROTECTION ---
-# Check if user 'davibarrel' has any active python processes
-if pgrep -u davibarrel python > /dev/null; then
-    echo "[$(date)] A Python job is already running for davibarrel. Skipping this cron execution."
-    exit 0
-else
-    echo "[$(date)] No active Python job found for davibarrel. Proceeding with execution."
-fi
-
 # --- LOAD ENVIRONMENT VARIABLES ---
 if [ -f .env ]; then
     source .env
@@ -17,8 +8,19 @@ else
     exit 1
 fi
 
-# Now use the variable
 SLACK_WEBHOOK=$SLACK_WEBHOOK_URL
+
+# --- OVERLAP PROTECTION ---
+# Check if user 'davibarrel' has any active python processes
+if pgrep -u davibarrel python > /dev/null; then
+    echo "[$(date)] A Python job is already running for davibarrel. Skipping this cron execution."
+    curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Job Schedule: There is a pipeline already in progess, skipping the scheduled execution.\"}" \
+            $SLACK_WEBHOOK 
+exit 0
+else
+    echo "[$(date)] No active Python job found for davibarrel. Proceeding with execution."
+fi
 
 # Define your experiment variables
 PHASES=("experiments.prompt_selection" "experiments.test")
