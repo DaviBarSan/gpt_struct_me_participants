@@ -32,9 +32,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 RESULTS_PATH = ROOT / "results" / "test"
 
 
-def main(mid: str = "chatgpt", language: str = "english", shot_language: str = "english", config_path: str = "config.yaml"):
+def main(mid: str = "chatgpt", language: str = "english", shot_language: str = "english", config_path: str = "config.yaml", temp: float = 0.3):
     """Main script."""
     model = mid2model(mid)
+    logger.info(f"Using temperature: {temp}")
     entities = ENTITIES[language]
     sample_docs = SAMPLE_DOCS_IDS[language]
     examples = EXAMPLERS[shot_language]
@@ -72,42 +73,39 @@ def main(mid: str = "chatgpt", language: str = "english", shot_language: str = "
         else:
             example = None
         definition = "def" in tid
-        
-        #iterate over defined temperatures
-        for temp in config["temperatures"]:
-            logger.info(f"Temperature: {temp}")
-            for experiment_config in config["prompt_configs"]:
-                prompt_config = experiment_config["experiment"]
-                prompter = Prompter(
-                    entity=entity,
-                    task=task,
-                    example=example,
-                    definition=definition,
-                    delimiter=prompt_config["delimiters"],
-                    role=prompt_config["role"],
-                    language=language,
-                    constraints=prompt_config["constraints"],
-                    chain_of_thought=prompt_config["chain_of_thought"]
-                 )
-                
-                exp_name = f"{tid}_temp{temp}_{'delim' if prompt_config['delimiters'] else 'nodelim'}_{'role' if prompt_config['role'] else 'norole'}_{'cot' if prompt_config['chain_of_thought'] else 'nocot'}"
-                for doc in test_docs:
-                    logger.info(f"Iteration {iter}/{n_iter}")
 
-                    prompt = prompter.generate(doc.text)
+        for experiment_config in config["prompt_configs"]:
+            prompt_config = experiment_config["experiment"]
+            prompter = Prompter(
+                entity=entity,
+                task=task,
+                example=example,
+                definition=definition,
+                delimiter=prompt_config["delimiters"],
+                role=prompt_config["role"],
+                language=language,
+                constraints=prompt_config["constraints"],
+                chain_of_thought=prompt_config["chain_of_thought"]
+             )
 
-                    answer_path = RESULTS_PATH / language / mid / entity / tid / exp_name / f"{doc.id}.txt"
-                    if not answer_path.exists():
-                        answer_path.parent.mkdir(parents=True, exist_ok=True)
-                        answer = model(prompt, temp=temp)
-                        answer_path.write_text(answer)
-                        logger.info(f"{mid} Answer:\n{answer}")
-                        time.sleep(20)
+            exp_name = f"{tid}_temp{temp}_{'delim' if prompt_config['delimiters'] else 'nodelim'}_{'role' if prompt_config['role'] else 'norole'}_{'cot' if prompt_config['chain_of_thought'] else 'nocot'}"
+            for doc in test_docs:
+                logger.info(f"Iteration {iter}/{n_iter}")
 
-                    else:
-                        logger.info(f"{mid} answer already exists.")
+                prompt = prompter.generate(doc.text)
 
-                    iter += 1
+                answer_path = RESULTS_PATH / language / mid / entity / tid / exp_name / f"{doc.id}.txt"
+                if not answer_path.exists():
+                    answer_path.parent.mkdir(parents=True, exist_ok=True)
+                    answer = model(prompt, temp=temp)
+                    answer_path.write_text(answer)
+                    logger.info(f"{mid} Answer:\n{answer}")
+                    time.sleep(20)
+
+                else:
+                    logger.info(f"{mid} answer already exists.")
+
+                iter += 1
 
 
 if __name__ == "__main__":

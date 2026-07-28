@@ -32,10 +32,11 @@ dotenv.load_dotenv(ROOT / ".env")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def main(mid: str = "llama2-7b", language: str = "english", shot_language: str = "english"):
+def main(mid: str = "llama2-7b", language: str = "english", shot_language: str = "english", temp: float = 0.3):
     print(language)
     model = mid2model(mid)
     print(f"Model is {model}")
+    logger.info(f"Using temperature: {temp}")
     entities = ENTITIES[language]
     sample_docs = SAMPLE_DOCS_IDS[language]
     examples = EXAMPLERS[shot_language]
@@ -83,7 +84,7 @@ def main(mid: str = "llama2-7b", language: str = "english", shot_language: str =
                 answer_path = RESULTS_PATH / language / mid / entity / tid / f"{doc.id}.txt"
                 if not answer_path.exists():
                     answer_path.parent.mkdir(parents=True, exist_ok=True)
-                    answer = model(prompt)
+                    answer = model(prompt, temp=temp)
                     print(f"Generated answer: {answer}")
                     print(f"Writing answer to {answer_path}")
                     answer_path.write_text(answer, encoding='utf-8')
