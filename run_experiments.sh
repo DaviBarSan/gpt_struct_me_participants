@@ -22,7 +22,7 @@ SLACK_WEBHOOK=$SLACK_WEBHOOK_URL
 
 # Define your experiment variables
 PHASES=("experiments.prompt_selection" "experiments.test")
-MODELS=("qwen3_14b")  # Add all your model IDs here
+MODELS=("amalia")  # Add all your model IDs here
 LANGUAGES=("portuguese" "english")
 
 # Get the start time once so all logs in this batch share the same timestamp
@@ -75,33 +75,45 @@ for MID in "${MODELS[@]}"; do
 
             # 4. Handle the result
             if [ "$SUCCESS" -eq 1 ]; then
-                END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
-                echo "[$END_TIME] Successfully finished $LOG_FILE ($CURRENT/$TOTAL)"
-                curl -X POST -H 'Content-type: application/json' \
-                --data "{\"text\":\"Succeeded pipeline :)\nExecution SUCCEEDED for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
-                $SLACK_WEBHOOK
-                echo "----------------------------------------"
+                # Every iteration hit an existing answer file means this phase
+                # was already fully done before this execution started (nothing
+                # new was generated), so this run's log and the downstream
+                # parse/eval/best-template logs would be pure noise.
+                ALREADY_DONE_COUNT=$(grep -c "answer already exists" "./logs/$LOG_FILE")
 
-                # Required step: before the test phase can run, the best prompt
-                # template (highest F1) for this model/language must be selected
-                # and written into BEST_TEMPLATES in experiments/constants.py.
-                if [ "$PHASE" == "experiments.prompt_selection" ]; then
-                    PARSE_EVAL_LOG="prmpt_sel_parse_eval_${MID}_${LANG}_${TIMESTAMP}.log"
-                    BEST_TMPLT_LOG="best_tmplt_sel_${MID}_${LANG}_${TIMESTAMP}.log"
+                if [ "$ALREADY_DONE_COUNT" -eq "$TOTAL" ]; then
+                    rm -f "./logs/$LOG_FILE"
+                    echo "Phase already completed in a previous execution - skipping log for $LOG_FILE"
+                    echo "----------------------------------------"
+                else
+                    END_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+                    echo "[$END_TIME] Successfully finished $LOG_FILE ($CURRENT/$TOTAL)"
+                    curl -X POST -H 'Content-type: application/json' \
+                    --data "{\"text\":\"Succeeded pipeline :)\nExecution SUCCEEDED for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
+                    $SLACK_WEBHOOK
+                    echo "----------------------------------------"
 
-                    echo "[$(date)] Parsing/evaluating prompt_selection results for $MID | $LANG"
-                    bash ./scripts/promp_selection_pos_exec_scripts.sh "$LANG" > "./logs/$PARSE_EVAL_LOG" 2>&1
-                    if [ $? -ne 0 ]; then
-                        echo "[FATAL ERROR] Failed to parse/evaluate prompt_selection results for $MID | $LANG. Aborting."
-                        exit 1
-                    fi
+                    # Required step: before the test phase can run, the best prompt
+                    # template (highest F1) for this model/language must be selected
+                    # and written into BEST_TEMPLATES in experiments/constants.py.
+                    if [ "$PHASE" == "experiments.prompt_selection" ]; then
+                        PARSE_EVAL_LOG="prmpt_sel_parse_eval_${MID}_${LANG}_${TIMESTAMP}.log"
+                        BEST_TMPLT_LOG="best_tmplt_sel_${MID}_${LANG}_${TIMESTAMP}.log"
 
-                    echo "[$(date)] Selecting best prompt template (highest F1) for $MID | $LANG"
+                        echo "[$(date)] Parsing/evaluating prompt_selection results for $MID | $LANG"
+                        bash ./scripts/promp_selection_pos_exec_scripts.sh "$LANG" > "./logs/$PARSE_EVAL_LOG" 2>&1
+                        if [ $? -ne 0 ]; then
+                            echo "[FATAL ERROR] Failed to parse/evaluate prompt_selection results for $MID | $LANG. Aborting."
+                            exit 1
+                        fi
 
-                    python -u -m experiments.select_best_templates --mid "$MID" --language "$LANG" > "./logs/$BEST_TMPLT_LOG" 2>&1
-                    if [ $? -ne 0 ]; then
-                        echo "[FATAL ERROR] Failed to select best prompt template for $MID | $LANG. Aborting."
-                        exit 1
+                        echo "[$(date)] Selecting best prompt template (highest F1) for $MID | $LANG"
+
+                        python -u -m experiments.select_best_templates --mid "$MID" --language "$LANG" > "./logs/$BEST_TMPLT_LOG" 2>&1
+                        if [ $? -ne 0 ]; then
+                            echo "[FATAL ERROR] Failed to select best prompt template for $MID | $LANG. Aborting."
+                            exit 1
+                        fi
                     fi
                 fi
             else
