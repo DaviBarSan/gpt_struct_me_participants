@@ -80,6 +80,11 @@ for MID in "${MODELS[@]}"; do
                 curl -X POST -H 'Content-type: application/json' \
                 --data "{\"text\":\"Succeeded pipeline :)\nExecution SUCCEEDED for Phase=$PHASE_NAME | Model=$MID | Language=$LANG\"}" \
                 $SLACK_WEBHOOK
+
+                # Phase already concluded (last iteration == total-1): the run log
+                # is redundant once success is confirmed and Slack notified, so drop it.
+                rm -f "./logs/$LOG_FILE"
+                echo "Removed redundant log for concluded phase: $LOG_FILE"
                 echo "----------------------------------------"
 
                 # Required step: before the test phase can run, the best prompt
