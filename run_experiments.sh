@@ -26,7 +26,7 @@ fi
 PHASES=("experiments.prompt_selection" "experiments.test")
 MODELS=("qwen3_14b")  # Add all your model IDs here
 LANGUAGES=("portuguese" "english")
-TEMPERATURES=("0.3")  # Swept only for the test phase; prompt_selection always runs at temp=0.3
+TEMPERATURES=("0.3" "0.6" "1")  # Swept only for the test phase; prompt_selection always runs at temp=0.3
 
 # Get the start time once so all logs in this batch share the same timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M)
