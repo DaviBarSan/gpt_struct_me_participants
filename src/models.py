@@ -113,10 +113,10 @@ def qwen3_14b(prompt: str, temp = 0.3):
         print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
         _qwen3_14b_engine = LLM(model=relative_path,
                                 tensor_parallel_size=4,
-                                dtype="float16",
+                                dtype="float16",                # <--- Forces FP16 for V100 GPUs)
                                 enable_chunked_prefill=False,   # Bypasses Triton slice bug
-                                enforce_eager=True               # Disables CUDA Graph Triton layout ops
-                            )  # <--- Forces FP16 for V100 GPUs)
+                                enforce_eager=True              # Disables CUDA Graph Triton layout ops
+                            )
 
     messages = [
         {"role": "user", "content": prompt},
@@ -127,6 +127,36 @@ def qwen3_14b(prompt: str, temp = 0.3):
     )
 
     outputs = _qwen3_14b_engine.chat(messages, sampling_params)
+    generated_text = outputs[0].outputs[0].text
+    print(generated_text)
+    return generated_text
+
+
+def qwen3_8b(prompt: str, temp = 0.3):
+    """vLLM version: tensor-parallelized across the 4 available GPUs."""
+    global _qwen3_8b_engine
+    from vllm import LLM, SamplingParams
+
+    relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/qwen3_8b"
+
+    if _qwen3_8b_engine is None:
+        print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
+        _qwen3_8b_engine = LLM(model=relative_path,
+                                tensor_parallel_size=4,
+                                dtype="float16",                # <--- Forces FP16 for V100 GPUs)
+                                enable_chunked_prefill=False,   # Bypasses Triton slice bug
+                                enforce_eager=True              # Disables CUDA Graph Triton layout ops
+                            )
+
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+    sampling_params = SamplingParams(
+        temperature=temp,
+        max_tokens=16384,
+    )
+
+    outputs = _qwen3_8b_engine.chat(messages, sampling_params)
     generated_text = outputs[0].outputs[0].text
     print(generated_text)
     return generated_text
