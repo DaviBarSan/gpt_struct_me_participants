@@ -1,0 +1,47 @@
+<think>
+Okay, I need to extract all participants from the given text. Let me start by reading through the input carefully. The example provided in the task shows that participants include entities like organizations, people, and specific roles mentioned. 
+
+Looking at the input text: "MP acusa agente da GNR de Braga de peculato e abuso de poder...". The main participants here are "MP" (Ministério Público), "agente da GNR de Braga", and "GNR de Braga" itself. Then there's mention of "Ministério Público (MP)", so maybe both forms should be included. Also, "Procuradoria-Geral Regional do Porto" is mentioned as the source of the note, so that's another entity. 
+
+The accused is "o arguido", which is a general term, but the specific person is referred to as "um militar da GNR de Braga" and later as "o arguido" again. Also, "Núcleo de Investigação Criminal da GNR de Braga" is a department involved. 
+
+Other entities include "mapas mensais de suplementos remuneratórios", but those are objects, not participants. The monetary amount is 5.400 euros, which isn't a participant. 
+
+I need to make sure to capture all named entities and specific roles. "Núcleo de Investigação Criminal" is part of the GNR de Braga, so maybe it's included as "Núcleo de Investigação Criminal da GNR de Braga". Also, the subordinates of the accused are mentioned as "militares do efectivo do Núcleo de Investigação Criminal", but since they are not named, maybe just the role is enough. 
+
+Wait, in the example output, they included "o motor", "a aeronave", etc. So even if it's a role or an object, it's included. So in this case, "militares do efectivo do Núcleo de Investigação Criminal" might be considered as a group of participants. But the user might want to extract all possible entities regardless of their role. 
+
+Also, "Procuradoria-Geral Regional do Porto" is the entity that published the note, so that's a participant. The "Ministério Público (MP)" is mentioned twice, once as MP and once in full, so both should be included. 
+
+Let me list them out step by step:
+
+1. MP (Ministério Público)
+2. agente da GNR de Braga
+3. GNR de Braga
+4. Ministério Público (MP) - same as first, but in full form
+5. Procuradoria-Geral Regional do Porto
+6. o arguido (militar da GNR de Braga)
+7. Núcleo de Investigação Criminal da GNR de Braga
+8. mapas mensais de suplementos remuneratórios - but these are documents, not participants, so maybe not included
+9. militares do efectivo do Núcleo de Investigação Criminal (subordinates of the accused)
+10. suplemento de escala - not a participant
+11. 5.400,17 euros - monetary value, not participant
+12. Núcleo de Investigação Criminal - already included as part of GNR de Braga
+
+Wait, in the example, "a aeronave" is included even though it's a single entity. So here, "agente da GNR de Braga" is a participant, "GNR de Braga" is another. The accused is "o arguido" and "um militar da GNR de Braga". Also, "Procuradoria-Geral Regional do Porto" is a participant. The "Ministério Público" is mentioned again as "O Ministério Público", so that's another entry. 
+
+I need to make sure to include all variations. Let me check again:
+
+- "MP acusa agente da GNR de Braga..." → "MP", "agente da GNR de Braga"
+- "Ministério Público (MP) acusou um militar da GNR de Braga..." → "Ministério Público (MP)", "um militar da GNR de Braga"
+- "Procuradoria-Geral Regional do Porto" is mentioned as the source.
+- "o arguido era chefe do Núcleo..." → "o arguido", "Núcleo de Investigação Criminal da GNR de Braga"
+- "militares do efectivo do Núcleo de Investigação Criminal" → perhaps included as "militares do efectivo do Núcleo de Investigação Criminal"
+- "GNR de Braga" is mentioned multiple times.
+
+Also, "suplemento de escala" is a term but not a participant. 
+
+I think that covers all. Now, compiling the list as per the example, making sure to include all variations and entities.
+</think>
+
+["MP", "agente da GNR de Braga", "Ministério Público (MP)", "um militar da GNR de Braga", "GNR de Braga", "Procuradoria-Geral Regional do Porto", "o arguido", "Núcleo de Investigação Criminal da GNR de Braga", "militares do efectivo do Núcleo de Investigação Criminal", "o Núcleo de Investigação Criminal", "a GNR de Braga", "o Ministério Público", "a Procuradoria-Geral Regional do Porto", "o suplemento de escala", "os mapas mensais de suplementos remuneratórios", "o arguido", "os militares do efectivo", "a GNR de Braga", "o Ministério Público", "o Núcleo de Investigação Criminal da GNR de Braga", "os suplementos remuneratórios", "a GNR", "a GNR de Braga", "o Núcleo de Investigação Criminal"]
