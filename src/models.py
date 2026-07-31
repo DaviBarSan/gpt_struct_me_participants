@@ -111,7 +111,7 @@ def qwen3_14b(prompt: str, temp = 0.3):
 
     if _qwen3_14b_engine is None:
         print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
-        _qwen3_14b_engine = LLM(model=relative_path, tensor_parallel_size=4)
+        _qwen3_14b_engine = LLM(model=relative_path, tensor_parallel_size=4, dtype="float16")  # <--- Forces FP16 for V100 GPUs)
 
     messages = [
         {"role": "user", "content": prompt},
