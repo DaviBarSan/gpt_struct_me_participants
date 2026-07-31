@@ -36,6 +36,7 @@ os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 # Cache for the vLLM engine so qwen3_14b only pays the tensor-parallel model
 # load cost once per process, not on every call.
 _qwen3_14b_engine = None
+_qwen3_8b_engine = None
 
 def qwen3_4b(prompt: str, temp: float):
     from transformers import pipeline
