@@ -33,6 +33,10 @@ HF_KEY = os.getenv("HF_KEY")
 os.environ["TRANSFORMERS_NO_FLASH_ATTN"] = "1"
 os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 
+# Cache for the vLLM engine so qwen3_14b only pays the tensor-parallel model
+# load cost once per process, not on every call.
+_qwen3_14b_engine = None
+
 def qwen3_4b(prompt: str, temp: float):
     from transformers import pipeline
     # 1. Define the relative path you used
@@ -63,35 +67,62 @@ def qwen3_4b(prompt: str, temp: float):
     print(generated_text)
     return generated_text
 
+# Original single-GPU (transformers pipeline) implementation, kept for reference.
+# Superseded below by a vLLM version that tensor-parallelizes across 4 GPUs.
+# def qwen3_14b(prompt: str, temp = 0.3):
+#     from transformers import pipeline
+#     # 1. Define the relative path you used
+#     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/qwen3_14b"
+#
+#     # # 2. Convert the relative path to an absolute path
+#     # os.path.abspath() handles relative parts like '..'
+#     absolute_model_path = os.path.abspath(relative_path)
+#     # absolute_model_path = 'C:/Users/davib/Desktop/MSc_DataScience/thesis/resources/models/Qwen3-4B'
+#     print(f"Loading model from absolute path: {relative_path}")
+#
+#     # 3. Pass the ABSOLUTE path to the pipeline
+#     pipe = pipeline("text-generation", model=relative_path)
+#     messages = [
+#         {"role": "user", "content": prompt},
+#     ]
+#     # 2. Call the pipeline and store the result
+# # Crucial Argument: return_full_text=False
+#     output = pipe(
+# messages,
+#         max_new_tokens=16384,
+#         temperature=temp,          # Apply the temperature parameter
+#         do_sample=True,            # do_sample must be True to use temperature
+#         return_full_text=False
+#     )
+#
+#     # 3. Extract the final text
+#     # The output is a list of dictionaries, so we need to drill down.
+#     generated_text = output[0]['generated_text']
+#     print(generated_text)
+#     return generated_text
+
+
 def qwen3_14b(prompt: str, temp = 0.3):
-    from transformers import pipeline
-    # 1. Define the relative path you used
+    """vLLM version: tensor-parallelized across the 4 available GPUs."""
+    global _qwen3_14b_engine
+    from vllm import LLM, SamplingParams
+
     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/qwen3_14b"
 
-    # # 2. Convert the relative path to an absolute path
-    # os.path.abspath() handles relative parts like '..'
-    absolute_model_path = os.path.abspath(relative_path)
-    # absolute_model_path = 'C:/Users/davib/Desktop/MSc_DataScience/thesis/resources/models/Qwen3-4B'
-    print(f"Loading model from absolute path: {relative_path}")
+    if _qwen3_14b_engine is None:
+        print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
+        _qwen3_14b_engine = LLM(model=relative_path, tensor_parallel_size=4)
 
-    # 3. Pass the ABSOLUTE path to the pipeline
-    pipe = pipeline("text-generation", model=relative_path)
     messages = [
         {"role": "user", "content": prompt},
     ]
-    # 2. Call the pipeline and store the result
-# Crucial Argument: return_full_text=False
-    output = pipe(
-messages,
-        max_new_tokens=16384,
-        temperature=temp,          # Apply the temperature parameter
-        do_sample=True,            # do_sample must be True to use temperature
-        return_full_text=False
+    sampling_params = SamplingParams(
+        temperature=temp,
+        max_tokens=16384,
     )
 
-    # 3. Extract the final text
-    # The output is a list of dictionaries, so we need to drill down.
-    generated_text = output[0]['generated_text']
+    outputs = _qwen3_14b_engine.chat(messages, sampling_params)
+    generated_text = outputs[0].outputs[0].text
     print(generated_text)
     return generated_text
 
@@ -237,7 +268,27 @@ def gemini(prompt: str, temp: float) -> str:
 # Example Usage (assuming you have your API key set as an environment variable)
 # print(gemini_generate_text("Explain the concept of quantum entanglement in simple terms."))
 
-def mistral_7b(prompt: str, temp: float) -> str:    
+def amalia(prompt: str, temp: float = 0.0) -> str:
+    """Generate text with the Amalia API (OpenAI-compatible, self-hosted at INESC-TEC)."""
+    import openai
+
+    client = openai.OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url="http://amalia.inesctec.pt:8000/v1"
+    )
+
+    completion = client.chat.completions.create(
+        model="amalia-base",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temp,
+    )
+
+    answer = completion.choices[0].message.content
+    print(answer)
+    return answer
+
+
+def mistral_7b(prompt: str, temp: float) -> str:
 
    ##MISTRAL
     from mistral_inference.transformer import Transformer
