@@ -1,0 +1,87 @@
+<think>
+Okay, I need to extract all participants from the given text. Let me start by reading through the example provided to understand the pattern. The example input is about an emergency landing, and the output includes entities like "Avião", "o motor", "Um avião", etc. So, participants are likely any named entities or specific nouns that are involved in the events described.
+
+Looking at the input text about the man's body found in the Douro River, I should identify all the entities mentioned. Let's go through the text sentence by sentence.
+
+First sentence: "Cadáver de homem encontrado a boiar no rio Douro, em Vila Nova de Gaia." The participants here are "Cadáver de homem" (though maybe just "homem" is enough?), "rio Douro", "Vila Nova de Gaia".
+
+Next sentence: "O cadáver de um homem com cerca de 60 anos foi hoje encontrado a boiar no rio Douro, em Vila Nova de Gaia, tendo sido retirado da água pela Polícia Marítima, confirmou à Lusa o comandante da capitania do Porto." Here, "O cadáver de um homem" (again, maybe just "homem" or "cadáver"), "rio Douro", "Vila Nova de Gaia", "Polícia Marítima", "comandante da capitania do Porto", "Lusa".
+
+Third sentence: "Segundo Rui Santos Amaral, a autoridade marítima foi “alertada por populares” que viram o “corpo de um homem a boiar junto ao cais flutuante de Santa Marinha”, em Vila Nova de Gaia, cerca das 17:20." Participants here: "Rui Santos Amaral", "autoridade marítima", "populares", "corpo de um homem", "cais flutuante de Santa Marinha", "Vila Nova de Gaia".
+
+Fourth sentence: "A Polícia Marítima removeu então o cadáver da água, ficando depois a aguardar pela chegada da Polícia Judiciária para serem iniciadas as averiguações." Participants: "Polícia Marítima", "Polícia Judiciária".
+
+Last sentence: "No local estiveram também os Sapadores de Vila Nova de Gaia e os Bombeiros de Coimbrões." Participants: "Sapadores de Vila Nova de Gaia", "Bombeiros de Coimbrões".
+
+Now, compiling all these, I need to make sure to include all the entities. Some might be repeated, like "Vila Nova de Gaia" and "rio Douro" appear multiple times. Also, "Polícia Marítima" is mentioned twice. The example output includes repeated entries, so I should follow that. Also, "à Lusa" is included as "à agência Lusa" in the example, so here "à Lusa" would be "à Lusa" or "Lusa" as a participant. Similarly, "comandante da capitania do Porto" is included as a participant. Also, "Rui Santos Amaral" is a person's name, so that's a participant. The "corpo de um homem" might be considered as "cadáver" or "corpo", but in the example, "o motor" and "um motor" are both included. So perhaps all variations are included as separate entries.
+
+So compiling the list:
+
+- Cadáver de homem
+- homem
+- rio Douro
+- Vila Nova de Gaia
+- O cadáver de um homem
+- rio Douro
+- Vila Nova de Gaia
+- Polícia Marítima
+- comandante da capitania do Porto
+- Lusa
+- Rui Santos Amaral
+- autoridade marítima
+- populares
+- corpo de um homem
+- cais flutuante de Santa Marinha
+- Vila Nova de Gaia
+- Polícia Marítima
+- Polícia Judiciária
+- Sapadores de Vila Nova de Gaia
+- Bombeiros de Coimbrões
+
+Wait, but in the example, "a aeronave" and "A aeronave" are both included. So even if the same entity is mentioned with different articles or forms, they are considered separate. So I need to include each occurrence as a separate entry. Let me check again.
+
+In the input text, "O cadáver de um homem" is mentioned, then "O cadáver de um homem" again. Also, "corpo de um homem" is another variation. So each instance would be a separate entry. Also, "Vila Nova de Gaia" is mentioned multiple times. The example includes "Lisboa" multiple times. So I need to list each occurrence.
+
+So the final list would include:
+
+["Cadáver de homem", "homem", "rio Douro", "Vila Nova de Gaia", "O cadáver de um homem", "rio Douro", "Vila Nova de Gaia", "Polícia Marítima", "comandante da capitania do Porto", "Lusa", "Rui Santos Amaral", "autoridade marítima", "populares", "corpo de um homem", "cais flutuante de Santa Marinha", "Vila Nova de Gaia", "Polícia Marítima", "Polícia Judiciária", "Sapadores de Vila Nova de Gaia", "Bombeiros de Coimbrões"]
+
+Wait, but in the example, "a aeronave" and "A aeronave" are both included. So even if it's the same entity with different capitalization, they are separate. Also, "o motor" and "um motor" are both included. So in this case, "O cadáver de um homem" and "O cadáver de um homem" (same exact phrase) would be considered the same, but in the example, "Um avião" and "O avião" are both included. So maybe even if the same exact phrase is repeated, they are included as separate entries. However, in the input text, "O cadáver de um homem" is mentioned once, and then again in the next sentence. Wait, looking back:
+
+First sentence: "Cadáver de homem encontrado a boiar no rio Douro, em Vila Nova de Gaia."
+
+Second sentence: "O cadáver de um homem com cerca de 60 anos foi hoje encontrado a boiar no rio Douro, em Vila Nova de Gaia..."
+
+So "O cadáver de um homem" is a different form from "Cadáver de homem". So both would be included. Similarly, "corpo de um homem" is another variation.
+
+So the list would have:
+
+- Cadáver de homem
+- O cadáver de um homem
+- corpo de um homem
+- homem (from "um homem com cerca de 60 anos")
+- rio Douro (twice)
+- Vila Nova de Gaia (multiple times)
+- Polícia Marítima (twice)
+- comandante da capitania do Porto
+- Lusa
+- Rui Santos Amaral
+- autoridade marítima
+- populares
+- cais flutuante de Santa Marinha
+- Polícia Judiciária
+- Sapadores de Vila Nova de Gaia
+- Bombeiros de Coimbrões
+
+Also, "Vila Nova de Gaia" is mentioned in the first sentence, then again in the second, third, and fifth sentences. Each occurrence is included as separate entries. Similarly, "rio Douro" is mentioned in the first and second sentences. So each instance is a separate entry.
+
+So the final list would be:
+
+["Cadáver de homem", "homem", "rio Douro", "Vila Nova de Gaia", "O cadáver de um homem", "rio Douro", "Vila Nova de Gaia", "Polícia Marítima", "comandante da capitania do Porto", "Lusa", "Rui Santos Amaral", "autoridade marítima", "populares", "corpo de um homem", "cais flutuante de Santa Marinha", "Vila Nova de Gaia", "Polícia Marítima", "Polícia Judiciária", "Sapadores de Vila Nova de Gaia", "Bombeiros de Coimbrões"]
+
+But wait, in the example, "Lisboa" is included multiple times. So even if the same location is mentioned multiple times, each occurrence is a separate entry. So in this case, "Vila Nova de Gaia" is included multiple times. Also, "rio Douro" is mentioned twice. So the list should include each occurrence as a separate entry.
+
+Therefore, the final JSON array would be as above.
+</think>
+
+["Cadáver de homem", "homem", "rio Douro", "Vila Nova de Gaia", "O cadáver de um homem", "rio Douro", "Vila Nova de Gaia", "Polícia Marítima", "comandante da capitania do Porto", "Lusa", "Rui Santos Amaral", "autoridade marítima", "populares", "corpo de um homem", "cais flutuante de Santa Marinha", "Vila Nova de Gaia", "Polícia Marítima", "Polícia Judiciária", "Sapadores de Vila Nova de Gaia", "Bombeiros de Coimbrões"]
