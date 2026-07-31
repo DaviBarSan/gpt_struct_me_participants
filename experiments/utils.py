@@ -9,7 +9,8 @@ from src.models import (
     mistral_7b,
     phi_4_6b,
     gemma3_1b,
-    llama32_3b
+    llama32_3b,
+    qwen3_8b
 )
 
 
@@ -36,3 +37,5 @@ def mid2model(mid: str):
         return llama32_3b
     elif mid == "qwen25_14b":
         return qwen25_14b
+    elif mid == "qwen3_8b":
+        return qwen3_8b
