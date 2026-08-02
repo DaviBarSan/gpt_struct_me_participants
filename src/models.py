@@ -349,15 +349,18 @@ def amalia(prompt: str, temp: float = 0.0) -> str:
     """Generate text with the Amalia API (OpenAI-compatible, self-hosted at INESC-TEC)."""
     import openai
 
+    # Bump to DEBUG so the request/response wire trace (connection open/reuse,
+    # headers, retries) shows up in the log for debugging hangs/timeouts.
     client = openai.OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
-        base_url="http://amalia.inesctec.pt:8000/v1"
+        base_url="http://amalia.inesctec.pt:8000/v1",
+        timeout=90,      # fail fast instead of hanging on a stale/broken connection over VPN
+        max_retries=3,
     )
 
     completion = client.chat.completions.create(
         model="amalia-base",
         messages=[{"role": "user", "content": prompt}],
-        temperature=temp,
     )
 
     answer = completion.choices[0].message.content
