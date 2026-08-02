@@ -164,39 +164,41 @@ def qwen3_8b(prompt: str, temp = 0.3):
     return generated_text
 
 
-def gemma3_12b(prompt: str, temp = 0.3):
-    """vLLM version: tensor-parallelized across the 4 available GPUs."""
+def gemma3_12b(prompt: str, temp=0.3):
+    """vLLM version tuned for Gemma 3 stability and execution limits."""
     global _gemma3_12b_engine
     from vllm import LLM, SamplingParams
-    import os
-    # Prevent tokenizer fork deadlocks/warnings
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/gemma3_12b"
 
     if _gemma3_12b_engine is None:
         print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
-        _gemma3_12b_engine = LLM(model=relative_path,
-                                tensor_parallel_size=4,
-                                dtype="float16",                # <--- Forces FP16 for V100 GPUs)
-                                enable_chunked_prefill=False,   # Bypasses Triton slice bug
-                                max_num_batched_tokens=16384,      # MUST match or exceed max_model_len when chunked prefill is False
-                                enforce_eager=False,              # CUDA graphs captured & enabled
-                                max_model_len=16384,              # Fits safely within V100 KV cache bounds
-                                gpu_memory_utilization=0.90,
-                                limit_mm_per_prompt={"image": 0},  # Bypasses SigLIP/vision tower for text workloads
-                            )
+        _gemma3_12b_engine = LLM(
+            model=relative_path,
+            tensor_parallel_size=4,
+            dtype="auto",                      # Fixes FP16 NaN soft-capping bug & empty output
+            enable_chunked_prefill=False,      # Avoids Triton slice bug on Volta
+            limit_mm_per_prompt={"image": 0},  # Bypasses vision pipeline for pure text
+            max_model_len=16384,
+            max_num_batched_tokens=16384,
+            enforce_eager=False,
+            gpu_memory_utilization=0.90,
+        )
 
     messages = [
         {"role": "user", "content": prompt},
     ]
+    
+    # Cap max output tokens to prevent runaway generation loops
     sampling_params = SamplingParams(
         temperature=temp,
-        max_tokens=16384,
+        max_tokens=2048,                      # Prevents infinite generation if EOS is missed
     )
 
     outputs = _gemma3_12b_engine.chat(messages, sampling_params)
     result = outputs[0].outputs[0]
     print(f"[gemma3_12b] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
+    
     generated_text = result.text
     print(generated_text)
     return generated_text
