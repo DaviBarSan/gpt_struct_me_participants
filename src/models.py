@@ -177,7 +177,8 @@ def gemma3_12b(prompt: str, temp = 0.3):
                                 tensor_parallel_size=4,
                                 dtype="float16",                # <--- Forces FP16 for V100 GPUs)
                                 enable_chunked_prefill=False,   # Bypasses Triton slice bug
-                                enforce_eager=True              # Disables CUDA Graph Triton layout ops
+                                enforce_eager=True,             # Disables CUDA Graph Triton layout ops
+                                max_model_len=20000             # Gemma3's native 131072 ctx exceeds available KV cache (~23392 tokens) on V100s
                             )
 
     messages = [
