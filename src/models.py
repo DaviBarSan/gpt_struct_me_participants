@@ -168,7 +168,9 @@ def gemma3_12b(prompt: str, temp = 0.3):
     """vLLM version: tensor-parallelized across the 4 available GPUs."""
     global _gemma3_12b_engine
     from vllm import LLM, SamplingParams
-
+    import os
+    # Prevent tokenizer fork deadlocks/warnings
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
     relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/gemma3_12b"
 
     if _gemma3_12b_engine is None:
@@ -176,9 +178,11 @@ def gemma3_12b(prompt: str, temp = 0.3):
         _gemma3_12b_engine = LLM(model=relative_path,
                                 tensor_parallel_size=4,
                                 dtype="float16",                # <--- Forces FP16 for V100 GPUs)
-                                enable_chunked_prefill=False,   # Bypasses Triton slice bug
-                                #enforce_eager=True,             # Disables CUDA Graph Triton layout ops
-                                max_model_len=20000             # Gemma3's native 131072 ctx exceeds available KV cache (~23392 tokens) on V100s
+                                enable_chunked_prefill=True,      # Enabled: breaks large prompt prefill into chunks
+                                max_num_batched_tokens=2048,      # Controls chunk size to keep V100 compute saturated efficiently
+                                enforce_eager=False,              # CUDA graphs captured & enabled
+                                max_model_len=16384,              # Fits safely within V100 KV cache bounds
+                                gpu_memory_utilization=0.90,
                             )
 
     messages = [
@@ -190,7 +194,9 @@ def gemma3_12b(prompt: str, temp = 0.3):
     )
 
     outputs = _gemma3_12b_engine.chat(messages, sampling_params)
-    generated_text = outputs[0].outputs[0].text
+    result = outputs[0].outputs[0]
+    print(f"[gemma3_12b] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
+    generated_text = result.text
     print(generated_text)
     return generated_text
 
