@@ -178,7 +178,7 @@ def gemma3_12b(prompt: str, temp = 0.3):
         _gemma3_12b_engine = LLM(model=relative_path,
                                 tensor_parallel_size=4,
                                 dtype="float16",                # <--- Forces FP16 for V100 GPUs)
-                                enable_chunked_prefill=True,      # Enabled: breaks large prompt prefill into chunks
+                                enable_chunked_prefill=False,   # Bypasses Triton slice bug
                                 max_num_batched_tokens=2048,      # Controls chunk size to keep V100 compute saturated efficiently
                                 enforce_eager=False,              # CUDA graphs captured & enabled
                                 max_model_len=16384,              # Fits safely within V100 KV cache bounds
