@@ -79,6 +79,7 @@ BEST_TEMPLATES = {
         ("gemma3_1b", "participants"): "ext_def_exp",
         ("qwen25_14b", "participants"): "cls_exp",
         ("qwen3_14b", "participants"): "ext_exp",
+        ("qwen3_8b", "participants"): "ext_def_exp",
     },
 
     "english": {
@@ -88,6 +89,7 @@ BEST_TEMPLATES = {
         ("gemini", "participants"): "cls_def_exp",
         
         ("qwen3_14b", "participants"): "ext_exp",
+        ("qwen3_8b", "participants"): "ext_exp",
     }
 }
 
