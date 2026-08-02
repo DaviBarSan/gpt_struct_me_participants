@@ -1,6 +1,7 @@
 from src.models import (
     gemini,
     amalia,
+    gemma3_12b,
     qwen3_4b,
     qwen3_14b,
     qwen3_30b,
@@ -39,3 +40,5 @@ def mid2model(mid: str):
         return qwen25_14b
     elif mid == "qwen3_8b":
         return qwen3_8b
+    elif mid == "gemma3_12b":
+        return gemma3_12b
