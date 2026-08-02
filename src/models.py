@@ -183,6 +183,7 @@ def gemma3_12b(prompt: str, temp = 0.3):
                                 enforce_eager=False,              # CUDA graphs captured & enabled
                                 max_model_len=16384,              # Fits safely within V100 KV cache bounds
                                 gpu_memory_utilization=0.90,
+                                limit_mm_per_prompt={"image": 0},  # Bypasses SigLIP/vision tower for text workloads
                             )
 
     messages = [
