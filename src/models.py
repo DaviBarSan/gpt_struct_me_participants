@@ -40,6 +40,7 @@ _qwen3_8b_engine = None
 _gemma3_12b_engine = None
 _gemma3_4b_engine = None
 _euro_llm_9b_engine = None
+_gervasio_8b_ptpt_engine = None
 
 def qwen3_4b(prompt: str, temp: float):
     from transformers import pipeline
@@ -276,6 +277,42 @@ def euro_llm_9b(prompt: str, temp=0.3):
     outputs = _euro_llm_9b_engine.chat(messages, sampling_params)
     result = outputs[0].outputs[0]
     print(f"[euro_llm_9b] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
+
+    generated_text = result.text
+    print(generated_text)
+    return generated_text
+
+
+def gervasio_8b_ptpt(prompt: str, temp=0.3):
+    """vLLM version, using the same tensor-parallel/stability settings as euro_llm_9b."""
+    global _gervasio_8b_ptpt_engine
+    from vllm import LLM, SamplingParams
+
+    relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/gervasio_8b_ptpt"
+
+    if _gervasio_8b_ptpt_engine is None:
+        print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
+        _gervasio_8b_ptpt_engine = LLM(
+            model=relative_path,
+            tensor_parallel_size=4,
+            dtype="float32",                 # V100/Volta GPUs lack native bfloat16 support
+            enable_chunked_prefill=False,     # Avoids Triton slice bug on Volta
+            enforce_eager=False,
+        )
+
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+
+    # Cap max output tokens to prevent runaway generation loops
+    sampling_params = SamplingParams(
+        temperature=temp,
+        max_tokens=2048,                      # Prevents infinite generation if EOS is missed
+    )
+
+    outputs = _gervasio_8b_ptpt_engine.chat(messages, sampling_params)
+    result = outputs[0].outputs[0]
+    print(f"[gervasio_8b_ptpt] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
 
     generated_text = result.text
     print(generated_text)

@@ -13,6 +13,7 @@ from src.models import (
     gemma3_12b,
     gemma3_4b,
     euro_llm_9b,
+    gervasio_8b_ptpt,
     llama32_3b
 )
 
@@ -48,3 +49,5 @@ def mid2model(mid: str):
         return gemma3_4b
     elif mid == "euro_llm_9b":
         return euro_llm_9b
+    elif mid == "gervasio_8b_ptpt":
+        return gervasio_8b_ptpt
