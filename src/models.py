@@ -258,11 +258,11 @@ def euro_llm_9b(prompt: str, temp=0.3):
         _euro_llm_9b_engine = LLM(
             model=relative_path,
             tensor_parallel_size=4,
-            dtype="float32",                      # Fixes FP16 NaN soft-capping bug & empty output
+            dtype="float32",                      # Safe default for Volta GPUs
             enable_chunked_prefill=False,      # Avoids Triton slice bug on Volta
             limit_mm_per_prompt={"image": 0},  # Bypasses vision pipeline for pure text
-            max_model_len=16384,
-            max_num_batched_tokens=16384,
+            max_model_len=4096,                # EuroLLM-9B's max_position_embeddings is 4096
+            max_num_batched_tokens=4096,
             enforce_eager=False,
             gpu_memory_utilization=0.90,
         )
