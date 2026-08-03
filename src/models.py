@@ -39,6 +39,7 @@ _qwen3_14b_engine = None
 _qwen3_8b_engine = None
 _gemma3_12b_engine = None
 _gemma3_4b_engine = None
+_euro_llm_9b_engine = None
 
 def qwen3_4b(prompt: str, temp: float):
     from transformers import pipeline
@@ -240,6 +241,46 @@ def gemma3_4b(prompt: str, temp=0.3):
     result = outputs[0].outputs[0]
     print(f"[gemma3_4b] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
     
+    generated_text = result.text
+    print(generated_text)
+    return generated_text
+
+
+def euro_llm_9b(prompt: str, temp=0.3):
+    """vLLM version, using the same tensor-parallel/stability settings as gemma3_12b/4b."""
+    global _euro_llm_9b_engine
+    from vllm import LLM, SamplingParams
+
+    relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models/euro_llm_9b"
+
+    if _euro_llm_9b_engine is None:
+        print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
+        _euro_llm_9b_engine = LLM(
+            model=relative_path,
+            tensor_parallel_size=4,
+            dtype="float32",                      # Fixes FP16 NaN soft-capping bug & empty output
+            enable_chunked_prefill=False,      # Avoids Triton slice bug on Volta
+            limit_mm_per_prompt={"image": 0},  # Bypasses vision pipeline for pure text
+            max_model_len=16384,
+            max_num_batched_tokens=16384,
+            enforce_eager=False,
+            gpu_memory_utilization=0.90,
+        )
+
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+
+    # Cap max output tokens to prevent runaway generation loops
+    sampling_params = SamplingParams(
+        temperature=temp,
+        max_tokens=2048,                      # Prevents infinite generation if EOS is missed
+    )
+
+    outputs = _euro_llm_9b_engine.chat(messages, sampling_params)
+    result = outputs[0].outputs[0]
+    print(f"[euro_llm_9b] finish_reason={result.finish_reason} output_tokens={len(result.token_ids)}")
+
     generated_text = result.text
     print(generated_text)
     return generated_text
