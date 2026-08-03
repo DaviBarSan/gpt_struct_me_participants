@@ -1,5 +1,15 @@
 """Parse models predictions."""
 
+import sys
+
+# Must run before `import fire`: on Windows, fire wraps whatever sys.stdout
+# is at import time with colorama, which writes through the console's cp1252
+# codepage. Model outputs routinely contain characters outside cp1252 (e.g.
+# '√'), which would otherwise crash print() mid-run and abort parsing.
+if sys.platform.startswith("win"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import json
 import logging
 from pathlib import Path
@@ -73,13 +83,23 @@ def detect_encoding(file_path: str, buffer_size: int = 4096) -> str:
 def read_text_safe(filepath: Path) -> str:
     """Read a text file's content, never raising on a bad/misdetected encoding.
 
-    `detect_encoding` is probabilistic and occasionally picks a codec (e.g.
-    cp1252) that can't actually decode the file, which used to crash the
-    whole parse run on a single bad prediction file. Falls through utf-8 and
-    finally latin1, which maps every byte 0-255 and therefore never raises.
+    Prediction files are always written as UTF-8 by the generation pipeline
+    (see `answer_path.write_text(..., encoding='utf-8')` in
+    experiments/prompt_selection.py), so UTF-8 is tried first. Being strict,
+    it fails loudly on genuinely non-UTF-8 bytes instead of risking chardet
+    guessing a wrong 8-bit codec (e.g. it once called a UTF-8 file "MacRoman"
+    at 0.69 confidence), which silently turns valid UTF-8 bytes into mojibake
+    rather than raising. `detect_encoding` is only consulted as a fallback,
+    and finally latin1, which maps every byte 0-255 and therefore never
+    raises.
     """
+    try:
+        return filepath.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        pass
+
     hint = detect_encoding(filepath)
-    for encoding in dict.fromkeys([hint, "utf-8", "latin1"]):
+    for encoding in dict.fromkeys([hint, "latin1"]):
         if not encoding:
             continue
         try:
@@ -138,6 +158,96 @@ def extract_json_span(content: str) -> str:
     return content[start:]
 
 
+def insert_missing_commas(content: str) -> str:
+    """Best-effort repair for a missing comma between adjacent JSON values
+    (e.g. `["a", "b"] ["c", "d"]`), a formatting slip some models make when
+    an array grows long. Walks the string tracking whether we're inside a
+    quoted value, and inserts a comma whenever a closed value (`]`, `}`, or
+    a closing quote) is immediately followed - modulo whitespace - by the
+    start of the next one (`[`, `{`, or an opening quote), since valid JSON
+    never places two sibling values directly next to each other.
+    """
+    out = []
+    in_string = False
+    escape = False
+    just_closed_value = False
+    for ch in content:
+        if in_string:
+            out.append(ch)
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+                just_closed_value = True
+            continue
+        if ch.isspace():
+            out.append(ch)
+            continue
+        if just_closed_value and ch in '[{"':
+            out.append(",")
+        just_closed_value = ch in "]}"
+        if ch == '"':
+            in_string = True
+        out.append(ch)
+    return "".join(out)
+
+
+def close_truncated_json(content: str) -> str:
+    """Best-effort repair for JSON truncated mid-generation (e.g. the model
+    hit its output token cap before finishing the array). Walks the value
+    tracking bracket depth and drops back to the last point where a sibling
+    element had just completed (right after a closing `]`/`}`, or right
+    before a `,`); if the string is still inside an open array/object at
+    that point, drops the incomplete trailing element and appends the
+    closing brackets needed to balance what's left. Returns `content`
+    unchanged if it's already balanced or has no recoverable safe cut point.
+    """
+    stack = []
+    in_string = False
+    escape = False
+    start = None
+    last_cut = None
+    for i, ch in enumerate(content):
+        if start is None:
+            if ch in "[{":
+                start = i
+                stack.append(ch)
+            continue
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+            continue
+        if ch in "[{":
+            stack.append(ch)
+            continue
+        if ch in "]}":
+            if stack:
+                stack.pop()
+            if not stack:
+                return content
+            last_cut = (i + 1, list(stack))
+            continue
+        if ch == "," and stack:
+            last_cut = (i, list(stack))
+
+    if start is None or not stack or last_cut is None:
+        return content
+
+    cut_index, stack_snapshot = last_cut
+    truncated = content[start:cut_index]
+    closing = "".join("]" if opener == "[" else "}" for opener in reversed(stack_snapshot))
+    return truncated + closing
+
+
 def sanitize_json_string(raw_text: str) -> str:
     """
     Limpa uma string que se espera ser um array ou objeto JSON:
@@ -169,7 +279,15 @@ def sanitize_json_string(raw_text: str) -> str:
     # 2. Substituir Espaços Não-Padrão (\u00A0)
     # Este é o caractere de "Non-Breaking Space" que costuma quebrar o json.loads()
     cleaned_text = cleaned_text.replace('\u00A0', ' ')
-    
+
+    # 3. Normalizar aspas tipograficas (smart quotes) para aspas retas: alguns
+    # modelos (ex. llama32_3b) emitem \u201C/\u201D em vez de ", o que o
+    # json.loads() nao reconhece como delimitador de string.
+    for smart_quote in ('\u201C', '\u201D'):
+        cleaned_text = cleaned_text.replace(smart_quote, '"')
+    for smart_quote in ('\u2018', '\u2019'):
+        cleaned_text = cleaned_text.replace(smart_quote, "'")
+
     return cleaned_text
 
 
@@ -236,6 +354,24 @@ def read_json(filepath: Path) -> tuple:
             print(f"ERROR: but loaded JSON answer: {answer}")
             return answer, True
         except ValueError:
+            continue
+
+    # Last resort: repair two common model formatting slips - a missing
+    # comma between adjacent array elements, and JSON truncated mid-array
+    # because the model hit its output token cap - and retry. Applied only
+    # after the strategies above fail, since both repairs are lossy
+    # (the comma repair guesses at the model's intent; the truncation
+    # repair discards the incomplete trailing element).
+    repaired_candidates = dict.fromkeys(
+        close_truncated_json(insert_missing_commas(candidate))
+        for candidate in candidates
+    )
+    for candidate in repaired_candidates:
+        try:
+            answer = json.loads(candidate)
+            print(f"ERROR: but loaded JSON answer after repair: {answer}")
+            return answer, True
+        except json.decoder.JSONDecodeError:
             continue
 
     print("Failed to parse JSON content after sanitization. Invalid response from model. Returning empty dict.")

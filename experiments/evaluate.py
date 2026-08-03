@@ -1,5 +1,15 @@
 """Parse models predictions."""
 
+import sys
+
+# Must run before `import fire`: on Windows, fire wraps whatever sys.stdout
+# is at import time with colorama, which writes through the console's cp1252
+# codepage. Model outputs routinely contain characters outside cp1252 (e.g.
+# '√'), which would otherwise crash print() mid-run and abort evaluation.
+if sys.platform.startswith("win"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import json
 from pathlib import Path
 

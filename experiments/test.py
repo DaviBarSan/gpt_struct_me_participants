@@ -1,8 +1,17 @@
 """Run the best prompt for each model/entity pair on the test set."""
 
 import os
+import sys
 import time
 import logging
+
+# Windows consoles default to the cp1252 codepage, which can't represent every
+# Unicode character a model may generate (smart quotes, non-breaking hyphens, etc.),
+# crashing the whole run on a plain print()/log call. Force UTF-8 on the output
+# streams themselves; this doesn't touch the actual prompt/answer strings.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 import fire
 import dotenv
