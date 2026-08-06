@@ -95,12 +95,13 @@ def evaluate(predictions: dict, annotations: dict, dict_words: dict) -> list:
     result_detailts_token_level = [('modelo', 'entity','doc_id','template','complete_prediction', 
                                     'token','pred_type','matched_annotation', 'full_matched_sentence', 'ann_entity_id','annt_type','result',
                                     'word_category', 'pct_tp_participant_level', 'result_type')]
-    print(predictions.items())
+    # print(predictions.items())
     for model, templates in predictions.items():
         for template, entities in templates.items():
             for entity, prediction in entities.items():
                 if entity not in annotations:
-                    print(f"Skipping unknown entity '{entity}' (model={model}, template={template}): not found in annotations.")
+                    # print(f"Skipping unknown entity '{entity}' (model={model}, template={template}): not found in annotations.")
+                    pass
                     continue
                 print(f"Evaluating {model} - {entity} - {template}")
                 annotation = annotations[entity]

@@ -24,12 +24,17 @@ LANGUAGES = ("portuguese", "english")
 
 # Fixed, colorblind-safe (Okabe-Ito) categorical palettes. Order and colors
 # are fixed so a given model/language has the same color in every notebook.
-MODEL_ORDER = ["gemini", "gemma3_1b", "qwen25_14b", "qwen3_4b"]
+MODEL_ORDER = ["gemini", "gemma3_4b", "gemma3_12b", "qwen3_4b", "qwen3_8b", "qwen3_14b", "amalia", "euro_llm_9b", "gervasio_8b_ptpt"]
 MODEL_COLORS = {
     "gemini": "#E69F00",
-    "gemma3_1b": "#56B4E9",
-    "qwen25_14b": "#CC79A7",
+    "gemma3_4b": "#56B4E9",
+    "gemma3_12b": "#CC79A7",
     "qwen3_4b": "#D55E00",
+    "qwen3_8b": "#009E73",
+    "qwen3_14b": "#F0E442",
+    "amalia": "#0072B2",
+    "euro_llm_9b": "#000000",
+    "gervasio_8b_ptpt": "#999999",
 }
 LANGUAGE_ORDER = ["portuguese", "english"]
 LANGUAGE_COLORS = {
@@ -43,7 +48,7 @@ HEATMAP_CMAP = "Blues"
 # out as flat near zero while every other model showed the expected
 # *_exp-prompt improvement) and are excluded from all four notebooks via the
 # loaders below, rather than filtered ad hoc in each notebook.
-EXCLUDED_MODELS = ["llama32_3b"]
+EXCLUDED_MODELS = ["llama32_3b", "gemma3_1b", "qwen25_12b"] 
 
 # Gold annotations use fine-grained location subtypes (Pl_capital, Pl_civil,
 # Pl_country, Pl_region, Pl_state, Pl_water) that model outputs never

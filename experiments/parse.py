@@ -378,7 +378,7 @@ def read_json(filepath: Path) -> tuple:
     return {}, False
 
 
-def read_predictions(path: Path, prompt_name_variations: str = "False") -> list:
+def read_predictions(path: Path) -> list:
     """Parse the prediction files."""
     predictions = []
     failed_filepaths = []
@@ -387,10 +387,17 @@ def read_predictions(path: Path, prompt_name_variations: str = "False") -> list:
     for filepath in filepaths:
         if filepath.name == "parse_failures.txt":
             continue
-        *_, model, entity, template, _ = filepath.parts
-        # if it is a prompt variation, the filepath is different. Set as template the prompt variation abreviations.
-        if prompt_name_variations in entity:
-            *_, model, entity, _, template, _ = filepath.parts
+        # A prompt-variation run nests one extra directory between the
+        # template and the prediction file, named "<template>_<suffix>"
+        # (e.g. cls_exp/cls_exp_temp0.3_nodelim_norole_nocot/doc.txt).
+        # Detect it per file from the folder names themselves - rather than
+        # a caller-supplied template name - since a single run's results
+        # mix models that have variation subfolders with ones that don't.
+        *_, model, entity, template, variation, _ = filepath.parts
+        if variation.startswith(f"{template}_"):
+            template = variation
+        else:
+            *_, model, entity, template, _ = filepath.parts
         doc = filepath.stem
 
         answer, ok = read_json(filepath)
@@ -440,15 +447,46 @@ def read_predictions(path: Path, prompt_name_variations: str = "False") -> list:
     return predictions, failed_filepaths
 
 
-def main(mode: str = "prompt_selection", language: str = "portuguese", prompt_name_variations: str = None) -> None:
-    """Run the script."""
+def main(
+    mode: str = "prompt_selection",
+    language: str = "portuguese",
+    model: str = None,
+) -> None:
+    """Run the script.
+
+    If `model` is given, only that model's subtree is walked (instead of
+    every model under `results/<mode>/<language>`), which is what makes
+    re-parsing a single model fast. The result is then merged into the
+    existing `predictions.json`/`parse_failures.txt` - replacing only that
+    model's entries - since `evaluate.py` expects a single aggregate file
+    covering all models.
+    """
     path = RESULTS_PATH / mode / language
+    parse_path = path / model if model else path
 
-    print(path)
+    print(parse_path)
 
-    predictions, failed_filepaths = read_predictions(path, prompt_name_variations)
+    predictions, failed_filepaths = read_predictions(parse_path)
 
     predictions_path = path / "predictions.json"
+    failures_path = path / "parse_failures.txt"
+
+    if model:
+        existing_predictions = []
+        if predictions_path.exists():
+            existing_predictions = json.loads(predictions_path.read_text(encoding="utf-8"))
+            existing_predictions = [p for p in existing_predictions if p["model"] != model]
+        predictions = existing_predictions + predictions
+
+        existing_failed_filepaths = []
+        if failures_path.exists():
+            model_prefix = str(parse_path)
+            existing_failed_filepaths = [
+                Path(line) for line in failures_path.read_text(encoding="utf-8").splitlines()
+                if line and not line.startswith(model_prefix)
+            ]
+        failed_filepaths = existing_failed_filepaths + failed_filepaths
+
     json.dump(predictions, predictions_path.open("w"), indent=4)
 
     total = len(predictions)
@@ -459,11 +497,12 @@ def main(mode: str = "prompt_selection", language: str = "portuguese", prompt_na
         for failed_path in failed_filepaths:
             print(f"  - {failed_path}")
 
-        failures_path = path / "parse_failures.txt"
         failures_path.write_text(
             "\n".join(str(failed_path) for failed_path in failed_filepaths), encoding="utf-8"
         )
         print(f"List of failed files written to {failures_path}")
+    elif failures_path.exists():
+        failures_path.unlink()
 
 
 if __name__ == "__main__":
