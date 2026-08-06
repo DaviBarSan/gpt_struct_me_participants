@@ -35,6 +35,7 @@ os.environ["TORCH_DISABLE_FLASH_ATTN"] = "1"
 
 # Cache for the vLLM engine so qwen3_14b only pays the tensor-parallel model
 # load cost once per process, not on every call.
+_qwen3_4b_engine = None
 _qwen3_14b_engine = None
 _qwen3_8b_engine = None
 _gemma3_12b_engine = None
@@ -42,33 +43,32 @@ _gemma3_4b_engine = None
 _euro_llm_9b_engine = None
 _gervasio_8b_ptpt_engine = None
 
-def qwen3_4b(prompt: str, temp: float):
-    from transformers import pipeline
-    # 1. Define the relative path you used
-    relative_path = "/projects/F202500017AIVLABDEUCALION/davibsantos/gpt_struct_me_participants/resources/models/qwen3_4b"
+def qwen3_4b(prompt: str, temp = 0.3):
+    """vLLM version: tensor-parallelized across the 4 available GPUs."""
+    global _qwen3_4b_engine
+    from vllm import LLM, SamplingParams
 
-    # # 2. Convert the relative path to an absolute path
-    # os.path.abspath() handles relative parts like '..'
-    absolute_model_path = os.path.abspath(relative_path)
-    # absolute_model_path = 'C:/Users/davib/Desktop/MSc_DataScience/thesis/resources/models/Qwen3-4B'
-    print(f"Loading model from absolute path: {relative_path}")
+    relative_path = "/data/davibarrel/gpt_struct_me_participants/resources/models//qwen3_4b"
 
-    # 3. Pass the ABSOLUTE path to the pipeline
-    pipe = pipeline("text-generation", model=relative_path)
+    if _qwen3_4b_engine is None:
+        print(f"Loading model from absolute path: {relative_path} (tensor_parallel_size=4)")
+        _qwen3_4b_engine = LLM(model=relative_path,
+                                tensor_parallel_size=4,
+                                dtype="float16",                # <--- Forces FP16 for V100 GPUs)
+                                enable_chunked_prefill=False,   # Bypasses Triton slice bug
+                                enforce_eager=True              # Disables CUDA Graph Triton layout ops
+                            )
+
     messages = [
         {"role": "user", "content": prompt},
     ]
-    # 2. Call the pipeline and store the result
-# Crucial Argument: return_full_text=False
-    output = pipe(
-        messages,
-        max_new_tokens=16384,
-        return_full_text=False      # Tells the pipeline to return ONLY the generated text
+    sampling_params = SamplingParams(
+        temperature=temp,
+        max_tokens=16384,
     )
 
-    # 3. Extract the final text
-    # The output is a list of dictionaries, so we need to drill down.
-    generated_text = output[0]['generated_text']
+    outputs = _qwen3_4b_engine.chat(messages, sampling_params)
+    generated_text = outputs[0].outputs[0].text
     print(generated_text)
     return generated_text
 
