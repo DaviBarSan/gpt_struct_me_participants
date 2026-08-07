@@ -8,6 +8,8 @@ four notebooks so a given model/language always renders in the same color.
 from pathlib import Path
 
 import json
+import re
+
 import numpy as np
 import pandas as pd
 
@@ -16,11 +18,16 @@ PROJECT_ROOT = HERE.parent.parent
 RESULTS_DIR = PROJECT_ROOT / "results"
 FIGURES_DIR = PROJECT_ROOT / "report" / "Figures" / "results"
 BEST_TEMPLATES_PATH = HERE / "best_templates.json"
+BEST_CONFIGS_PATH = HERE / "best_configs.json"
 
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 STAGES = ("prompt_selection", "test")
 LANGUAGES = ("portuguese", "english")
+
+# Test-stage runs with no `_temp<T>` suffix in their name predate the
+# temperature sweep and used the pipeline default (experiments/test.py).
+TEST_DEFAULT_TEMPERATURE = 0.3
 
 # Fixed, colorblind-safe (Okabe-Ito) categorical palettes. Order and colors
 # are fixed so a given model/language has the same color in every notebook.
@@ -151,6 +158,13 @@ def filter_to_best_templates(df: pd.DataFrame, best_templates: dict, verbose: bo
     template selected for that (language, model) pair (from notebook 01's
     argmax-F1-on-prompt_selection choice).
 
+    NOTE: this matches the *bare* template name and is therefore only
+    appropriate for `prompt_selection`-stage frames. Test-stage run names
+    additionally encode the decoding configuration
+    (`cls_def_exp_temp0.3_nodelim_norole_nocot`), so nothing matches exactly
+    there -- use `filter_to_best_configs` with `select_best_test_configs`
+    instead for anything read out of `results/test/`.
+
     That choice can occasionally disagree with what was actually run in the
     `test` stage -- e.g. qwen3_4b/portuguese: prompt_selection F1 narrowly
     favors `ext_exp` (0.278) over `cls_def_exp` (0.276), a near-tie, but the
@@ -191,6 +205,206 @@ def filter_to_best_templates(df: pd.DataFrame, best_templates: dict, verbose: bo
             filtered = pd.concat([filtered] + fallback_rows, ignore_index=True)
 
     return filtered.reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
+# Best (template, temperature) configuration for the test stage
+# ---------------------------------------------------------------------------
+#
+# The prompt-selection stage varied the prompt *template* only. The test
+# stage then took each model's best template forward and swept decoding
+# temperature, encoding the whole configuration in the run name:
+#
+#     <template>_temp<T>_<delim>_<role>_<cot>
+#     e.g. cls_def_exp_temp0.6_nodelim_norole_nocot
+#
+# So "the best template" is no longer enough to identify a single test-stage
+# run -- notebooks 02-04 need the best (template, temperature) *pair*. The
+# helpers below parse those run names, pick the argmax-F1 configuration per
+# (language, model), and persist the choice to best_configs.json so all four
+# notebooks analyse exactly the same runs.
+
+_TEMP_RE = re.compile(r"^(?P<base>.+?)_temp(?P<temp>\d+(?:\.\d+)?)(?:_|$)")
+
+
+def split_run_name(template: str):
+    """Splits a test-stage run name into (base_template, temperature).
+
+    >>> split_run_name("cls_def_exp_temp0.6_nodelim_norole_nocot")
+    ('cls_def_exp', 0.6)
+    >>> split_run_name("cls_def_exp")
+    ('cls_def_exp', 0.3)
+
+    Runs with no `_temp` suffix predate the sweep and ran at the pipeline
+    default temperature, so they are reported as TEST_DEFAULT_TEMPERATURE.
+    """
+    m = _TEMP_RE.match(str(template))
+    if m is None:
+        return str(template), TEST_DEFAULT_TEMPERATURE
+    return m.group("base"), float(m.group("temp"))
+
+
+def add_run_config_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Returns a copy of `df` with `base_template`, `temperature` and
+    `is_swept` (True when the run name carries an explicit `_temp` suffix)
+    derived from the `template` column."""
+    df = df.copy()
+    parsed = df["template"].map(split_run_name)
+    df["base_template"] = parsed.map(lambda t: t[0])
+    df["temperature"] = parsed.map(lambda t: t[1])
+    df["is_swept"] = df["template"].astype(str).str.contains(r"_temp\d", regex=True)
+    return df
+
+
+def select_best_test_configs(
+    test_results: pd.DataFrame, best_templates: dict, verbose: bool = True
+) -> pd.DataFrame:
+    """Picks the argmax-F1 (template, temperature) test-stage run per
+    (language, model).
+
+    Selection proceeds in two steps per (language, model) group:
+
+    1. Restrict to runs whose *base template* is the one notebook 01 selected
+       on the prompt-selection stage. Where the test stage was actually run
+       with a different template (e.g. PT/qwen3_4b, where prompt selection
+       narrowly favoured `ext_exp` but the test stage only ever ran
+       `cls_def_exp`), fall back to the single base template present in the
+       test stage and record that in `template_source`.
+    2. Among those, take the highest-F1 run. When the group contains both
+       swept runs (explicit `_temp` suffix) and legacy unsuffixed runs, only
+       the swept ones are considered, so the comparison varies temperature
+       alone rather than mixing in the older runs' different delimiter/role/
+       CoT settings.
+
+    Note that step 2 selects on the test set itself, so the resulting F1 is
+    an optimistic, best-configuration figure rather than a held-out estimate
+    -- report it as such.
+
+    Returns one row per (language, model) with columns: language, model,
+    template (the full run name), base_template, temperature, f1, f1_r,
+    n_candidates (how many configurations the argmax ranged over) and
+    template_source ("prompt_selection" or "test_stage_fallback").
+    """
+    df = add_run_config_columns(test_results)
+    rows = []
+
+    for (language, model), group in df.groupby(["language", "model"], sort=True):
+        wanted = get_best_template(best_templates, language, model)
+        candidates = group[group["base_template"] == wanted]
+        source = "prompt_selection"
+
+        if candidates.empty:
+            available = sorted(group["base_template"].unique())
+            if len(available) != 1:
+                if verbose:
+                    print(
+                        f"[select_best_test_configs] {language}/{model}: prompt-selection best "
+                        f"template ({wanted!r}) absent from the test stage and the fallback is "
+                        f"ambiguous ({available}); skipping."
+                    )
+                continue
+            candidates = group
+            source = "test_stage_fallback"
+            if verbose:
+                print(
+                    f"[select_best_test_configs] {language}/{model}: prompt-selection best "
+                    f"template ({wanted!r}) was never run in the test stage; falling back to the "
+                    f"single template actually run there ({available[0]!r})."
+                )
+
+        swept = candidates[candidates["is_swept"]]
+        if not swept.empty and len(swept) < len(candidates):
+            dropped = sorted(set(candidates["template"]) - set(swept["template"]))
+            if verbose:
+                print(
+                    f"[select_best_test_configs] {language}/{model}: ignoring pre-sweep run(s) "
+                    f"{dropped} in favour of the {len(swept)} explicit temperature runs."
+                )
+            candidates = swept
+
+        best = candidates.loc[candidates["f1"].idxmax()]
+        rows.append(
+            {
+                "language": language,
+                "model": model,
+                "template": best["template"],
+                "base_template": best["base_template"],
+                "temperature": best["temperature"],
+                "f1": best["f1"],
+                "f1_r": best["f1_r"],
+                "n_candidates": len(candidates),
+                "template_source": source,
+            }
+        )
+
+    return pd.DataFrame(rows).sort_values(["language", "model"]).reset_index(drop=True)
+
+
+def save_best_configs(best_configs: pd.DataFrame) -> Path:
+    """Persists `select_best_test_configs` output as
+    {language: {model: {template, base_template, temperature, ...}}}."""
+    payload: dict = {}
+    for row in best_configs.to_dict(orient="records"):
+        payload.setdefault(row["language"], {})[row["model"]] = {
+            "template": row["template"],
+            "base_template": row["base_template"],
+            "temperature": row["temperature"],
+            "f1": row["f1"],
+            "f1_r": row["f1_r"],
+            "n_candidates": int(row["n_candidates"]),
+            "template_source": row["template_source"],
+        }
+    BEST_CONFIGS_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
+    return BEST_CONFIGS_PATH
+
+
+def load_best_configs() -> dict:
+    """{language: {model: {template, base_template, temperature, ...}}},
+    produced by 01_prompt_importance.ipynb."""
+    if not BEST_CONFIGS_PATH.exists():
+        raise FileNotFoundError(
+            f"{BEST_CONFIGS_PATH} not found -- run 01_prompt_importance.ipynb first."
+        )
+    return json.loads(BEST_CONFIGS_PATH.read_text())
+
+
+def best_configs_frame(best_configs: dict) -> pd.DataFrame:
+    """Flattens `load_best_configs` output back into a tidy DataFrame."""
+    rows = [
+        {"language": language, "model": model, **cfg}
+        for language, models in best_configs.items()
+        for model, cfg in models.items()
+    ]
+    return pd.DataFrame(rows).sort_values(["language", "model"]).reset_index(drop=True)
+
+
+def filter_to_best_configs(df: pd.DataFrame, best_configs: dict, verbose: bool = True) -> pd.DataFrame:
+    """Keeps only the rows of a test-stage frame (results, detailed_results or
+    detailed_results_token_level) belonging to the best (template,
+    temperature) run selected for each (language, model).
+
+    Adds `base_template` and `temperature` columns so downstream plots can
+    label the configuration without re-parsing run names. Any (language,
+    model) present in `df` but absent from `best_configs` is reported rather
+    than silently dropped.
+    """
+    wanted = {
+        (language, model): cfg["template"]
+        for language, models in best_configs.items()
+        for model, cfg in models.items()
+    }
+
+    keys = list(zip(df["language"], df["model"]))
+    mask = pd.Series(
+        [wanted.get(k) == t for k, t in zip(keys, df["template"])], index=df.index
+    )
+    filtered = df[mask]
+
+    missing = sorted(set(keys) - set(wanted))
+    if missing and verbose:
+        print(f"[filter_to_best_configs] no selected configuration for: {missing}")
+
+    return add_run_config_columns(filtered).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------

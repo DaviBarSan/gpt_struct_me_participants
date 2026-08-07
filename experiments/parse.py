@@ -10,6 +10,7 @@ if sys.platform.startswith("win"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import ast
 import json
 import logging
 from pathlib import Path
@@ -248,6 +249,170 @@ def close_truncated_json(content: str) -> str:
     return truncated + closing
 
 
+def escape_inner_quotes(content: str) -> str:
+    """Escape unescaped `"` characters that appear *inside* a JSON string value.
+
+    By far the most common failure mode: models quote a phrase verbatim from
+    the source article without escaping, e.g.
+
+        ["movimento "Black Lives Matter"", "Org"]
+
+    which `json.loads` reads as the string "movimento " followed by garbage.
+    Disambiguated structurally: once inside a string, a `"` only really closes
+    it when the next non-whitespace character is one that may legally follow a
+    string value (`,` `]` `}` `:`) or end of input; any other `"` must be a
+    literal quote the model forgot to escape, so it is escaped in place.
+    """
+    out = []
+    i = 0
+    n = len(content)
+    in_string = False
+    while i < n:
+        ch = content[i]
+        if not in_string:
+            out.append(ch)
+            if ch == '"':
+                in_string = True
+            i += 1
+            continue
+        if ch == "\\" and i + 1 < n:
+            out.append(content[i:i + 2])
+            i += 2
+            continue
+        if ch == '"':
+            j = i + 1
+            while j < n and content[j].isspace():
+                j += 1
+            if j >= n or content[j] in ",]}:":
+                out.append('"')
+                in_string = False
+            else:
+                out.append('\\"')
+            i += 1
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def brace_to_bracket(content: str) -> str:
+    """Swap an outer `{...}` for `[...]` when the model wrapped a list of pairs
+    in object braces (e.g. `{["man", "Per"], ["GNR", "Org"]}`). Only applied
+    when the first thing inside is itself a bracket, so a genuine JSON object
+    with `"key": value` members is left alone.
+    """
+    stripped = content.strip()
+    if not (stripped.startswith("{") and stripped.endswith("}")):
+        return content
+    inner = stripped[1:-1].strip()
+    if inner.startswith("[") or inner.startswith("{"):
+        return "[" + inner + "]"
+    return content
+
+
+def python_literal_loads(content: str):
+    """Parse a Python literal instead of JSON, for models that emit
+    single-quoted strings (`[['Man', 'Per'], ...]`) or tuples
+    (`[("Authorities",), ...]`). Uses `ast.literal_eval`, which only evaluates
+    literals and never executes code. Tuples are normalised to lists so the
+    result is shaped like the JSON the rest of the pipeline expects. Also
+    tolerates trailing commas, which are legal in Python but not in JSON.
+    Returns None when the content is not a valid Python literal.
+    """
+    try:
+        value = ast.literal_eval(content)
+    except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError):
+        # TypeError covers brace-wrapped pair lists, which Python reads as a
+        # set literal of unhashable lists (`{["a", "b"], ["c", "d"]}`).
+        return None
+
+    def normalise(node):
+        if isinstance(node, (list, tuple)):
+            return [normalise(item) for item in node]
+        return node
+
+    return normalise(value)
+
+
+def longest_valid_prefix(content: str, max_attempts: int = 500):
+    """Recover the leading, well-formed part of a degenerate generation.
+
+    Some models start a correct array then collapse into a repetition loop
+    until the token cap (e.g. gemma3 emitting `"de", "de", "de", ...` for
+    kilobytes). Walks element boundaries from the end backwards and returns
+    the longest prefix that parses once closed, so the entities the model did
+    produce before degenerating are kept. Returns None if nothing parses.
+    """
+    if not content.startswith("["):
+        return None
+    cuts = [m.start() for m in re.finditer(r"\]\s*,", content)]
+    for attempt, cut in enumerate(reversed(cuts)):
+        if attempt >= max_attempts:
+            break
+        candidate = content[:cut + 1] + "]"
+        try:
+            return json.loads(candidate)
+        except json.decoder.JSONDecodeError:
+            continue
+    return None
+
+
+def matches_task_shape(answer, template: str) -> bool:
+    """Whether `answer` has the shape the task expects: a list of strings for
+    the extraction templates, a list of [entity, class] pairs otherwise.
+
+    Gates the lossy repairs below. Each of them guesses at what the model
+    meant, so a repair is only accepted when it yields something the task can
+    actually use; otherwise the next repair is tried and, failing all of them,
+    the file is still reported as a failure rather than silently contributing
+    a malformed prediction.
+    """
+    if not isinstance(answer, list) or not answer:
+        return False
+    if "ext" in template:
+        return all(isinstance(a, str) for a in answer)
+    return all(
+        isinstance(a, list) and len(a) == 2 and isinstance(a[0], str)
+        for a in answer
+    )
+
+
+def repair_json(content: str, template: str):
+    """Last-resort repair ladder, tried only after every strategy in
+    `read_json` has already failed. Returns the recovered answer, or None.
+
+    Each text repair is combined with three readers - strict JSON, Python
+    literal, and Python literal after closing a truncated value - since the
+    slips are independent (a model may use single quotes *and* leave an
+    unescaped quote *and* hit its token cap). Every candidate is checked
+    against `matches_task_shape` before being accepted.
+    """
+    for transform in (lambda s: s, brace_to_bracket, escape_inner_quotes):
+        candidate = transform(content)
+
+        try:
+            answer = json.loads(candidate)
+            if matches_task_shape(answer, template):
+                return answer
+        except json.decoder.JSONDecodeError:
+            pass
+
+        answer = python_literal_loads(candidate)
+        if matches_task_shape(answer, template):
+            return answer
+
+        answer = python_literal_loads(close_truncated_json(candidate))
+        if matches_task_shape(answer, template):
+            return answer
+
+    for candidate in (content, escape_inner_quotes(content)):
+        answer = longest_valid_prefix(candidate)
+        if matches_task_shape(answer, template):
+            return answer
+
+    return None
+
+
 def sanitize_json_string(raw_text: str) -> str:
     """
     Limpa uma string que se espera ser um array ou objeto JSON:
@@ -311,13 +476,22 @@ def json_loads_section(content: str) -> dict:
     raise ValueError("Invalid JSON")
 
 
-def read_json(filepath: Path) -> tuple:
+def read_json(filepath: Path, template: str = "") -> tuple:
     """Read and parse a model's raw text output into JSON.
 
-    Returns (answer, ok). `ok` is False (and answer is {}) when every
-    parsing strategy below fails, so callers can report which files
-    couldn't be parsed instead of silently treating them like a
-    legitimate empty prediction.
+    Returns (answer, status), where status is one of:
+
+    - "ok"          - the answer was parsed (possibly after repair).
+    - "no_answer"   - the model never emitted a structured answer at all
+                      (it refused, asked for input, or ran out of tokens
+                      mid-reasoning). Not a parser problem: the correct
+                      prediction really is empty.
+    - "unparseable" - the model emitted something JSON-shaped that no
+                      strategy could recover.
+
+    Separating the last two matters because they mean different things for
+    the results: "no_answer" is a model behaviour worth reporting, whereas
+    "unparseable" is a limitation of this parser.
     """
     content = read_text_safe(filepath)
     print(f"{filepath}")
@@ -345,14 +519,14 @@ def read_json(filepath: Path) -> tuple:
     candidates = dict.fromkeys([content, f"[{content}]", span, f"[{span}]"])
     for candidate in candidates:
         try:
-            return json.loads(candidate), True
+            return json.loads(candidate), "ok"
         except json.decoder.JSONDecodeError:
             pass
 
         try:
             answer = json_loads_section(candidate)
             print(f"ERROR: but loaded JSON answer: {answer}")
-            return answer, True
+            return answer, "ok"
         except ValueError:
             continue
 
@@ -370,22 +544,36 @@ def read_json(filepath: Path) -> tuple:
         try:
             answer = json.loads(candidate)
             print(f"ERROR: but loaded JSON answer after repair: {answer}")
-            return answer, True
+            return answer, "ok"
         except json.decoder.JSONDecodeError:
             continue
 
+    # Nothing above worked. Before giving up, tell apart the two reasons a
+    # file gets here: a model that never produced a structured answer (no
+    # bracket anywhere in the output) versus one that produced a malformed
+    # one. Only the latter is worth handing to the repair ladder.
+    if "[" not in content and "{" not in content:
+        print("No JSON structure in output at all - model gave no answer.")
+        return {}, "no_answer"
+
+    answer = repair_json(span, template)
+    if answer is not None:
+        print(f"ERROR: but recovered answer via repair ladder: {answer}")
+        return answer, "ok"
+
     print("Failed to parse JSON content after sanitization. Invalid response from model. Returning empty dict.")
-    return {}, False
+    return {}, "unparseable"
 
 
 def read_predictions(path: Path) -> list:
     """Parse the prediction files."""
     predictions = []
     failed_filepaths = []
+    no_answer_filepaths = []
     filepaths = path.glob("**/*.txt")
 
     for filepath in filepaths:
-        if filepath.name == "parse_failures.txt":
+        if filepath.name in ("parse_failures.txt", "no_answer.txt"):
             continue
         # A prompt-variation run nests one extra directory between the
         # template and the prediction file, named "<template>_<suffix>"
@@ -400,9 +588,11 @@ def read_predictions(path: Path) -> list:
             *_, model, entity, template, _ = filepath.parts
         doc = filepath.stem
 
-        answer, ok = read_json(filepath)
-        if not ok:
+        answer, status = read_json(filepath, template)
+        if status == "unparseable":
             failed_filepaths.append(filepath)
+        elif status == "no_answer":
+            no_answer_filepaths.append(filepath)
 
         # print(f"Read answer from {filepath}: {answer}")
 
@@ -444,7 +634,7 @@ def read_predictions(path: Path) -> list:
                 "classes": classes
             })
 
-    return predictions, failed_filepaths
+    return predictions, failed_filepaths, no_answer_filepaths
 
 
 def main(
@@ -466,10 +656,23 @@ def main(
 
     print(parse_path)
 
-    predictions, failed_filepaths = read_predictions(parse_path)
+    predictions, failed_filepaths, no_answer_filepaths = read_predictions(parse_path)
 
     predictions_path = path / "predictions.json"
     failures_path = path / "parse_failures.txt"
+    no_answer_path = path / "no_answer.txt"
+
+    def merge_existing(listing_path: Path, current: list) -> list:
+        """Keep the entries of the other models already on disk, since a
+        single-model run only re-derives its own subtree."""
+        if not listing_path.exists():
+            return current
+        model_prefix = str(parse_path)
+        kept = [
+            Path(line) for line in listing_path.read_text(encoding="utf-8").splitlines()
+            if line and not line.startswith(model_prefix)
+        ]
+        return kept + current
 
     if model:
         existing_predictions = []
@@ -478,31 +681,32 @@ def main(
             existing_predictions = [p for p in existing_predictions if p["model"] != model]
         predictions = existing_predictions + predictions
 
-        existing_failed_filepaths = []
-        if failures_path.exists():
-            model_prefix = str(parse_path)
-            existing_failed_filepaths = [
-                Path(line) for line in failures_path.read_text(encoding="utf-8").splitlines()
-                if line and not line.startswith(model_prefix)
-            ]
-        failed_filepaths = existing_failed_filepaths + failed_filepaths
+        failed_filepaths = merge_existing(failures_path, failed_filepaths)
+        no_answer_filepaths = merge_existing(no_answer_path, no_answer_filepaths)
 
     json.dump(predictions, predictions_path.open("w"), indent=4)
 
     total = len(predictions)
     n_failed = len(failed_filepaths)
-    print(f"\nParse summary: {total - n_failed}/{total} files parsed successfully, {n_failed} failed.")
-    if failed_filepaths:
-        print("Failed files:")
-        for failed_path in failed_filepaths:
-            print(f"  - {failed_path}")
+    n_no_answer = len(no_answer_filepaths)
+    n_parsed = total - n_failed - n_no_answer
+    print(f"\nParse summary: {n_parsed}/{total} files parsed successfully, "
+          f"{n_failed} unparseable, {n_no_answer} with no answer from the model.")
 
-        failures_path.write_text(
-            "\n".join(str(failed_path) for failed_path in failed_filepaths), encoding="utf-8"
-        )
-        print(f"List of failed files written to {failures_path}")
-    elif failures_path.exists():
-        failures_path.unlink()
+    def write_listing(listing_path: Path, listing: list, label: str) -> None:
+        if listing:
+            print(f"{label}:")
+            for entry in listing:
+                print(f"  - {entry}")
+            listing_path.write_text(
+                "\n".join(str(entry) for entry in listing), encoding="utf-8"
+            )
+            print(f"List of {label.lower()} written to {listing_path}")
+        elif listing_path.exists():
+            listing_path.unlink()
+
+    write_listing(failures_path, failed_filepaths, "Unparseable files")
+    write_listing(no_answer_path, no_answer_filepaths, "Files with no model answer")
 
 
 if __name__ == "__main__":
