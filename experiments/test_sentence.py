@@ -264,6 +264,7 @@ def run(
                     queried = False
 
                     det_path = doc_path / f"{sid:03d}_det.txt"
+                    print(f"Detection prompt: {det_prompter.generate(sentence)}")
                     det_answer, det_queried = ask(model, det_path, det_prompter.generate(sentence), temp, mid, sleep)
                     queried = queried or det_queried
                     detection = read_detection(det_answer)
@@ -279,12 +280,14 @@ def run(
                             logger.info(f"Sentence {sid}: detection answer unreadable, extracting anyway.")
 
                         ext_path = doc_path / f"{sid:03d}_ext.txt"
+                        print(f"Extraction prompt: {ext_prompter.generate(sentence)}")
                         _, ext_queried = ask(model, ext_path, ext_prompter.generate(sentence), temp, mid, sleep)
                         queried = queried or ext_queried
 
                         candidates = read_candidates(ext_path, ext_tid)
                         if candidates:
                             cls_path = doc_path / f"{sid:03d}_cls.txt"
+                            print(f"Classification prompt: {cls_prompter.generate(sentence, candidates=candidates)}")
                             _, cls_queried = ask(
                                 model, cls_path,
                                 cls_prompter.generate(sentence, candidates=candidates),
