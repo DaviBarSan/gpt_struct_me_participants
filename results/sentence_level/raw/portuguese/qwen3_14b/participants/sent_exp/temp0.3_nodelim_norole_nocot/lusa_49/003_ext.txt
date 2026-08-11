@@ -1,0 +1,63 @@
+<think>
+Okay, I need to extract all participants from the given input text. Let me read the example again to make sure I understand the task correctly. The example input was about an emergency landing, and the output included entities like "Avião", "o motor", "Um avião", etc. So participants here seem to be any named entities or specific objects mentioned, including people, organizations, places, and things.
+
+Looking at the new input: "A GNR apreendeu ao suspeito 24,3 gramas de heroína, uma balança digital, uma tesoura, sacos de plástico para acondicionamento de doses individuais e cerca de 150 euros em dinheiro."
+
+First, I'll break down the sentence. The main participants here are the GNR (which is a Portuguese police force), the suspect ("suspeito"), the items seized: heroína (heroin), balança digital (digital scale), tesoura (scissors), sacos de plástico (plastic bags), and the money (150 euros). 
+
+I need to make sure I capture all these elements. The GNR is an organization, so that's a participant. The "suspeito" is a person, so that's another. Then each item listed after "apreendeu" should be included as participants. The money is mentioned as "cerca de 150 euros em dinheiro," so "150 euros" is a participant. 
+
+Wait, in the example, they included things like "aeroporto" and "os aeroportos," so even generic terms if they are part of the entities. Here, "sacos de plástico" is a specific item, so that's a participant. Also, "balança digital" and "tesoura" are specific objects. 
+
+I should check if "ao suspeito" is part of the participants. The suspect is the person, so "suspeito" is included. The GNR is the entity doing the action, so they are a participant. 
+
+So compiling the list: "A GNR", "o suspeito", "24,3 gramas de heroína", "uma balança digital", "uma tesoura", "sacos de plástico", "150 euros", "dinheiro". Wait, but in the example, they included "o motor" and "a aeronave" as separate entities. So maybe each noun phrase is considered a participant. 
+
+But in the example, "o motor" and "um motor" are both included. So even if the same object is mentioned with different articles, they are considered separate entries. So here, "24,3 gramas de heroína" and "heroína" might be different, but in the input, it's "24,3 gramas de heroína" which is a specific quantity, so that's a participant. Similarly, "uma balança digital" is a specific item, so that's included. 
+
+Also, "sacos de plástico para acondicionamento de doses individuais" is a specific type of plastic bags, so that's a participant. The money is "cerca de 150 euros em dinheiro," so "150 euros" and "dinheiro" might be separate, but in the example, they included "150 euros" as a participant. However, in the example output, "cerca de 150 euros" wasn't included, but "150 euros" was. Wait, the example input had "cerca de 150 euros em dinheiro" and the output included "cerca de 150 euros em dinheiro" as a participant? Wait, no, looking back, the example output had "cerca de 150 euros" as a participant. Wait, the example input was about the airport and the plane, and the output included "cerca de 150 euros" as a participant. Wait, no, in the example input, the output included "cerca de 150 euros" as a participant? Let me check again.
+
+In the example input, the output included "cerca de 150 euros" as a participant? Wait, the example input was:
+
+"O avião pertence à companhia aérea Jota Aviation e fazia a ligação entre os aeroportos de Farnborough, na Inglaterra, e Lisboa, de acordo com o ‘site’ da ANA-Aeroportos de Portugal."
+
+The output included "o ‘site’" as a participant. So in the example, the output included specific mentions of quantities and items. So in the current input, "24,3 gramas de heroína" is a specific quantity, so that's a participant. Similarly, "uma balança digital" is a specific item. 
+
+So the list would be:
+
+["A GNR", "ao suspeito", "24,3 gramas de heroína", "uma balança digital", "uma tesoura", "sacos de plástico", "cerca de 150 euros", "dinheiro"]
+
+Wait, but in the example, "o motor" and "um motor" are both included. So even if the same object is mentioned with different articles, they are separate. Here, "sacos de plástico" is mentioned once. Also, "dinheiro" is mentioned as part of "150 euros em dinheiro," but in the example, "dinheiro" wasn't included as a separate participant. Wait, in the example input, the output included "150 euros" but not "dinheiro." Let me check the example again.
+
+In the example input, the output had "cerca de 150 euros" as a participant. Wait, the example input was:
+
+"O avião pertence à companhia aérea Jota Aviation e fazia a ligação entre os aeroportos de Farnborough, na Inglaterra, e Lisboa, de acordo com o ‘site’ da ANA-Aeroportos de Portugal."
+
+The output included "o ‘site’" as a participant. But in the current input, the phrase is "cerca de 150 euros em dinheiro." In the example, the output included "cerca de 150 euros" as a participant. So in this case, "cerca de 150 euros em dinheiro" would be split into "cerca de 150 euros" and "dinheiro"? Or is the entire phrase considered as one participant?
+
+Looking back at the example, the input had "cerca de 150 euros em dinheiro" and the output included "cerca de 150 euros" as a participant. Wait, no, the example input was different. Let me check again.
+
+The example input was:
+
+"O avião pertence à companhia aérea Jota Aviation e fazia a ligação entre os aeroportos de Farnborough, na Inglaterra, e Lisboa, de acordo com o ‘site’ da ANA-Aeroportos de Portugal."
+
+The output included "o ‘site’" as a participant. So in that case, the phrase "de acordo com o ‘site’ da ANA-Aeroportos de Portugal" is parsed into "o ‘site’" and "a ANA-Aeroportos de Portugal." So the entire noun phrase is considered as a participant. 
+
+In the current input, the phrase is "24,3 gramas de heroína, uma balança digital, uma tesoura, sacos de plástico para acondicionamento de doses individuais e cerca de 150 euros em dinheiro." So each item listed after "apreendeu" is a separate participant. So:
+
+- "24,3 gramas de heroína"
+- "uma balança digital"
+- "uma tesoura"
+- "sacos de plástico para acondicionamento de doses individuais"
+- "cerca de 150 euros em dinheiro"
+
+But in the example, "sacos de plástico para acondicionamento de doses individuais" would be included as is. Also, "ao suspeito" is a participant, and "A GNR" is the entity that did the action. So the list would be:
+
+["A GNR", "ao suspeito", "24,3 gramas de heroína", "uma balança digital", "uma tesoura", "sacos de plástico para acondicionamento de doses individuais", "cerca de 150 euros em dinheiro"]
+
+Wait, but in the example, "a aeronave" and "aeronave" are both included. So even if the same noun is mentioned with different articles, they are separate. Here, "sacos de plástico" is mentioned once. Also, "dinheiro" is part of the phrase "cerca de 150 euros em dinheiro," but in the example, "dinheiro" wasn't included as a separate participant. So maybe the entire phrase is considered as one participant. 
+
+Therefore, the final list should include each item as a separate participant. So the answer would be the list as above.
+</think>
+
+["A GNR", "ao suspeito", "24,3 gramas de heroína", "uma balança digital", "uma tesoura", "sacos de plástico para acondicionamento de doses individuais", "cerca de 150 euros em dinheiro"]

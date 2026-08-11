@@ -1,0 +1,82 @@
+<think>
+Okay, let's see. The task is to extract all participants from the given input text. The example provided shows that participants can be entities like people, organizations, places, objects, etc., mentioned in the text. 
+
+Looking at the example input about the plane emergency landing, the output includes things like "Plane," "A plane," "the aircraft," "the plane," "airport," "Humberto Delgado Airport," "Lisbon," "Farnborough," "England," "Lusa," "Public Security Police," "Jota Aviation," "ANA-Aeroportos de Portugal," "source," "the same source," and "website." So it seems like any noun phrase that refers to an entity is included, even if it's a part of a larger phrase or a specific name.
+
+Now, applying this to the new input: "The GNR seized 24.3 grams of heroin from the suspect, a digital scale, scissors, plastic bags for storing individual doses and around 150 euros in cash."
+
+First, I need to identify all the participants here. Let's break it down:
+
+- "The GNR" – GNR is likely an organization, so that's a participant.
+- "the suspect" – a person involved, so that's a participant.
+- "heroin" – a substance, but not a participant. Wait, the example included "engine" and "a stopped engine," which are objects. But in the example, "engine" was part of the event, not a participant. Hmm, maybe the participants are the entities involved in the action, like the actors or objects being acted upon. 
+
+Wait, looking back at the example output, "engine" and "a stopped engine" were included. So maybe any noun phrase that's a participant in the event, whether it's the subject, object, or something affected. So in the new input, the GNR is the actor (seized), the suspect is the one from whom something was seized, the heroin, digital scale, scissors, plastic bags, and cash are the items seized. 
+
+So participants would be:
+
+- "The GNR"
+- "the suspect"
+- "heroin"
+- "digital scale"
+- "scissors"
+- "plastic bags"
+- "150 euros"
+- "cash"
+
+Wait, but in the example, "engine" was included as "to engine" and "a stopped engine." But in the new input, "heroin" is a substance, so maybe it's included. Also, "digital scale," "scissors," "plastic bags," and "cash" are objects. 
+
+But the example output included "airport" and "the airports," so maybe any noun phrase that's a participant. Also, "GNR" is an organization, so that's a participant. The suspect is a person. The items seized are objects. 
+
+So the output list should be:
+
+["The GNR", "the suspect", "heroin", "digital scale", "scissors", "plastic bags", "150 euros", "cash"]
+
+Wait, but in the example, "Lusa." was included with a period. However, in the new input, the items are "heroin", "digital scale", etc. Also, "around 150 euros in cash" – "150 euros" and "cash" are separate. 
+
+I need to make sure to extract all noun phrases that are participants. Let me check again:
+
+Original input: "The GNR seized 24.3 grams of heroin from the suspect, a digital scale, scissors, plastic bags for storing individual doses and around 150 euros in cash."
+
+Breaking down:
+
+- "The GNR" – participant (organization)
+- "the suspect" – participant (person)
+- "heroin" – object seized
+- "digital scale" – object
+- "scissors" – object
+- "plastic bags" – object
+- "150 euros" – amount of money
+- "cash" – another form of money
+
+So all these should be included. Also, "24.3 grams of heroin" – but the example included "24.3 grams" as part of the quantity, but in the example output, they didn't include numbers. Wait, in the example input, the output had "24.3 grams" as part of the heroin? Wait, no. Let me check the example again.
+
+Wait, the example input had "24.3 grams of heroin" but in the output, it was "heroin" and "24.3 grams" wasn't included. Wait, no, the example output was:
+
+["Plane", "to engine", "A plane", "engine", "the aircraft", "a stopped engine", "The aircraft", "The plane", "airport", "at Humberto Delgado Airport", "Lisbon", "the airports", "Farnborough", "England", "Lisbon", "Lusa.", "a Public Security Police", "airline Jota Aviation", "ANA-Aeroportos de Portugal", "source", "the same source", "Lisbon", "website."]
+
+So in that case, the quantity like "24.3 grams" wasn't included. Wait, but in the input, the example had "24.3 grams of heroin" but in the output, it's just "heroin". So maybe the quantity is not considered a participant, but the substance is. Similarly, in the new input, "24.3 grams of heroin" would be "heroin" as the participant, and the quantity is just a modifier. 
+
+So in the new input, the participants would be:
+
+- The GNR
+- the suspect
+- heroin
+- digital scale
+- scissors
+- plastic bags
+- 150 euros
+- cash
+
+But wait, "around 150 euros in cash" – "cash" is separate. So "150 euros" and "cash" are both participants. 
+
+So the JSON array would be:
+
+["The GNR", "the suspect", "heroin", "digital scale", "scissors", "plastic bags", "150 euros", "cash"]
+
+I need to make sure that all these are included as per the example. Also, in the example, "Lusa." was included with a period. But in the new input, the items don't have periods. However, the example had "Lusa." with a period, so maybe punctuation is preserved. But in the new input, the items are "heroin", "digital scale", etc., without periods. So I should keep them as they are, including any punctuation if present.
+
+In the input, "heroin" is a noun, so it's included. The other items are all noun phrases. So the final list should be as above.
+</think>
+
+["The GNR", "the suspect", "heroin", "digital scale", "scissors", "plastic bags", "150 euros", "cash"]

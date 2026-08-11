@@ -1,0 +1,33 @@
+<think>
+Okay, let's see. The task is to extract all participants from the given text. The example provided shows that participants are entities like people, organizations, places, etc., mentioned in the text. The output is a JSON array of strings.
+
+Looking at the input text: "Em comunicado, o Comando Territorial de Castelo Branco explica que a detenção do homem de 52 anos, foi efetuada na quinta-feira, através do Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova."
+
+First, I need to identify all the participants. Let's break it down.
+
+"Comando Territorial de Castelo Branco" is an organization, so that's a participant. Then "homem de 52 anos" refers to a person, but the example in the task didn't include age details, just the noun phrase. Wait, in the example, they had "o motor" and "um motor" as participants. So maybe even noun phrases with articles are included. So "o Comando Territorial de Castelo Branco" would be a participant. Then "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" is another organization. Also, "Idanha-a-Nova" is a place. The days like "quinta-feira" are days, but the example didn't include days. Wait, in the example, they had "Lisboa" and "Inglaterra" as places, so maybe places are included. But "quinta-feira" is a day, not a participant. So maybe not included.
+
+So participants here would be:
+
+- "Comando Territorial de Castelo Branco" (organization)
+- "o Comando Territorial de Castelo Branco" (with article)
+- "homem de 52 anos" (person)
+- "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" (organization)
+- "Idanha-a-Nova" (place)
+
+Wait, but in the example, "aeroporto" was included as a participant. So maybe any noun phrase that refers to an entity. So "o Comando Territorial de Castelo Branco" is a participant, "Comando Territorial de Castelo Branco" without the article? The example had "Avião" and "Um avião" as separate entries. So both with and without articles are included. So in this case, "o Comando Territorial de Castelo Branco" and "Comando Territorial de Castelo Branco" would both be separate entries. Wait, but in the example, "Avião" and "Um avião" are both present. So maybe even if the same entity is mentioned with different articles, they are considered separate entries. So here, "o Comando Territorial de Castelo Branco" and "Comando Territorial de Castelo Branco" would both be included. But in the input text, the first mention is "o Comando Territorial de Castelo Branco", so that's one entry. Then "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" is another. Also, "Idanha-a-Nova" is a place. The "homem de 52 anos" is a person. 
+
+Wait, but in the example, "fonte" and "a mesma fonte" are included. So even if it's a generic term like "fonte" (source), it's included. So in this case, "homem de 52 anos" is a participant. Also, the days like "quinta-feira" are not included. The example didn't have days. So the output should be:
+
+["Comando Territorial de Castelo Branco", "o Comando Territorial de Castelo Branco", "homem de 52 anos", "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova", "Idanha-a-Nova"]
+
+Wait, but in the example, "Lisboa" was included multiple times. So even if the same place is mentioned multiple times, each occurrence is a separate entry. In the input here, "Idanha-a-Nova" is mentioned once. Also, the "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" is a full name, so that's one entry. The "NIC" is part of that name, but the example didn't include abbreviations unless they were part of the full name. For example, in the example, "ANA-Aeroportos de Portugal" is included. So the full name with the abbreviation is included. So here, "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" is the full name, so that's one entry. The "NIC" is part of that, but not as a separate entry unless it's used alone. In this case, it's part of the full name, so it's included as is.
+
+So the final list would be:
+
+["Comando Territorial de Castelo Branco", "o Comando Territorial de Castelo Branco", "homem de 52 anos", "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova", "Idanha-a-Nova"]
+
+But wait, the example included "aeroporto" as a participant. So maybe even generic terms like "aeroporto" are included. In the input here, "comunicado" is a document, but not sure if that's considered a participant. The example didn't include "comunicado", so maybe not. So the main entities are the organizations, people, places. So the above list seems correct.
+</think>
+
+["Comando Territorial de Castelo Branco", "o Comando Territorial de Castelo Branco", "homem de 52 anos", "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova", "Idanha-a-Nova"]

@@ -1,0 +1,31 @@
+<think>
+Okay, let's see. The task is to extract all participants from the given input text. The example provided shows that participants are entities involved in the event, like people, organizations, places, etc. The output is a JSON array of strings.
+
+Looking at the example input about the plane emergency landing, the output includes things like "Plane", "A plane", "the aircraft", "the plane", "airport", "Humberto Delgado Airport", "Lisbon", "Farnborough", "England", "Lusa", "Public Security Police", "Jota Aviation", "ANA-Aeroportos de Portugal", etc. So it seems like they're capturing all noun phrases that refer to participants, including organizations, locations, and specific entities.
+
+Now, the new input is: "He added that the first rescuers to arrive at the scene, from the local Red Cross, found him already in cardiorespiratory arrest."
+
+I need to extract all participants here. Let's break it down.
+
+First, "He" – but in the example, they included "source" and "the same source", so maybe pronouns are included if they refer to a specific entity. However, in the example, "he" wasn't in the output. Wait, the example input had "a Public Security Police source told Lusa" and "the same source", so "source" was included. But "he" in the new input might refer to the source, but since it's just "he", maybe it's not included unless it's a specific entity. But the example included "source" as a participant. Hmm.
+
+The main participants here are "rescuers", "local Red Cross", and maybe "him" (the person in arrest). But the example didn't include "him" in the output. Let's check the example again. The example input had "found him already in cardiorespiratory arrest" but the output didn't include "him". Wait, in the example output, the input had "the aircraft" and "the plane" but not "him". So perhaps only nouns and noun phrases that are specific entities are included, not pronouns unless they refer to a named entity.
+
+In the new input, "rescuers" is a noun, but it's general. However, in the example, "engine" was included as a participant. Wait, in the example, "engine" was part of "engine failure" and "a stopped engine". So maybe any noun or noun phrase that's part of the event is included.
+
+So in the new input, "rescuers" is a participant. Then "local Red Cross" is an organization, so that's a participant. "scene" might be a location, but in the example, "airport" was included. However, "scene" is more general. The example had "Humberto Delgado Airport" as a specific location, so maybe specific locations are included. But "scene" is not specific, so maybe not. Then "him" is a pronoun, not included. 
+
+So the output would be ["rescuers", "local Red Cross", "scene", "cardiorespiratory arrest"]? Wait, but "cardiorespiratory arrest" is a medical condition, not a participant. The example included "engine failure" as "to engine" and "a stopped engine". Wait, in the example, "engine failure" was split into "to engine" and "engine" and "a stopped engine". So maybe any noun or noun phrase that's part of the event, even if it's a condition or object.
+
+But in the new input, the main participants are the rescuers, the Red Cross, and the person (him), but the person isn't named. So perhaps only "rescuers" and "local Red Cross" are included. Also, "scene" might be considered a location, but in the example, "airport" was included. However, "scene" is more generic. The example had "the airports" as a participant. So maybe "scene" is included as a location. But I'm not sure. Alternatively, maybe only named entities like organizations, places, and specific people are included.
+
+In the example, "Lusa" and "Public Security Police" were included. So "local Red Cross" is an organization, so that's a participant. "rescuers" is a group of people, so they are participants. "scene" is a location, but maybe not. The example had "Humberto Delgado Airport" as a specific place, but "scene" is not specific. So perhaps "scene" is not included. 
+
+So the output would be ["rescuers", "local Red Cross"]. Also, "him" is a pronoun, but since it's not a named entity, it's excluded. 
+
+Wait, but in the example, "the same source" was included. So if "he" refers to a source, but in the input, "he" is not a named entity. So maybe "he" is not included. 
+
+Therefore, the final answer is ["rescuers", "local Red Cross"].
+</think>
+
+["rescuers", "local Red Cross"]

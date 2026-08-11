@@ -1,0 +1,37 @@
+<think>
+Okay, let's see. The task is to extract all participants from the given input text. The example provided shows that participants can be entities like people, organizations, places, etc. The output is a JSON array of strings.
+
+Looking at the example input: "Plane makes emergency landing..." and the output includes things like "Plane", "A plane", "the aircraft", "the plane", "airport", "Humberto Delgado Airport", "Lisbon", etc. So it seems like any noun phrase that refers to a participant in the event is included. Even repeated mentions are listed separately.
+
+Now, the new input is: "Two men aged 22 and 33 were injured, one of them seriously, on Tuesday night following a disorder in the Casal dos Machados neighborhood, in Lisbon, a PSP source told Lusa."
+
+First, I need to identify all participants here. The main participants are the two men. The ages are given, but the example didn't include ages, just the entities. So "Two men" would be one entry. Then "one of them" refers back to the men, but maybe that's considered a pronoun and not a participant. The neighborhood is "Casal dos Machados neighborhood", Lisbon is a place. The PSP source and Lusa are organizations or sources.
+
+So breaking it down:
+
+- "Two men" (the main participants)
+- "Casal dos Machados neighborhood" (location)
+- "Lisbon" (location)
+- "a PSP source" (organization/person)
+- "Lusa" (organization)
+
+Wait, in the example, "a Public Security Police" was included as a participant. Here, "PSP" is the acronym for Public Security Police, so "a PSP source" would be similar to that. So "a PSP source" is a participant. Also, "Lusa" is a news agency, so that's another participant.
+
+The output in the example included "Lisbon" multiple times, but in the input, it's mentioned once. However, in the example, "Lisbon" appears twice in the output. Wait, looking back:
+
+In the example input, "Lisbon" is mentioned in "Humberto Delgado Airport, in Lisbon" and then again in "connecting the airports of Farnborough, England, and Lisbon". The output has "Lisbon" listed twice. So even if the same place is mentioned multiple times, each occurrence is listed as a separate entry.
+
+So in the current input, "Casal dos Machados neighborhood" is a specific place, "Lisbon" is another place. The PSP source and Lusa are organizations. The two men are the people involved.
+
+So the output should be:
+
+["Two men", "Casal dos Machados neighborhood", "Lisbon", "a PSP source", "Lusa"]
+
+Wait, but the example also included "the airports" as a participant. In the example input, "the airports of Farnborough, England, and Lisbon" was in the output as "the airports". So maybe any noun phrase that refers to a participant, even if it's a general term like "airports" if it's part of the event.
+
+In the current input, the main participants are the two men, the neighborhood, Lisbon, the PSP source, and Lusa. The "disorder" is an event, not a participant. So I think that's all. Let me check again.
+
+The input says "a disorder in the Casal dos Machados neighborhood, in Lisbon, a PSP source told Lusa." So the participants are the two men, the neighborhood, Lisbon, PSP source, Lusa. The "disorder" is an event, not a participant. So the list should be as above.
+</think>
+
+["Two men", "Casal dos Machados neighborhood", "Lisbon", "a PSP source", "Lusa"]
