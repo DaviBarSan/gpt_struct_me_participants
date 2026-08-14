@@ -64,6 +64,7 @@ EXCLUDED_MODELS = ["llama32_3b", "gemma3_1b", "qwen25_12b"]
 # label-granularity mismatch, not an extraction failure. COARSE_CLASS_MAP
 # lets notebook 03 also show a coarse-grained view where those collapse into
 # "Loc" for a fairer comparison, alongside the raw fine-grained view.
+
 COARSE_CLASS_MAP = {
     "Pl_capital": "Loc",
     "Pl_civil": "Loc",

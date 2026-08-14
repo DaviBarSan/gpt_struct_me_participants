@@ -7,6 +7,38 @@ from src.utils import get_full_sentence, string_overlap, tokenize, get_best_matc
 from experiments.constants import word_to_category
 
 
+# Full participant labels as they appear in the prompts, mapped to the
+# abbreviations used by the corpus annotations.
+TYPE_ABBREVIATIONS = {
+    "Object": "Obj",
+    "Facility": "Fac",
+    "Location": "Loc",
+    "Person": "Per",
+    "Event": "Eve",
+    "Organization": "Org",
+}
+
+# Lookup accepting either spelling of a label, case-insensitively.
+_TYPE_LOOKUP = {full.lower(): abbr for full, abbr in TYPE_ABBREVIATIONS.items()}
+_TYPE_LOOKUP.update({abbr.lower(): abbr for abbr in TYPE_ABBREVIATIONS.values()})
+
+
+def normalize_type(pred_type: str) -> str:
+    """Normalize a predicted participant type to the corpus abbreviation.
+
+    Models answer with either the full label ("Organization") or the already
+    abbreviated one ("Org"), so a plain lookup on the full-label mapping would
+    turn every abbreviated answer into "N/A". Labels outside the schema are
+    returned verbatim so the reports reflect what the model actually predicted.
+    """
+    if pred_type is None:
+        return "N/A"
+    label = str(pred_type).strip()
+    if not label:
+        return "N/A"
+    return _TYPE_LOOKUP.get(label.lower(), label)
+
+
 def recall_score(tp: int, fn: int) -> float:
     """Compute the recall score."""
     return tp / (tp + fn) if tp + fn > 0 else 0
@@ -28,14 +60,13 @@ def strict_metrics(prediction: list, annotation: list, template: str, modelo: st
     """Compute micro-averaged metrics for a given entity.
     ('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')
     """
-    temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
     tps, fns, fps = 0, 0, 0
     detailed_results = []
     for doc_id in prediction:
         if "cls" in template:
             # print("Template with classification detected.")
             preds = {(item[0]) for item in prediction[doc_id]}
-            preds_dicts = {item[0]: temp_dict.get(item[1], 'N/A') for item in prediction[doc_id]}
+            preds_dicts = {item[0]: normalize_type(item[1]) for item in prediction[doc_id]}
             annts = {item[0] for item in annotation[doc_id]}            
             annts_dict = {f'{item[0]}': item[1] for item in annotation[doc_id]}            
         else:
@@ -126,7 +157,6 @@ def exact_match(prediction: set, annotation: set, template: str) -> tuple:
 def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: str, dict_words: dict) -> dict:
     """Compute micro-averaged metrics for a given entity."""
     f1 = 0
-    temp_dict = {"Object": "Obj", "Facility": "Fac", "Location": "Loc", "Person": "Per", "Event": "Eve", "Organization": "Org"}
     # print("Computing relaxed metrics...")
     detailed_results_token_level = []
     for doc_id in prediction:
@@ -137,7 +167,7 @@ def relaxed_metrics(prediction: Dict, annotation: Dict, template: str, model: st
             preds = {item[0] for item in prediction[doc_id]}
             annts = {tuple(item) for item in annotation[doc_id]}
             # print("Template with classification detected.")
-            preds = {(item[0], temp_dict.get(item[1], item[1])) for item in prediction[doc_id]}
+            preds = {(item[0], normalize_type(item[1])) for item in prediction[doc_id]}
             
         else:
             # print("Template of extraction detected. Relaxed metrics")

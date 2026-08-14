@@ -60,6 +60,37 @@ EXAMPLERS = {
     }
 }
 
+# Negative demonstrations for the sentence-level detection step, which needs to
+# show the model sentences that mention no entity at all. They cannot come from
+# the exampler: all five sentences of lusa_117 carry annotated participants.
+#
+# The prompt-selection set (SAMPLE_DOCS_IDS) holds 16 sentences without a single
+# annotated participant, but 14 of them are headlines - "Man kills ex-partner
+# with gunshot in Vila Nova de Gaia" - which plainly do mention participants and
+# are simply left unannotated (inconsistently so: lusa_117's own headline *is*
+# annotated). Using those would teach the gate to answer "no" on the most
+# participant-dense sentences, and a "no" costs the sentence its extraction.
+#
+# That leaves the two genuinely participant-free sentences of lusa_96, quoted
+# verbatim below (its sentences 5 and 2), mentioning only events and a time
+# expression. The third is written in the same register to complete the set.
+DETECTION_NEGATIVES = {
+    "english": {
+        "participants": [
+            "The alert was given at around 5 pm.",
+            "This is an accident that involves a fall from a height.",
+            "The incident occurred on Tuesday afternoon.",
+        ]
+    },
+    "portuguese": {
+        "participants": [
+            "O alerta foi dado cerca das 17 horas.",
+            "Trata-se de um acidente que envolve uma queda em altura.",
+            "O incidente ocorreu na tarde de terça-feira.",
+        ]
+    }
+}
+
 ENTITIES = {
     "portuguese": [
         # "event triggers",

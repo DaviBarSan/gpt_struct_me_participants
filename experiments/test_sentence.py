@@ -9,9 +9,14 @@ sentence goes through three requests:
     3. classification - classify the spans extraction returned (`cls` prompt,
                         conditioned on those candidates)
 
-Both prompts keep the modifiers (`def`, `exp`) of the model's document-level
-winner in `BEST_TEMPLATES`, so a sentence-level run stays comparable to the
-document-level one it is contrasted against.
+All three prompts carry the entity definition and a few-shot example, whatever
+modifiers the model's document-level winner in `BEST_TEMPLATES` happens to use: a
+lone sentence gives the model far less context than a whole article to infer what
+counts as an entity from, so withholding either at this granularity would test
+something other than the effect of the granularity itself. For the seven
+model/language pairs whose winner has no `def`, this means the sentence-level run
+differs from its document-level counterpart in the definition block as well as in
+granularity - worth stating when the two are contrasted.
 
 Only raw answers are written here - one file per sentence per step - so an
 interrupted run resumes at the sentence it stopped on and re-deriving the
@@ -26,7 +31,7 @@ import sys
 import time
 import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 # Windows consoles default to the cp1252 codepage, which can't represent every
 # Unicode character a model may generate (smart quotes, non-breaking hyphens,
@@ -42,6 +47,7 @@ import yaml
 
 from experiments.constants import (
     BEST_TEMPLATES,
+    DETECTION_NEGATIVES,
     ENTITIES,
     EXAMPLERS,
     RESOURCE_PATH,
@@ -50,6 +56,8 @@ from experiments.constants import (
 )
 from experiments.parse import read_json, read_text_safe, strip_thinking
 
+from src.confidence import as_confidence, split_span_confidence
+from src.emissions import run_name, track_emissions
 from src.prompts import Prompter
 from src.sentences import split_sentences
 
@@ -66,6 +74,12 @@ RAW_PATH = SENTENCE_PATH / "raw"
 # in this sentence." - hence a word-boundary search rather than an equality test.
 DETECTION_TOKENS = re.compile(r"\b(yes|no|sim|n[aã]o)\b", re.IGNORECASE)
 POSITIVE_TOKENS = {"yes", "sim"}
+
+# The detection answer is "yes 0.85" once confidences are asked for, but a model
+# may also wrap it ({"answer": "yes", "confidence": 0.85}), so the number is
+# searched for rather than positionally indexed. Answers predating the feature
+# contain no number at all and yield None.
+CONFIDENCE_TOKENS = re.compile(r"\d*\.?\d+")
 
 
 def run_dir_name(definition: bool, example: bool) -> str:
@@ -102,6 +116,21 @@ def read_detection(answer: str) -> str:
     return "yes" if match.group(1).lower() in POSITIVE_TOKENS else "no"
 
 
+def read_detection_confidence(answer: str) -> Optional[float]:
+    """Read the confidence out of a detection answer, or None if absent.
+
+    Takes the first number in [0, 1] - or a percentage, via
+    `src.confidence.as_confidence` - so it reads "yes 0.85" and a JSON-wrapped
+    answer alike, and returns None for the bare "yes"/"no" of a run collected
+    before confidences were asked for.
+    """
+    for match in CONFIDENCE_TOKENS.finditer(strip_thinking(answer or "")):
+        value = as_confidence(match.group())
+        if value is not None:
+            return value
+    return None
+
+
 def read_candidates(path: Path, template: str) -> List[str]:
     """Read the extraction answer at `path` as a list of candidate spans.
 
@@ -110,14 +139,19 @@ def read_candidates(path: Path, template: str) -> List[str]:
     literals, `<think>` blocks) applies at sentence granularity too. Duplicates
     are dropped keeping first occurrence, since the same span repeated in one
     answer is one candidate to classify.
+
+    Reads both `["a plane", ...]` and `[["a plane", 0.9], ...]`: the confidence is
+    irrelevant here, since classification is asked about every span extraction
+    returned regardless of how sure it was.
     """
     answer, _ = read_json(path, template)
     if not isinstance(answer, list):
         return []
-    candidates = [
-        span.strip() for span in answer
-        if isinstance(span, str) and span.strip()
-    ]
+    candidates = []
+    for item in answer:
+        span, _ = split_span_confidence(item)
+        if span:
+            candidates.append(span)
     return list(dict.fromkeys(candidates))
 
 
@@ -198,10 +232,12 @@ def run(
         logger.info(f"Entity: {entity}")
 
         tid = best_templates[(mid, entity)]
-        # The document-level winner only fixes the modifiers; the sentence-level
+        # The document-level winner is recorded for reference only: every
+        # sentence-level prompt carries the definition and the example, for the
+        # reason given in the module docstring. It still fixes nothing else - the
         # run always needs both an extraction and a classification prompt.
-        definition = "def" in tid
-        use_example = "exp" in tid
+        definition = True
+        use_example = True
         if use_example:
             try:
                 print(f"Looking for example doc id: {examples[entity]}")
@@ -216,7 +252,10 @@ def run(
         ext_tid, cls_tid = templates_for(definition, use_example)
         ext_tid = ext_template or ext_tid
         cls_tid = cls_template or cls_tid
-        logger.info(f"Document-level winner {tid} -> extraction {ext_tid}, classification {cls_tid}")
+        logger.info(f"Document-level winner {tid}; sentence-level forces definition "
+                    f"and example -> extraction {ext_tid}, classification {cls_tid}")
+
+        negatives = DETECTION_NEGATIVES[shot_language][entity]
 
         for experiment_config in config["prompt_configs"]:
             prompt_config = experiment_config["experiment"]
@@ -228,10 +267,17 @@ def run(
                 language=language,
                 constraints=prompt_config["constraints"],
                 chain_of_thought=prompt_config["chain_of_thought"],
+                confidence=True,
             )
-            det_prompter = Prompter(task="detection", example=None, **prompter_kwargs)
+            det_prompter = Prompter(
+                task="detection", example=example,
+                detection_negatives=negatives, **prompter_kwargs,
+            )
             ext_prompter = Prompter(task="extraction", example=example, **prompter_kwargs)
-            cls_prompter = Prompter(task="classification", example=example, candidates=True, **prompter_kwargs)
+            cls_prompter = Prompter(
+                task="classification", example=example, candidates=True,
+                class_definitions=True, **prompter_kwargs,
+            )
 
             exp_suffix = (
                 f"temp{temp}"
@@ -341,18 +387,19 @@ def main(
     config = yaml.safe_load(open(config_path))
     print(f"Config: {config}")
 
-    run(
-        model=model,
-        mid=mid,
-        language=language,
-        shot_language=shot_language,
-        config=config,
-        temp=temp,
-        sleep=sleep,
-        docs=docs,
-        ext_template=ext_template,
-        cls_template=cls_template,
-    )
+    with track_emissions(mid, run_name("sentence_level", language, mid, temp)):
+        run(
+            model=model,
+            mid=mid,
+            language=language,
+            shot_language=shot_language,
+            config=config,
+            temp=temp,
+            sleep=sleep,
+            docs=docs,
+            ext_template=ext_template,
+            cls_template=cls_template,
+        )
 
 
 if __name__ == "__main__":

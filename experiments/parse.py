@@ -499,10 +499,10 @@ def read_json(filepath: Path, template: str = "") -> tuple:
     match = re.search(r"<Output>(.*?)</Output>", content, re.DOTALL)
     if match:
         content = match.group(1)
-        print("Extracted String:")
-        print(content)
-    else:
-        print("Output tag not found.")
+        # print("Extracted String:")
+        # print(content)
+    # else:
+        # print("Output tag not found.")
 
     content = sanitize_json_string(content)
     content = content.replace('\u00A0', ' ')
