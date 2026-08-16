@@ -1,0 +1,61 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given input text. Participants are entities involved in or affected by the event. The example provided shows that even parts of phrases like "to engine" are included, though that might be a mistake. Wait, in the example, "to engine" is listed, but maybe that's a typo. Let me check the example again.
+
+In the example input, the output includes "to engine" with confidence 0.8. But "to engine" isn't a participant; it's part of the phrase "due to engine failure." Hmm, maybe the example is incorrect, but I have to follow it. So perhaps the user expects parts of phrases as entities even if they're not full nouns. But that seems odd. Maybe the example is a mistake, but I need to adhere to it.
+
+Now, looking at the current input: "The alert was given at 8:37 am and the Vila Nova de Gaia Firefighters and Aguda Firefighters were fighting the flames that started in the kitchen of the house, the source added."
+
+First, identify all entities. The main participants here are the fire departments: Vila Nova de Gaia Firefighters and Aguda Firefighters. They are actively involved in fighting the flames. The source is mentioned as adding the information, so "the source" is a participant. The house is where the fire started, so that's a location. The flames are part of the event, but maybe not a participant. The kitchen is part of the house. The time "8:37 am" is a time, not a participant. 
+
+Wait, the definition says participants can be individuals, groups, organizations, or entities impacted. The house is impacted, so maybe it's a participant. But the example didn't include locations like "airport" or "Lisbon" as participants. Wait, in the example output, "airport" and "Lisbon" are included. So maybe locations are considered participants. So "the house" would be a participant here. Also, "the kitchen" is part of the house, but maybe not a separate entity. 
+
+So the entities would be:
+
+- Vila Nova de Gaia Firefighters (group)
+- Aguda Firefighters (group)
+- the source (entity)
+- the house (location)
+- the kitchen (location, but maybe part of the house)
+- flames (event, but not sure if it's a participant)
+- the alert (event, but not a participant)
+- 8:37 am (time, not a participant)
+
+But according to the example, "airport" and "Lisbon" are included. So maybe locations are considered participants. So "the house" and "the kitchen" would be participants. However, the example includes "the airports" as a participant, which is a location. So I should include "the house" and "the kitchen" as participants. 
+
+But the example also includes "source" and "the same source" as participants. In the current input, "the source" is mentioned. So that's a participant. 
+
+So compiling the list:
+
+1. Vila Nova de Gaia Firefighters (confidence high)
+2. Aguda Firefighters (high)
+3. the source (high)
+4. the house (medium, since it's the location where the fire started)
+5. the kitchen (medium, part of the house)
+6. flames (maybe, but not sure. The example didn't include "flames" as a participant, but "engine" was included. Wait, in the example, "engine" and "a stopped engine" are participants. So maybe any noun phrase related to the event is considered. So "flames" could be included. But the example includes "engine" as a participant, which is a noun. So "flames" would be a participant here. 
+
+But the example also includes "the aircraft" and "the plane" as participants. So in the current input, "the house" and "the kitchen" would be participants. 
+
+So the list would be:
+
+["Vila Nova de Gaia Firefighters", 0.95], ["Aguda Firefighters", 0.95], ["the source", 0.8], ["the house", 0.7], ["the kitchen", 0.6], ["flames", 0.5]
+
+Wait, but the example includes "the same source" as a participant. In the current input, "the source" is mentioned once. So "the source" is a participant. 
+
+Also, the example includes "Lusa." as a participant. In the current input, the source is "the source added," but the example's "Lusa." is a news agency. So in the current input, "the source" is the entity, but it's not named. So maybe "the source" is a participant with lower confidence. 
+
+Alternatively, if the source is an organization, but it's not named here. So "the source" is a participant. 
+
+So the final list would be:
+
+["Vila Nova de Gaia Firefighters", 0.95], ["Aguda Firefighters", 0.95], ["the source", 0.8], ["the house", 0.7], ["the kitchen", 0.6], ["flames", 0.5]
+
+But I need to check if "flames" is considered a participant. The definition says participants can be entities that are impacted or involved. The flames are part of the event, but are they an entity? Maybe not. The example includes "engine" as a participant, which is a noun. So "flames" could be included. But the example's output includes "engine" and "a stopped engine" as separate entries. So maybe "flames" is a participant here. 
+
+Alternatively, the user might not want to include "flames" as a participant. But the example includes "engine" as a participant. So I should include "flames" as well. 
+
+Another thing: the example includes "the same source" as a participant. In the current input, "the source" is mentioned once. So "the source" is a participant. 
+
+So the final answer would be the list with those entities and their confidence scores.
+</think>
+
+[["Vila Nova de Gaia Firefighters", 0.95], ["Aguda Firefighters", 0.95], ["the source", 0.8], ["the house", 0.7], ["the kitchen", 0.6], ["flames", 0.5]]

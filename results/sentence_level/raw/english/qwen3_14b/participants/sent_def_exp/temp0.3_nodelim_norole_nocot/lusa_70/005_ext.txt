@@ -1,0 +1,58 @@
+<think>
+Okay, let's tackle this task step by step. The goal is to extract all participants from the given text based on the provided definition. Participants can be individuals, groups, organizations, or entities involved or impacted by the event. The example shows that even parts like "to engine" were included, which might be a bit confusing, but I'll follow the guidelines.
+
+First, I need to parse the input sentence: "Emergency services found the 74-year-old victim in cardiorespiratory arrest, and maneuvers to reverse the situation were unsuccessful, so death was confirmed at the scene."
+
+Breaking it down, the main entities here are:
+
+1. Emergency services: This is a group involved in the event. They found the victim. Confidence is high here, maybe 0.95.
+2. The 74-year-old victim: The individual who was found in arrest. The age is part of the description, but the entity is the victim. Confidence around 0.9.
+3. Cardiorespiratory arrest: This is a medical condition, but according to the example, parts like "engine" were included. However, in the example, "engine" was part of a larger phrase like "a stopped engine." Here, "cardiorespiratory arrest" is the state, not an entity. Wait, the definition says participants are those involved or impacted. The arrest is the state, not an entity. So maybe this isn't a participant. Hmm, tricky.
+4. Maneuvers: The actions taken, but the example included "maneuvers to reverse the situation" as "maneuvers" with confidence 0.8? Wait, looking back at the example output, the user included "to engine" as a participant. That seems odd. Maybe the example is including phrases that are part of the event's description, even if they're not entities. But the definition says participants are entities. So perhaps "maneuvers" isn't a participant, but the entities involved in the maneuvers. Wait, the example includes "a stopped engine" as a participant. That's a noun phrase, but it's a state. So maybe the task is to extract all noun phrases that are part of the event, even if they're not entities. That's confusing.
+
+Wait, the example output includes "to engine" which is a prepositional phrase, but maybe that's a mistake. Alternatively, maybe the user is extracting all noun phrases, even if they are not proper entities. The example given by the user includes "to engine" as a participant, which might be an error, but I have to follow the example.
+
+So, looking at the example input: "Plane makes emergency landing at Lisbon airport due to engine failure" and the output includes "to engine" as a participant. That seems incorrect, but perhaps the user is extracting all noun phrases, including those with prepositions. So maybe the task is to extract all noun phrases, regardless of whether they are entities or not.
+
+In that case, for the current input, the participants would be:
+
+- Emergency services (group)
+- the 74-year-old victim (individual)
+- cardiorespiratory arrest (state, but included as per example)
+- maneuvers (actions, but maybe included)
+- death (event outcome)
+- the scene (location)
+
+But the example output for the first input includes "a Public Security Police" as a participant, which is an organization. Also, "source" and "the same source" are included, which are entities.
+
+So, applying that to the current input:
+
+- Emergency services (group)
+- the 74-year-old victim (individual)
+- maneuvers (actions, but maybe included)
+- death (event)
+- the scene (location)
+
+But the example includes "maneuvers to reverse the situation" as "maneuvers" with confidence 0.8. Wait, in the example output, the user's input had "maneuvers to reverse the situation were unsuccessful" and the output included "maneuvers" as a participant. So maybe all noun phrases are extracted, even if they are actions or states.
+
+Therefore, in the current input, the participants would be:
+
+1. Emergency services (confidence 0.95)
+2. the 74-year-old victim (0.9)
+3. cardiorespiratory arrest (0.8)
+4. maneuvers (0.7)
+5. death (0.8)
+6. the scene (0.7)
+
+But wait, the example output for the first input included "the airports" as a participant. So even if it's a plural noun phrase, it's included. So in this case, "the scene" is a noun phrase and should be included.
+
+But I need to check if all these are considered participants. The definition says participants are those involved or impacted. The scene is the location where the event happened, so it's an entity involved. The maneuvers are actions taken, but the subject is emergency services. However, the example includes "maneuvers" as a participant, so I should follow that.
+
+So compiling the list:
+
+["Emergency services", 0.95], ["the 74-year-old victim", 0.9], ["cardiorespiratory arrest", 0.8], ["maneuvers", 0.7], ["death", 0.8], ["the scene", 0.7]
+
+But wait, the example output for the first input included "Lusa." as a participant. That's the news agency. In the current input, there's no such entity. So the output would be the list above. However, I need to make sure that all noun phrases are included, even if they are not entities. For example, "cardiorespiratory arrest" is a medical condition, but according to the example, it's included. So I'll proceed with that.
+</think>
+
+[["Emergency services", 0.95], ["the 74-year-old victim", 0.9], ["cardiorespiratory arrest", 0.8], ["maneuvers", 0.7], ["death", 0.8], ["the scene", 0.7]]

@@ -1,0 +1,45 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example provided shows that participants can be entities like individuals, groups, organizations, etc., that are involved or impacted by the event.
+
+First, I need to read the input carefully. The input is: "O alerta chegou às autoridades pelas 11:45 e a Polícia Judiciária foi já chamada a investigar, já que se trata de um caso da competência reservada daquele órgão de polícia criminal."
+
+Breaking this down, the main event is an alert reaching the authorities at 11:45, and the Police Judicial (Polícia Judiciária) was called to investigate because it's a case under their jurisdiction.
+
+Now, identifying participants. The first part mentions "autoridades" (authorities). That's a group, so that's a participant. Then "a Polícia Judiciária" is explicitly mentioned as being called to investigate. That's an organization. Also, "daquele órgão de polícia criminal" refers back to the Polícia Judiciária, so that's the same entity. 
+
+Wait, but in the example, they included things like "o motor" and "a aeronave" even if they were parts of the plane. So maybe even if the entity is a part of something else, like "o motor" (the engine), it's still considered a participant. But in this case, the entities are more about organizations and groups. 
+
+So in the input, "autoridades" is a participant. "Polícia Judiciária" is another. "daquele órgão de polícia criminal" is a bit redundant, but it's referring to the same entity as Polícia Judiciária. So maybe I should list "Polícia Judiciária" once, but the example had duplicates like "o motor" and "um motor" as separate entries. However, in the example, they included different mentions even if they refer to the same entity. So maybe I should list each occurrence as separate entries, even if they are the same entity.
+
+Wait, looking at the example output, they have "Avião", "o motor", "Um avião", etc. So each mention is treated as a separate entity, even if they refer to the same thing. So in this case, "a Polícia Judiciária" and "daquele órgão de polícia criminal" are both mentions of the same entity, but they are listed separately. However, in the example, "a aeronave" and "A aeronave" are both listed as separate entries. So I need to extract each mention as a separate entity, even if they are the same.
+
+So in the input, "autoridades" is one entity. Then "a Polícia Judiciária" is another. Then "daquele órgão de polícia criminal" is another mention of the same entity as "Polícia Judiciária". So I should list each of these as separate entries. 
+
+But wait, the example also included "fonte" and "a mesma fonte" as separate entries. So even if it's the same entity, different mentions are considered separate. So I need to extract each occurrence as a separate entity, even if they refer to the same thing.
+
+So for the input, the entities would be:
+
+- "autoridades"
+- "a Polícia Judiciária"
+- "daquele órgão de polícia criminal"
+
+But wait, "daquele órgão de polícia criminal" is a description of the Polícia Judiciária, so maybe it's redundant. But according to the example, even if it's a description, it's included. So I should include each mention as a separate entity.
+
+So the output would be:
+
+[
+  ["autoridades", 0.9],
+  ["a Polícia Judiciária", 0.95],
+  ["daquele órgão de polícia criminal", 0.85]
+]
+
+But I need to check if "autoridades" is a participant. The definition says participants are those actively involved or impacted. The authorities received the alert, so they are involved. The Polícia Judiciária is called to investigate, so they are participants. The "órgão de polícia criminal" is the same as the Polícia Judiciária, so that's another mention.
+
+Confidence scores: "autoridades" is a general term, but in context, it's specific to the authorities receiving the alert. So maybe 0.9. "a Polícia Judiciária" is explicitly mentioned, so high confidence, 0.95. "daquele órgão de polícia criminal" is a bit more indirect, but still refers to the same entity, so maybe 0.85.
+
+I should also check if there are any other entities. The time "pelas 11:45" is a time, not an entity. "já que se trata de um caso da competência reservada" – "caso" (case) might be an entity, but the definition says participants are those involved or impacted. The case itself is the event, not a participant. So probably not. The "competência reservada" is a legal term, but not an entity. So no other entities.
+
+So the final list would be those three entries with their confidence scores.
+</think>
+
+[["autoridades", 0.9], ["a Polícia Judiciária", 0.95], ["daquele órgão de polícia criminal", 0.85]]

@@ -1,0 +1,38 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example provided shows that participants can be entities like individuals, groups, organizations, etc., and they might be mentioned explicitly or inferred.
+
+First, I need to read the input carefully. The input is: "Em comunicado, o Comando Territorial de Castelo Branco explica que a detenção do homem de 52 anos, foi efetuada na quinta-feira, através do Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova."
+
+Breaking it down, the main entities here are:
+
+1. "Comando Territorial de Castelo Branco" – This is an organization, likely a police or military command. It's mentioned as the one issuing the statement, so they are definitely a participant.
+
+2. "homem de 52 anos" – The man being detained. He's an individual involved in the event, so he's a participant.
+
+3. "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" – This is a specific unit (NIC) located in Idanha-a-Nova. Since they carried out the detention, they are participants.
+
+4. "Idanha-a-Nova" – This is a place, the location of the NIC. However, the definition says participants are entities involved or impacted. The location might be a participant if it's an entity, but sometimes places are considered locations rather than participants. But the example included "Lisboa" and "Inglaterra" as participants, so maybe places are included here. So I should include it.
+
+5. "quinta-feira" – This is a day of the week. It's a time reference, not an entity involved, so probably not a participant.
+
+6. "detenção" – This is an action, not an entity. So not a participant.
+
+Now, checking the example output again. In the example, they included "aeroporto", "Lisboa", "Inglaterra", etc. So places are included. So "Idanha-a-Nova" should be included. Also, "Comando Territorial de Castelo Branco" is an organization, so that's a participant. The man is an individual, so he's a participant. The NIC is an organization, so that's a participant.
+
+Confidence scores: For "Comando Territorial de Castelo Branco", it's explicitly mentioned as the one issuing the statement, so high confidence (0.95). The man is directly mentioned, so 0.9. The NIC is explicitly named, so 0.9. "Idanha-a-Nova" is the location of the NIC, but since the example included places, I'll go with 0.8. The other terms like "quinta-feira" and "detenção" are not participants, so they are excluded.
+
+Wait, but in the example, "no Aeroporto Humberto Delgado" was included. So even with the preposition, they included the full phrase. So in this case, "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" is the full entity. But the user's example included "o motor", "a aeronave", etc., which are noun phrases. So I should extract the full noun phrases as entities.
+
+So the entities would be:
+
+- "Comando Territorial de Castelo Branco" (confidence 0.95)
+- "homem de 52 anos" (0.9)
+- "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" (0.9)
+- "Idanha-a-Nova" (0.8)
+
+Wait, but in the example, they included "Lisboa" multiple times, even though it's the same place. So maybe even if the same entity is mentioned multiple times, each occurrence is listed. However, in the input here, "Idanha-a-Nova" is mentioned once. So I need to check if the same entity is mentioned more than once. In this case, no. So the list would be those four entities.
+
+But wait, the example output had entries like "o motor", "um motor", "a aeronave", etc. So even if the same entity is referred to with different articles or forms, they are all listed. So in this case, "Comando Territorial de Castelo Branco" is mentioned once, "homem de 52 anos" once, "Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova" once, and "Idanha-a-Nova" once. So the output would be those four with their respective confidence scores.
+</think>
+
+[["Comando Territorial de Castelo Branco", 0.95], ["homem de 52 anos", 0.9], ["Núcleo de Investigação Criminal (NIC) de Idanha-a-Nova", 0.9], ["Idanha-a-Nova", 0.8]]

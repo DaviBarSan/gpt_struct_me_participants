@@ -1,0 +1,80 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given input text. Participants include individuals, groups, organizations, or entities involved or impacted by the event. The example provided shows that even parts of phrases like "to engine" are included, though that might be a mistake. Wait, in the example, "to engine" was listed, but maybe that's a typo? Hmm, maybe the example is just showing how they extracted parts of phrases, even if they're not full entities. But I need to be careful here.
+
+Looking at the input: "Mozambican maritime inspection seized 1,100 kilos of crab, in the center of the country, in less than a week, caught in the "veda season", when it is prohibited to catch the species, an authority source told Lusa today."
+
+First, identify all entities. Let's break it down.
+
+"Mozambican maritime inspection" – that's an organization or authority, so that's a participant. Confidence high, maybe 0.95.
+
+"1,100 kilos of crab" – the crab is the object, but the participants are the entities involved. The crab is the item seized, so maybe not a participant. Wait, the definition says participants are those involved or impacted. The crab is the subject of the seizure, so maybe it's a participant? Or is it just an object? The example included "engine" as a participant, so maybe objects are included. But in the example, "engine" was listed as a participant. So maybe even objects are considered participants if they are central to the event. Hmm, but in the example, "the aircraft" and "the plane" were included, which are the main entities involved. So perhaps the crab here is a participant as the item being seized. But I need to check the example again.
+
+In the example, "engine" was included. So maybe any noun that's part of the event is considered a participant. But the user's definition says participants are those involved or impacted. The crab is being seized, so it's impacted. So maybe include it. But the example didn't include "crab" as a participant. Wait, in the example input, the main participants were the plane, the airport, the airline, the source, etc. The engine was part of the problem. So maybe in this case, the crab is a participant. But I'm not sure. Let me think again.
+
+The definition says participants are entities involved or impacted. The crab is being seized, so it's impacted. So maybe include "crab" as a participant. But the example didn't include "crab" in their output. Wait, the example input had "engine failure" and "stopped engine" as participants. So maybe even objects are included. So in this case, "crab" would be a participant. But the example output included "engine" as a participant. So I think I should include "crab" here.
+
+Next, "Mozambican maritime inspection" – that's an organization, so definitely a participant. Then "an authority source" – that's a participant, maybe an individual or group. "Lusa" is a news agency, so that's a participant. "veda season" – that's a term, but is it an entity? Maybe not, unless it's a specific organization or event. The "veda season" is a prohibited period, so it's a regulation or a time period, not an entity. So probably not a participant. 
+
+"In the center of the country" – "the country" refers to Mozambique, but the input doesn't specify. However, the country is Mozambique, so maybe "Mozambique" is a participant. But the input says "the center of the country" without naming the country. However, the context is Mozambique, so maybe "Mozambique" is implied. But the input doesn't explicitly mention it. Hmm, tricky. The user might expect "country" as a participant, but without a name, it's ambiguous. Maybe not include it unless it's explicitly named. 
+
+"caught in the veda season" – "veda season" is a term, not an entity. So not a participant. 
+
+"an authority source" – this is a participant, as the source of the information. 
+
+"Lusa" is a news agency, so that's a participant. 
+
+So compiling the list:
+
+- Mozambican maritime inspection (high confidence)
+- 1,100 kilos of crab (maybe, but the example included "engine" as a participant, so maybe include)
+- crab (as the species, but the example didn't have that, but the input here has "crab" as the species, so maybe include)
+- veda season (probably not)
+- an authority source (yes)
+- Lusa (yes)
+- the country (but not named, so maybe not)
+- Mozambique (if implied, but not explicitly stated, so maybe not)
+
+Wait, the input says "in the center of the country" but the country isn't named. However, the context is Mozambique, so maybe "Mozambique" is a participant. But since it's not explicitly mentioned, maybe not. The user's example included "Lisbon" as a participant even though it was part of the airport name. So in this case, "country" might be "Mozambique," but since it's not explicitly stated, maybe not. Alternatively, "the country" is a participant, but that's vague. Maybe better to omit unless it's explicitly named.
+
+So the participants would be:
+
+- Mozambican maritime inspection
+- 1,100 kilos of crab
+- crab (as the species)
+- an authority source
+- Lusa
+
+Wait, but in the example, "engine" was included as a participant. So "crab" would be similar. However, the example also included "the aircraft" and "the plane," which are the main entities involved. So here, the main entities are the inspection, the crab, the source, and Lusa.
+
+But the example output included "engine" and "a stopped engine" as participants. So in this case, "crab" and "1,100 kilos of crab" would be participants. Also, "veda season" is a term, but not an entity. 
+
+So the final list would be:
+
+["Mozambican maritime inspection", 0.95], ["1,100 kilos of crab", 0.8], ["crab", 0.7], ["an authority source", 0.9], ["Lusa", 0.95]
+
+But wait, the example included "the same source" as a participant. In this case, "an authority source" is similar. Also, in the example, "source" was included. So maybe "source" is a participant here. But the input says "an authority source told Lusa," so "source" is the entity. But the example included "source" as a participant. So in this case, "an authority source" is the participant. Also, "Lusa" is a news agency, so that's a participant.
+
+But the example output included "Lusa." with a period, but the user's instruction says to extract the entity as a string. So "Lusa" without the period. So in the input, "Lusa today" – "Lusa" is the entity.
+
+So the final list would include:
+
+- Mozambican maritime inspection
+- 1,100 kilos of crab
+- crab
+- an authority source
+- Lusa
+
+Confidence levels:
+
+- Mozambican maritime inspection: high, maybe 0.95
+- 1,100 kilos of crab: 0.8
+- crab: 0.7 (since it's the species, but the example included "engine" as a participant)
+- an authority source: 0.9
+- Lusa: 0.95
+
+But wait, the example included "the same source" as a participant. Here, "an authority source" is similar. Also, "source" was included in the example. So maybe "source" is a participant here, but the input says "an authority source," so the full phrase is the participant. 
+
+I think that's it. Now, check if any other entities are missed. The country isn't named, so no. The veda season is a term, not an entity. So the final answer should be those five entities with their confidence scores.
+</think>
+
+[["Mozambican maritime inspection", 0.95], ["1,100 kilos of crab", 0.8], ["crab", 0.7], ["an authority source", 0.9], ["Lusa", 0.95]]

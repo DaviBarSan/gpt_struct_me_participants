@@ -1,0 +1,40 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text. Participants are individuals, groups, organizations, or entities involved or impacted by the event. The example they provided includes entities like "Plane", "engine", "airport", etc., each with a confidence score.
+
+First, I need to read the input carefully. The input here is: "Two men aged 22 and 33 were injured, one of them seriously, on Tuesday night following a disorder in the Casal dos Machados neighborhood, in Lisbon, a PSP source told Lusa."
+
+Breaking this down, the main event is a disorder in the Casal dos Machados neighborhood in Lisbon. The participants would be the people involved. The two men are clearly participants as they were injured. The PSP (Public Security Police) source is mentioned as the one who provided the information to Lusa. Lusa is the news agency, so that's an organization. The neighborhood, Casal dos Machados, is a location, so that's an entity. Lisbon is a city, also an entity. The ages (22 and 33) are attributes of the men, but the ages themselves aren't participants. The word "disorder" is the event, not a participant. "Tuesday night" is a time, not a participant. 
+
+Wait, the example included "a Public Security Police" as an entity. In this case, the source is "a PSP source", so "PSP" is the organization, and "source" is the role. But in the example, they included "a Public Security Police" as an entity. So here, "PSP" is the organization, and "a PSP source" would be the entity. But the user's example had "a Public Security Police" as an entity. So maybe I should extract "PSP" as the organization, and "source" as the role. However, the example included "source" as an entity. Wait, looking back at the example output, they have "source" and "the same source" as entities. So in this case, "a PSP source" would be the entity. But the user might expect "PSP" as the organization and "source" as the role. Hmm, but the example included "source" as an entity. So maybe in this case, "a PSP source" is the entity. But the user's example had "a Public Security Police" as an entity. So perhaps in this case, "PSP" is the organization, and "source" is the role. Wait, the example output included "a Public Security Police" as an entity. So maybe in this case, "PSP" is the organization, and "source" is the role. But the input here says "a PSP source told Lusa." So the entity is "PSP source", but in the example, they had "a Public Security Police" as an entity. So maybe the user wants the exact phrases as they appear. So "a PSP source" would be the entity. But the example had "a Public Security Police" as an entity. Wait, the example input was about a plane and engine failure, and the output included "a Public Security Police" as an entity. So in this case, the input has "a PSP source", so the entity would be "PSP source". But maybe "PSP" is the organization, and "source" is the role. However, the example included "source" as an entity. So perhaps "source" is considered an entity here. 
+
+Also, the neighborhood "Casal dos Machados" is a location, so that's an entity. Lisbon is another location. The news agency Lusa is an organization. The two men are individuals, so their ages are part of their description, but the entities would be "Two men aged 22 and 33" or just "men"? Wait, in the example, they included "the aircraft" and "the plane" as entities. So in this case, "Two men aged 22 and 33" would be the entity. But the example had "A plane" and "The aircraft" as separate entities. So maybe each mention is considered a separate entity. So "Two men aged 22 and 33" is one entity, and "one of them" refers back to the same men, but since it's a pronoun, maybe not. However, the example included "one of them seriously" as part of the entity? Wait no, in the example output, they didn't include "one of them" as an entity. They included "the aircraft" and "the plane" as separate entities. So in this case, "Two men aged 22 and 33" is the entity. Then "one of them seriously" is a description, not an entity. So the participants are the two men, the PSP source, Lusa, the neighborhood, Lisbon, and the disorder? Wait, the disorder is the event, not a participant. So participants are the people involved (the two men), the PSP source (as the informant), Lusa (the news agency), and the location (Casal dos Machados neighborhood, Lisbon). 
+
+So compiling the list:
+
+- "Two men aged 22 and 33" – participants, confidence high.
+- "Casal dos Machados neighborhood" – location, participant.
+- "Lisbon" – location, participant.
+- "a PSP source" – entity, participant.
+- "Lusa" – organization, participant.
+- "disorder" – event, not a participant. So not included.
+
+Wait, but the example included "engine" as an entity. So maybe even if it's a part of the event, like the engine failure, it's considered a participant. But in this case, the disorder is the event, not a participant. So maybe not. 
+
+So the final list would be:
+
+["Two men aged 22 and 33", 0.9], ["Casal dos Machados neighborhood", 0.8], ["Lisbon", 0.8], ["a PSP source", 0.7], ["Lusa", 0.8]. 
+
+Wait, but the example included "the same source" as an entity. In this case, "a PSP source" is mentioned once, so maybe that's the only one. Also, the example had "source" as an entity. So maybe "source" is an entity here. But the input says "a PSP source told Lusa." So the entity is "a PSP source", not just "source". 
+
+So the JSON array would be:
+
+[["Two men aged 22 and 33", 0.9], ["Casal dos Machados neighborhood", 0.8], ["Lisbon", 0.8], ["a PSP source", 0.7], ["Lusa", 0.8]]
+
+But need to check if "PSP" is an organization. Since PSP is the Public Security Police, so "PSP" is the organization, but the entity is "a PSP source". However, in the example, they included "a Public Security Police" as an entity. So maybe in this case, "PSP" is the organization, and "source" is the role. But the exact phrase is "a PSP source", so that's the entity. 
+
+Alternatively, maybe "PSP" is the organization, and "source" is the role. But the example included "a Public Security Police" as an entity. So perhaps the exact phrase is the entity. Therefore, "a PSP source" is the entity. 
+
+I think that's the way to go. So the final answer would include those entities with confidence scores.
+</think>
+
+[["Two men aged 22 and 33", 0.95], ["Casal dos Machados neighborhood", 0.85], ["Lisbon", 0.8], ["a PSP source", 0.75], ["Lusa", 0.8]]

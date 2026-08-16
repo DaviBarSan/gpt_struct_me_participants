@@ -1,0 +1,44 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and provide them in a JSON-parseable list with confidence scores. The example they provided shows that participants can be entities like people, groups, organizations, etc., and even things like "the motor" or "the airport" if they're relevant.
+
+First, I need to read the input text carefully. The input here is: "De acordo com a mesma fonte, o óbito foi confirmado no local e o corpo foi transportado para o Instituto Nacional de Medicina Legal."
+
+Breaking it down, the main entities mentioned here are:
+
+1. "a mesma fonte" – this refers to a source mentioned earlier, likely a person or organization. Since it's referred to as "fonte" (source), it might be an organization or individual providing information. The confidence here is high because it's explicitly mentioned as a source.
+
+2. "o óbito" – the death. However, "óbito" is an event, not a participant. Wait, the definition says participants are entities involved or impacted. The death itself is an event, not a participant. So maybe this isn't a participant. Hmm, need to check the example again. In the previous example, "o motor" was included as a participant. So maybe any noun that's an entity, even if it's an object or event, is considered a participant. But the definition says participants are individuals, groups, organizations, or other entities. "Óbito" is an event, not an entity. So maybe not. But the example included "o motor" which is an object. So perhaps objects and events can be considered participants if they are central to the event. This is a bit ambiguous. Let me think. The example output included "o motor" and "a aeronave" as participants. So maybe any noun that's a key entity in the situation is considered a participant. So "o óbito" might be considered a participant here, but I'm not sure. Alternatively, maybe only agents or entities that are acting or being acted upon. The body being transported is "o corpo", which is a participant. The "Instituto Nacional de Medicina Legal" is definitely an organization, so that's a participant. 
+
+So, let's list the possible participants:
+
+- "a mesma fonte" – source, which is an entity. Confidence high (0.9)
+- "o corpo" – the body, which is an object involved. Confidence medium (0.7)
+- "Instituto Nacional de Medicina Legal" – organization. Confidence high (0.95)
+- "no local" – the local, but that's a location. Wait, the definition says participants can be locations if they are involved. But the example included "aeroporto" and "Lisboa" as participants. So "no local" might be a location, but "local" is a bit vague. However, in the example, "o Aeroporto Humberto Delgado" was included. So maybe "no local" is too vague, but if it's a specific place, it's a participant. However, since it's just "no local" (at the location), maybe it's not specific enough. So perhaps not included. 
+
+Wait, the example output had "aeroporto" and "no Aeroporto Humberto Delgado" as separate entries. So even if it's a general term like "aeroporto" (airport), it's included. So in this case, "no local" is a location, but it's not a specific name. However, the example included "Lisboa" as a participant. So maybe even generic locations are included. But "no local" is more like "at the location" which is a prepositional phrase. The actual entity here is "o local" (the location), but it's not specified. So maybe "o local" is a participant, but since it's not named, maybe it's not. Alternatively, the user might expect that "no local" is considered as a participant. Hmm, this is tricky. 
+
+Alternatively, maybe "o local" is not a named entity, so it's not included. The example included "Lisboa" as a participant, which is a proper noun. So in this case, "no local" is a prepositional phrase, not a proper noun. So perhaps "o local" isn't a participant here. 
+
+So the main participants are:
+
+- "a mesma fonte" (source)
+- "o corpo" (the body)
+- "Instituto Nacional de Medicina Legal" (organization)
+
+Wait, but in the example, "fonte" was included as a participant. In the example input, "fonte da Polícia de Segurança Pública" was mentioned, and in the output, "fonte" and "a mesma fonte" were included. So here, "a mesma fonte" is a participant. 
+
+So, the output should be:
+
+[
+  ["a mesma fonte", 0.9],
+  ["o corpo", 0.7],
+  ["Instituto Nacional de Medicina Legal", 0.95]
+]
+
+But wait, the example also included "o motor" and "a aeronave" even though they were objects. So "o corpo" is an object here, so it's a participant. 
+
+I think that's it. Let me check again. The text says the body was transported to the institute. So the body is a participant. The source is a participant. The institute is a participant. The other parts are prepositions or verbs. So those three entities.
+</think>
+
+[["a mesma fonte", 0.9], ["o corpo", 0.7], ["Instituto Nacional de Medicina Legal", 0.95]]

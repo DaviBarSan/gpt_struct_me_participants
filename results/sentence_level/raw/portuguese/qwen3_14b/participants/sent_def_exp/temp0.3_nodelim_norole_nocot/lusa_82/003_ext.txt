@@ -1,0 +1,43 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given input text and provide them in a JSON-parseable list with confidence scores. The example they provided includes entities like "Avião", "o motor", etc., each with a confidence number between 0 and 1.
+
+First, I need to understand what constitutes a participant. According to the definition, participants are individuals, groups, organizations, or entities involved in or impacted by the event. They can be explicitly mentioned or inferred. So, I need to look for any such entities in the input text.
+
+Looking at the input: "A Polícia Marítima removeu então o cadáver da água, ficando depois a aguardar pela chegada da Polícia Judiciária para serem iniciadas as averiguações."
+
+Breaking it down:
+
+- "A Polícia Marítima" – This is a group (Maritime Police), clearly a participant as they performed an action (removed the body).
+- "o cadáver" – The corpse, which is an entity involved, though it's an object. But according to the example, "o motor" was included, so maybe objects are considered participants if they are central to the event.
+- "a água" – Water, the location where the body was. But in the example, "aeroporto" was included, so maybe locations are participants.
+- "a Polícia Judiciária" – Judicial Police, another group involved, waiting to start investigations.
+- "as averiguações" – The investigations, which is an event, but not an entity. The example didn't include events, so maybe not.
+- "a aguardar" – Waiting, an action, not an entity.
+- "pela chegada" – Arrival, again an action.
+
+Wait, the example included "aeroporto" as a participant. So locations are included. Similarly, "os aeroportos" and "Farnborough" were included. So in this case, "a água" might be a participant as a location.
+
+But "o cadáver" is an object. The example included "o motor" as a participant. So maybe objects are included if they are part of the event. So "o cadáver" would be a participant here.
+
+So the entities would be:
+
+- "A Polícia Marítima" – 1.0 confidence.
+- "o cadáver" – 0.9 confidence.
+- "a água" – 0.8 confidence.
+- "a Polícia Judiciária" – 1.0 confidence.
+- "as averiguações" – Not sure, but the example didn't include events, so maybe not. The example included "a aeronave" which is an object, so maybe "as averiguações" is an event, not an entity. So exclude it.
+
+Wait, the example output had "a aeronave" as an entity. So objects involved in the event are included. So "o cadáver" is an object involved, so it's a participant. "a água" is the location where the action happened, so it's a participant. The two police forces are definitely participants.
+
+So the list would be:
+
+["A Polícia Marítima", 1.0], ["o cadáver", 0.9], ["a água", 0.8], ["a Polícia Judiciária", 1.0]
+
+But wait, in the example, they had "no Aeroporto Humberto Delgado" as a participant. So the full name of the location. Here, "a água" is just "water", but maybe it's more specific. However, the input doesn't specify the body of water, so "a água" is the only term used. So that's acceptable.
+
+Also, in the example, "fonte" (source) was included. Here, there's no mention of a source, so no need to include that.
+
+So the final answer should be the JSON array with these entities and their confidence scores.
+</think>
+
+[["A Polícia Marítima", 1.0], ["o cadáver", 0.9], ["a água", 0.8], ["a Polícia Judiciária", 1.0]]

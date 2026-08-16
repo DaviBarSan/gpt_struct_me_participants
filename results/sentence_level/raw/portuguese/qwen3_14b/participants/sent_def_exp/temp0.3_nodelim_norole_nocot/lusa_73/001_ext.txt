@@ -1,0 +1,39 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example provided shows that participants can be individuals, groups, organizations, or entities involved or impacted by the event. 
+
+First, I need to read the input carefully. The sentence is: "Um homem de 60 anos ficou hoje em estado grave após ter caído de um andaime, a cerca de "três a quatro metros" de altura, quando trabalhava numa obra em Ponte de Lima, disse o comandante dos bombeiros locais."
+
+Breaking it down, the main event is a man falling from a scaffold and getting seriously injured. The participants would be the man himself, the scaffold, the work site, the city (Ponte de Lima), and the fire department commander who made the statement.
+
+Looking at the example output, they included entities like "Avião", "o motor", etc., even if they were repeated. So I need to list each occurrence of a participant, even if it's the same entity mentioned multiple times. For instance, "o comandante dos bombeiros locais" is mentioned once, but maybe "os bombeiros locais" could also be considered, but in the input, it's specifically the commander who spoke.
+
+Now, checking for each possible participant:
+
+1. "Um homem de 60 anos" – the main victim. Confidence high, maybe 0.95.
+2. "um andaime" – the scaffold he fell from. Confidence 0.9.
+3. "três a quatro metros" – the height, but is this a participant? The definition says participants are entities involved or impacted. The height is a measurement, not an entity. So maybe exclude this.
+4. "obra" – the construction site. Confidence 0.85.
+5. "Ponte de Lima" – the location. Confidence 0.9.
+6. "o comandante dos bombeiros locais" – the fire department commander who reported the incident. Confidence 0.95.
+7. "os bombeiros locais" – maybe, but the text says "comandante dos bombeiros locais", so the commander is the one speaking. The fire department as an organization might be a participant, but the example didn't include organizations unless explicitly mentioned. Wait, in the example, "a Polícia de Segurança Pública" was included. So here, "os bombeiros locais" could be considered, but the text only mentions the commander. Hmm, tricky. The example included "fonte" and "a mesma fonte" which were the police source. So maybe "os bombeiros locais" is the organization, but the text only mentions the commander. So perhaps just the commander is the participant here.
+
+Wait, the example included "a Polícia de Segurança Pública" as a participant. In the input, the source is "fonte da Polícia de Segurança Pública", so the police force is mentioned. Similarly, here, the commander is part of the fire department. So "os bombeiros locais" might be the organization, but the text only refers to the commander. However, the example included "a mesma fonte" which was the police. So maybe the commander is the participant here, not the entire fire department. So I should include "o comandante dos bombeiros locais" as the participant.
+
+Other entities: "três a quatro metros" is a measurement, not a participant. "numa obra" – "obra" is the construction site, so that's a participant. "Ponte de Lima" is the location, so that's a participant.
+
+So compiling the list:
+
+- "Um homem de 60 anos" (confidence 0.95)
+- "um andaime" (0.9)
+- "obra" (0.85)
+- "Ponte de Lima" (0.9)
+- "o comandante dos bombeiros locais" (0.95)
+
+Wait, but the example included "aeroporto" and "os aeroportos" as separate entries. So even if "obra" is mentioned once, it's included. Also, "Ponte de Lima" is a location, so that's a participant. 
+
+I think that's all. Let me check again. The man, the scaffold, the construction site, the location (Ponte de Lima), and the fire commander. No other entities seem to be involved. The height is just a detail, not an entity. The "obra" is the work site, so that's a participant. The city is part of the location, so "Ponte de Lima" is included. The commander is the one who reported, so he's a participant. 
+
+So the final list should be those five entities with their confidence scores.
+</think>
+
+[["Um homem de 60 anos", 0.95], ["um andaime", 0.9], ["obra", 0.85], ["Ponte de Lima", 0.9], ["o comandante dos bombeiros locais", 0.95]]

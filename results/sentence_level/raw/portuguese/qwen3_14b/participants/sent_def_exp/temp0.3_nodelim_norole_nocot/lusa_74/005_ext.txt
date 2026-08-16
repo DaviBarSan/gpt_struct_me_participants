@@ -1,0 +1,60 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and provide them in a JSON-parseable list with confidence scores. First, I need to understand what counts as a participant based on the definition. Participants are individuals, groups, organizations, or entities involved or impacted by the event. They can be explicitly mentioned or inferred.
+
+Looking at the input text: "Segundo a GNR, no mais recente episódio de violência, o arguido ameaçou e coagiu a mãe a entregar-lhe dinheiro para “satisfazer o seu vício de consumo de drogas”, tendo ainda destruído bens da residência, o que originou um mandado de detenção."
+
+Breaking it down:
+
+- "a GNR" is mentioned as the source, so that's an organization. Confidence is high.
+- "o arguido" is the accused person, definitely a participant. High confidence.
+- "a mãe" is the mother, another individual involved. High confidence.
+- "dinheiro" is money, but that's an object, not a participant. Probably not included.
+- "vício de consumo de drogas" is a condition, not an entity. Excluded.
+- "bens da residência" are property, not participants. Excluded.
+- "mandado de detenção" is a legal document, not an entity. Excluded.
+
+Wait, but the example in the task included things like "aeroporto" and "Lisboa" as participants. So maybe locations and organizations are included even if they're not directly acting. Let me check the example again.
+
+In the example, they included "aeroporto", "Lisboa", "os aeroportos", etc. So locations are considered participants. Also, "fonte" and "a mesma fonte" were included as entities. So even if the entity is a source or a role, it's included.
+
+So in this case, "a GNR" is an organization, definitely a participant. "o arguido" and "a mãe" are individuals. The text also mentions "a residência", which is a place, so that's a participant. Wait, but "residência" is the residence, which is a location. So maybe that's included. However, in the example, "aeroporto" was included, so "residência" might be as well. But in the input, it's "bens da residência", so the residence itself is the location. Hmm, but the example included "aeroporto" as a participant. So "residência" would be a participant here.
+
+Wait, but in the example, "os aeroportos" was included. So maybe any named location is considered a participant. However, in the current input, "residência" is not a specific name, just a generic term. So maybe it's not included. The example had specific names like "Aeroporto Humberto Delgado" and "Lisboa", which are proper nouns. So "residência" is a common noun, not a specific entity. Therefore, maybe not included.
+
+So the participants would be:
+
+- "a GNR" (organization)
+- "o arguido" (individual)
+- "a mãe" (individual)
+- "a residência" (location? But not sure if it's specific enough)
+- "mandado de detenção" (not an entity, it's a legal action)
+
+Wait, the example included "fonte" and "a mesma fonte" as entities. So even if it's a role, like "fonte", it's included. But in this case, "residência" is a location, but not a named one. So maybe not. Let me check the example again. The example had "aeroporto" as a participant, but that's a general term. However, in the input, "aeroporto" was part of a proper noun like "Aeroporto Humberto Delgado". So maybe in this case, "residência" is not a named entity, so it's not included. Therefore, the participants are "a GNR", "o arguido", "a mãe".
+
+Wait, but the example also included "o motor" and "a aeronave" as participants. So even if they are objects, they are considered participants if they are involved in the event. In this case, "o arguido" is the one acting, "a mãe" is the victim, and "a GNR" is the authority involved. The "residência" is the location where the destruction happened, but since it's not a named place, maybe it's not included. However, the example included "os aeroportos" as a participant even though it's a general term. So maybe "residência" is included as a participant here.
+
+But I'm not sure. Let me think again. The definition says participants are entities involved or impacted. The destruction of the residence's property would impact the residence itself, but since it's not a named entity, maybe it's not included. Alternatively, "residência" is a location, so even if not named, it's a participant. But in the example, "aeroporto" was included as a participant, which is a general term. So perhaps "residência" should be included here.
+
+So the participants would be:
+
+- "a GNR" (organization)
+- "o arguido" (individual)
+- "a mãe" (individual)
+- "a residência" (location)
+
+But wait, the example included "o motor" and "a aeronave" as participants. So even if they are objects, they are included. In this case, the destruction of the residence's property is part of the event, so the residence is involved. Therefore, "a residência" is a participant.
+
+But the user's example output included "o motor" and "a aeronave" as separate entities. So in this case, "a residência" would be included. However, the example also included "os aeroportos" as a participant, which is a plural form. So maybe even if it's a general term, it's included.
+
+So the final list would be:
+
+["a GNR", 0.95], ["o arguido", 0.95], ["a mãe", 0.95], ["a residência", 0.75]
+
+But I need to check if "a residência" is a participant. Since the destruction of the residence's property is part of the event, the residence is impacted, so it's a participant. However, the example included "aeroporto" as a participant even though it's a general term. So "residência" would be included here.
+
+Alternatively, maybe "residência" is not a named entity, so it's not included. But the example included "aeroporto" as a participant, which is a general term. So perhaps "residência" is included. Therefore, the answer would include those four entities. But I need to be careful with confidence scores. "a GNR" is definitely an organization, high confidence. "o arguido" and "a mãe" are individuals, high confidence. "a residência" is a location, but since it's not a specific name, maybe lower confidence, like 0.7 or 0.8.
+
+Wait, but in the example, "aeroporto" was included with confidence, even though it's a general term. So maybe "residência" is included here. Therefore, the final list would be those four entities with their confidence scores.
+</think>
+
+[["a GNR", 0.95], ["o arguido", 0.95], ["a mãe", 0.95], ["a residência", 0.75]]

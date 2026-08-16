@@ -1,0 +1,49 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example provided shows that participants can be individuals, groups, organizations, or entities involved or impacted by the event. 
+
+First, I need to read the input carefully. The input is a quote from César Maphossa, the chief of inspection, explaining that they are seizing crabs and boats, and the responsible parties face heavy fines if neutralized.
+
+So, the main participants here would be the people or entities involved in the action. Let's break down the sentence:
+
+- "Estamos a apreender caranguejo e embarcações" – The subject here is "nós" (we), but in the text, it's not explicitly mentioned who "we" are. However, since it's the chief of inspection speaking, it's likely referring to his department or the authority he represents. But the text doesn't explicitly name the authority, so maybe "os responsáveis" (the responsible parties) are the ones being targeted. 
+
+- "os responsáveis incorrem em pesadas multas, caso sejam neutralizados" – "os responsáveis" are the ones facing fines. So they are participants as they are impacted by the action.
+
+- "César Maphossa" is the chief of inspection, so he's a participant as the speaker.
+
+- "o chefe da fiscalização" is another way of referring to César Maphossa, so that's the same entity.
+
+Now, looking at the example output, they included entities like "Avião", "o motor", etc., even if they were repeated. So even if the same entity is mentioned multiple times, each instance is listed with its own confidence. 
+
+In this case, "os responsáveis" is mentioned once, and "César Maphossa" and "o chefe da fiscalização" are the same person. Also, "caranguejo" and "embarcações" are the items being seized, but are they participants? According to the definition, participants are those involved or impacted. The crabs and boats are being seized, so they are impacted. However, sometimes in such contexts, the items might not be considered participants but objects. But the example included "o motor" as a participant, so maybe even objects are included if they are directly involved. 
+
+Wait, in the example, "o motor" was included. The original text said "falha no motor", so the motor is part of the event. Similarly, here, "caranguejo" and "embarcações" are the objects being seized, so they are involved in the event. So they should be included as participants. 
+
+Also, "a fiscalização" (the inspection) might be an entity, but the text says "o chefe da fiscalização", so the chief is the person, and the fiscalização is the organization. However, the text doesn't explicitly name the organization, just the chief's title. So maybe "a fiscalização" is not explicitly mentioned, so it's not included. 
+
+So the participants would be:
+
+- "os responsáveis" (the responsible parties) – confidence high, maybe 0.9
+- "César Maphossa" – 1.0
+- "o chefe da fiscalização" – same as César, so 1.0
+- "caranguejo" – 0.8
+- "embarcações" – 0.8
+- "pesadas multas" – but that's a consequence, not a participant. The fines are a result, not an entity involved. So probably not included.
+- "a fiscalização" – not explicitly named, so maybe not. The text refers to the chief's role, not the organization's name.
+
+Wait, the example had "a Polícia de Segurança Pública" as a participant. In the input, the source was "fonte da Polícia de Segurança Pública", so the police were mentioned. So in this case, the chief is part of the inspection, but the organization isn't named. So maybe "a fiscalização" is the organization, but since it's not named, perhaps we can't include it. However, the title "chefe da fiscalização" might imply the organization, but without a name, it's unclear. So maybe not include it unless it's explicitly named.
+
+So the final list would be:
+
+["os responsáveis", 0.9], ["César Maphossa", 1.0], ["o chefe da fiscalização", 1.0], ["caranguejo", 0.8], ["embarcações", 0.8]
+
+Wait, but in the example, they included "o motor" even though it's a part of the plane. So even if the object is a part, it's included. So here, "caranguejo" and "embarcações" are the objects being seized, so they are participants. 
+
+But "os responsáveis" are the ones being fined, so they are impacted. So they are participants. 
+
+I think that's all. Let me check again. The example included "fonte", "a mesma fonte", etc., so even if the same entity is mentioned with different phrases, they are listed separately. So here, "os responsáveis" is mentioned once, but if there were multiple mentions, each would be a separate entry. 
+
+So the output should be a JSON array with each entity and confidence. The confidence for "César Maphossa" and "o chefe da fiscalização" is 1.0 because they are explicitly named. The others have lower confidence. "caranguejo" and "embarcações" are 0.8. "os responsáveis" is 0.9 because they are mentioned as the ones facing fines but not explicitly named.
+</think>
+
+[["os responsáveis", 0.9], ["César Maphossa", 1.0], ["o chefe da fiscalização", 1.0], ["caranguejo", 0.8], ["embarcações", 0.8]]

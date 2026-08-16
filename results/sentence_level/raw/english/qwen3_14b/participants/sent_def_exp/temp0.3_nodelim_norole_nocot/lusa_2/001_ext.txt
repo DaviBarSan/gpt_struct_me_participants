@@ -1,0 +1,62 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text. The definition says participants are individuals, groups, organizations, or entities involved or impacted by the event. The example provided shows that even parts like "to engine" and "a stopped engine" are included, though they might be parts of larger entities. Wait, but in the example, "engine" is listed as a separate entity. Hmm, maybe they consider parts of things as participants if they are mentioned in context.
+
+Looking at the input: "A 20-year-old man suspected of drug trafficking was arrested by the PSP in the Pasteleira Nova neighborhood, in Porto, and heroin, cocaine and a firearm were also seized, that police force reported today."
+
+First, identify all entities. The main participants here are the man, the PSP (police force), the neighborhood, the city (Porto), the substances (heroin, cocaine, firearm), and the police force reporting (PSP again). Also, "that police force" refers back to PSP. 
+
+Wait, the example output included "a Public Security Police" and "the same source" as entities. So even if it's a group or organization, they need to be included. Also, locations like neighborhoods and cities are participants if they are involved. 
+
+So breaking down the input:
+
+- "A 20-year-old man" is an individual, definitely a participant.
+- "suspected of drug trafficking" – this is a role, but the man is the participant.
+- "PSP" is the police force, so that's an organization.
+- "Pasteleira Nova neighborhood" is a location involved.
+- "Porto" is the city, another location.
+- "heroin, cocaine, and a firearm" are items seized, so they are participants as objects involved.
+- "that police force" refers back to PSP, so same entity.
+- "reported today" – the police force is the one reporting, so PSP again.
+
+Now, checking for possible entities. The example included "the airports" as an entity, so even plural nouns. Also, "heroin, cocaine, and a firearm" would be separate entities? Or as a list? The example had "a stopped engine" as an entity, so maybe each item is listed. But in the input, they are listed together. However, the user's example output included "heroin, cocaine and a firearm" as separate entries? Wait, no, looking back at the example input, the output had "engine" and "a stopped engine" as separate entries. So maybe each noun phrase is considered an entity. 
+
+In the given input, "heroin, cocaine and a firearm" are three separate items. So they should be listed as "heroin", "cocaine", "a firearm". But in the example, "a stopped engine" was included, so perhaps even with articles. However, in the example output, "engine" and "a stopped engine" are both present. So maybe both the general term and the specific instance are considered. But in the input, "heroin, cocaine and a firearm" are specific items seized. So each of those would be separate entities. 
+
+So the entities would be:
+
+- "A 20-year-old man" – but the example used "Plane" and "A plane" as separate entries. So maybe the article is included. However, in the example, "the aircraft" and "The aircraft" are both present. So perhaps the exact phrases are considered. 
+
+But the input says "A 20-year-old man" – so that's the exact phrase. Then "PSP" as an organization. "Pasteleira Nova neighborhood", "Porto", "heroin", "cocaine", "a firearm", "that police force" (which refers to PSP), and "the police force" (same as PSP). 
+
+Wait, the example included "source" and "the same source" as separate entities. So maybe the exact phrases are important. So in the input, "that police force" is a phrase referring to PSP, so that's another entity. But "PSP" is already listed. However, the example included "a Public Security Police" and "the same source", so even if they refer to the same entity, they are listed as separate entries. 
+
+So in this case, "PSP" and "that police force" would both be separate entities. Also, "the police force" is another mention. 
+
+So compiling all possible entities:
+
+1. "A 20-year-old man" – participant (individual)
+2. "suspected of drug trafficking" – this is a role, not an entity. So maybe not included.
+3. "PSP" – organization
+4. "Pasteleira Nova neighborhood" – location
+5. "Porto" – location
+6. "heroin" – item
+7. "cocaine" – item
+8. "a firearm" – item
+9. "that police force" – refers to PSP, but as a separate entity
+10. "the police force" – same as above
+11. "reported today" – the action, not an entity. So not included.
+
+Confidence levels: For "A 20-year-old man", confidence is high (0.95). "PSP" is definitely an organization (0.95). "Pasteleira Nova neighborhood" and "Porto" as locations (0.9). Heroin, cocaine, firearm as items (0.8 each). "that police force" and "the police force" might be redundant, but since the example included similar references, they should be included with lower confidence (0.7 each). 
+
+But need to check if "the police force" is the same as "PSP", but the example included "a Public Security Police" and "the same source" as separate entities. So even if they refer to the same entity, they are listed. So in this case, "PSP", "that police force", "the police force" would all be separate entries. 
+
+So the final list would be:
+
+["A 20-year-old man", 0.95], ["PSP", 0.95], ["Pasteleira Nova neighborhood", 0.9], ["Porto", 0.9], ["heroin", 0.8], ["cocaine", 0.8], ["a firearm", 0.8], ["that police force", 0.7], ["the police force", 0.7]
+
+Wait, but the example output included "Lusa." as an entity. So even if it's a name with a period. Similarly, "ANA-Aeroportos de Portugal" was included. So in this case, "PSP" is an acronym, and "that police force" is a phrase. So they are both included. 
+
+I think that's all. Let me make sure I didn't miss any. The input mentions the man, the police, the neighborhood, the city, the items seized, and the police force reporting. All those are covered.
+</think>
+
+[["A 20-year-old man", 0.95], ["PSP", 0.95], ["Pasteleira Nova neighborhood", 0.9], ["Porto", 0.9], ["heroin", 0.8], ["cocaine", 0.8], ["a firearm", 0.8], ["that police force", 0.7], ["the police force", 0.7]]

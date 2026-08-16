@@ -1,0 +1,54 @@
+<think>
+Okay, let's tackle this task. The goal is to extract all participants from the given text. Participants can be individuals, groups, organizations, or entities involved or impacted by the event. The example provided shows that even repeated mentions of the same entity are listed separately with their confidence scores.
+
+First, I need to read the input carefully. The sentence is: "O coletivo que julgou o caso decidiu ainda condenar o homem a pagar uma indemnização à mãe da vítima mortal no valor total de 141 mil euros."
+
+Breaking it down, the main participants here are:
+
+1. "O coletivo" – this is the group that judged the case. Since it's a collective, it's a participant.
+2. "o homem" – the person who was condemned to pay compensation.
+3. "a mãe da vítima mortal" – the mother of the deceased victim, who is receiving the compensation.
+4. "a vítima mortal" – the deceased victim, though they might not be directly involved in the action but are impacted.
+5. "141 mil euros" – the amount, but this is a monetary value, not an entity. Wait, the example includes numbers as entities? Let me check the example again. In the example, "141 mil euros" isn't listed, but the output includes entities like "o motor" and "Lisboa". The example output includes "141 mil euros" as part of the sentence, but in the output provided, it's not listed. Wait, looking at the example input and output again, the example input had "141 mil euros" but the output didn't include it. Wait, no, the example input was different. Let me check again.
+
+Wait, the user's example input was about an airplane emergency, and the output included entities like "Avião", "o motor", etc., but not numbers. So perhaps numbers aren't considered participants here. The definition says participants are entities involved or impacted, so maybe monetary amounts aren't participants. So "141 mil euros" is a value, not an entity. So I shouldn't include that.
+
+So focusing on the entities:
+
+- "O coletivo" – the collective/jury.
+- "o homem" – the man being condemned.
+- "a mãe da vítima mortal" – the mother of the deceased.
+- "a vítima mortal" – the deceased victim.
+- "o caso" – the case being judged, but is that a participant? The definition says participants are involved or impacted. The case is the subject of the judgment, but maybe not an entity. Hmm, the example didn't include "o caso" either. So probably not.
+
+Also, "condenar" is an action, but the participants are the ones involved. So the main entities are the coletivo, the man, the mother, and the victim.
+
+Wait, the mother is the one receiving the indemnization, so she's a participant. The victim is the one whose mother is receiving it, so the victim is also a participant as the one impacted.
+
+So the entities would be:
+
+["O coletivo", "o homem", "a mãe da vítima mortal", "a vítima mortal"]
+
+But I need to check if "a vítima mortal" is considered a participant. The definition says participants are those involved or impacted. Since the victim is the one whose mother is getting compensation, the victim is impacted, so yes.
+
+Now, confidence scores. For each entity, I need to assign a confidence between 0 and 1. Let's see:
+
+- "O coletivo" – definitely a participant, confidence 0.95.
+- "o homem" – clearly the person being condemned, 0.95.
+- "a mãe da vítima mortal" – the recipient, 0.9.
+- "a vítima mortal" – the deceased, 0.85.
+
+Wait, but in the example output, there are repeated mentions like "Um avião", "o motor", etc. So even if the same entity is mentioned multiple times, each instance is listed. However, in the current input, each entity is mentioned once. So the output would be a list of these four entities with their confidence scores.
+
+But wait, the example output includes "Lisboa" multiple times. So even if the same location is mentioned again, it's listed again. So in this case, if the same entity is mentioned again, like "Lisboa" in the example, each occurrence is listed. However, in the current input, each entity is mentioned once. So the output would be each of the four entities once.
+
+But let me check if "a mãe da vítima mortal" is a single entity. Yes, it's a single entity, the mother of the victim. So that's one entry. "a vítima mortal" is another.
+
+So the final list would be:
+
+[["O coletivo", 0.95], ["o homem", 0.95], ["a mãe da vítima mortal", 0.9], ["a vítima mortal", 0.85]]
+
+I think that's it. I need to make sure there are no other entities. The sentence doesn't mention any other organizations or groups. The "coletivo" is the group, the man, the mother, and the victim. The "caso" is the case, but not an entity. The "condenação" is an action, not an entity. So yes, those four.
+</think>
+
+[["O coletivo", 0.95], ["o homem", 0.95], ["a mãe da vítima mortal", 0.9], ["a vítima mortal", 0.85]]

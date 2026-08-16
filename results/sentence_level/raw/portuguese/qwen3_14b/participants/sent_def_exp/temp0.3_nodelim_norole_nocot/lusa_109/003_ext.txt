@@ -1,0 +1,46 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example provided shows that participants can be individuals, groups, organizations, etc., and they might be mentioned explicitly or inferred.
+
+First, I need to read the input carefully. The input is: "De acordo com o comandante Júlio Pereira, a vítima é bombeiro em Vizela e teve de ser resgatada pela equipa de grande ângulo da corporação."
+
+Breaking it down, the main elements here are:
+
+1. "comandante Júlio Pereira" – This is a person, specifically a commander. Since his name is mentioned, he's a participant. Confidence here is high, maybe 0.95.
+
+2. "a vítima" – The victim. The text says the victim is a firefighter in Vizela. So "a vítima" is a participant. Confidence is high, 0.9.
+
+3. "bombeiro em Vizela" – This refers to the victim's profession and location. But "bombeiro" is a role, not an entity. Wait, but the text says "a vítima é bombeiro em Vizela," so "bombeiro" here is the role of the victim. However, the actual entity is "a vítima," which is already listed. Maybe "bombeiro" isn't a separate participant here. Hmm, need to be careful not to duplicate.
+
+4. "equipa de grande ângulo da corporação" – This is a team from the corporation. The team is part of the corporation, so "equipa de grande ângulo" is a group, and "corporação" is the organization. But the text says "pela equipa de grande ângulo da corporação," so the team is acting on behalf of the corporation. Should I list both the team and the corporation as participants? The example in the task included both "a Polícia de Segurança Pública" and "fonte" as separate entities. So maybe "equipa de grande ângulo" and "corporação" are both participants here. Confidence for the team might be 0.85, and for the corporation 0.8.
+
+5. "Vizela" – A location where the victim is a firefighter. But locations aren't participants unless they are entities involved. The definition says participants are entities involved or impacted. Since Vizela is a place where the victim works, maybe it's not a participant. The example included "Lisboa" as a participant, but in that case, it was part of the airport name. Here, Vizela is just a location, so maybe not a participant.
+
+6. "corporação" – The corporation is mentioned as the organization the team belongs to. So "corporação" is an organization, hence a participant. Confidence around 0.8.
+
+Wait, the example output included "aeroporto" as a participant, even though it's a location. So maybe locations can be participants if they are part of the event. But in this case, Vizela is just the place where the victim works, not directly involved in the event. The event is the rescue. So maybe "Vizela" isn't a participant here.
+
+So compiling the list:
+
+- "comandante Júlio Pereira" (confidence 0.95)
+- "a vítima" (0.9)
+- "equipa de grande ângulo da corporação" (0.85)
+- "corporação" (0.8)
+
+Wait, but "equipa de grande ângulo da corporação" is a specific team. Should I split that into "equipa de grande ângulo" and "corporação"? The example included "Aeroporto Humberto Delgado" as a participant, which is a specific airport. So maybe "equipa de grande ângulo da corporação" is a single entity, but the "corporação" is another. However, in the example, "aeroportos" was listed as a participant, but "Aeroporto Humberto Delgado" was also listed. So maybe both the specific team and the corporation are participants here.
+
+Alternatively, maybe "equipa de grande ângulo" is the team, and "corporação" is the organization. So both are participants. But the text says "equipa de grande ângulo da corporação," which is the team of the corporation. So the team is part of the corporation. But the example included both "a Polícia de Segurança Pública" and "fonte" as separate entities. So perhaps both the team and the corporation are participants here. However, the user might expect that "equipa de grande ângulo da corporação" is considered as a single entity, but the example included "a aeronave" and "o motor" as separate entities. So maybe splitting into "equipa de grande ângulo" and "corporação" is better.
+
+But the original text says "pela equipa de grande ângulo da corporação," so the team is acting on behalf of the corporation. Therefore, both the team and the corporation are participants. So I should list both. However, the example included "a mesma fonte" as a participant, which is a reference to a previous source. So in this case, "equipa de grande ângulo" and "corporação" are separate.
+
+So the final list would be:
+
+["comandante Júlio Pereira", 0.95], ["a vítima", 0.9], ["equipa de grande ângulo da corporação", 0.85], ["corporação", 0.8]
+
+Wait, but in the example, "a aeronave" and "o motor" were both listed. So even if they are parts of the same object, they are separate. Similarly, "equipa de grande ângulo da corporação" is a team, and "corporação" is the organization. So both are participants. But maybe "equipa de grande ângulo da corporação" is a single entity. Hmm, this is a bit ambiguous. The example included "aeroporto" and "Aeroporto Humberto Delgado" as separate, so maybe specific names are more likely to be participants. Here, "equipa de grande ângulo da corporação" is a specific team, so that's a participant. The corporation is the organization, so that's another.
+
+Alternatively, maybe "corporação" is part of the team's name, so it's included in the team's name. But the example included "a Polícia de Segurança Pública" as a participant, which is an organization, and "fonte" as a participant. So perhaps both the team and the corporation are separate entities here.
+
+I think I'll go with listing both "equipa de grande ângulo da corporação" and "corporação" as separate participants. The confidence for the team might be 0.85, and for the corporation 0.8. Also, "comandante Júlio Pereira" is a person, so 0.95, and "a vítima" is 0.9. The location "Vizela" might not be a participant here. So the final JSON array would be as above.
+</think>
+
+[["comandante Júlio Pereira", 0.95], ["a vítima", 0.9], ["equipa de grande ângulo da corporação", 0.85], ["corporação", 0.8]]

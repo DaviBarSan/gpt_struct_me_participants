@@ -1,0 +1,48 @@
+<think>
+Okay, let's tackle this task. The user wants me to extract all participants from the given text and assign a confidence score to each. The example they provided includes entities like "Plane", "engine", etc., with confidence numbers. So, I need to follow that structure.
+
+First, I'll read the input carefully. The sentence is about Soumaila Cissé, the main opponent of the Government of Mali, who died in France from the new coronavirus. His family and party announced his death. 
+
+Participants are individuals, groups, organizations, or entities involved or impacted. Let's break down the sentence:
+
+- "Soumaila Cissé" is definitely a participant. He's the main subject here. Confidence should be high, maybe 0.95.
+- "the Government of Mali" is mentioned as his main opponent. That's an entity, so include that. Confidence around 0.85?
+- "jihadists" are mentioned as holding him captive. They are an opposing group. But the term is in quotes, so maybe it's a group. Confidence could be 0.75 since it's a label.
+- "France" is where he died. A location, but is it a participant? The definition says entities impacted or involved. Since he died there, maybe France is a participant. Confidence 0.7?
+- "the new coronavirus" is the cause of death. It's an entity here. Confidence 0.8?
+- "his family" and "party" are groups involved in announcing his death. They are participants. Confidence around 0.85 each.
+
+Wait, the example output included "Lusa." and "source" as entities. In this case, "his family and party" are the ones announcing, so "his family" and "party" should be separate. Also, "the main opponent of the Government of Mali" is a role, but the actual entity is Soumaila Cissé. So maybe "the Government of Mali" is a participant as an entity. 
+
+I need to check if all entities are captured. Let me list them again:
+
+1. Soumaila Cissé – individual, high confidence.
+2. Government of Mali – organization, high confidence.
+3. jihadists – group, but the term is in quotes, so maybe it's a label. Confidence lower.
+4. France – location, participant.
+5. new coronavirus – entity causing death.
+6. his family – group.
+7. party – organization (his political party?).
+
+Wait, the original text says "his family and party announced." So "his family" and "party" are two separate entities. So I need to split them. Also, "the new coronavirus" is an entity. 
+
+I should make sure not to include phrases that are not entities. For example, "due to the new coronavirus" – "due to" is a preposition, not an entity. But "the new coronavirus" is the entity. 
+
+So compiling the list:
+
+- ["Soumaila Cissé", 0.95]
+- ["the Government of Mali", 0.85]
+- ["jihadists", 0.75]
+- ["France", 0.7]
+- ["the new coronavirus", 0.8]
+- ["his family", 0.85]
+- ["party", 0.8]
+
+Wait, "party" might be ambiguous. The text says "his family and party announced," which likely refers to his political party. So "party" is an organization. But maybe it's better to specify "his party" as "the party" or "the political party of Soumaila Cissé." However, the input doesn't specify the name of the party, so just "party" is acceptable. Confidence around 0.8.
+
+I need to check if any other entities are missed. The example included "Lusa." as an entity, which is a news agency. In this case, the announcement is made by "his family and party," so those are the participants. No other organizations are mentioned except the Government of Mali and the party. 
+
+I think that's all. Now, format it as a JSON array with each element as [entity, confidence], ensuring the confidence is between 0 and 1.
+</think>
+
+[["Soumaila Cissé", 0.95], ["the Government of Mali", 0.85], ["jihadists", 0.75], ["France", 0.7], ["the new coronavirus", 0.8], ["his family", 0.85], ["party", 0.8]]
