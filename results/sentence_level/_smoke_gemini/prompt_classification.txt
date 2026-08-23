@@ -1,0 +1,56 @@
+Task:
+
+
+Classify each of the participants listed under "Participants to classify", according to how it is used in the input.
+
+Classes:
+In the examples below the entity is marked with #...#.
+Per - entities that are human individuals or fictitious human characters and divine entities. Ex. #O rapaz# leu o livro.
+Org - entities with an organizational structure (e.g. companies, governments, teams, institutions). Ex. #A EDP# subiu os precos.
+Obj - entities that represent any kind of tangible, manmade objects. Ex. O Joao partiu #a cadeira#.
+Nat - entities that are not manmade and occur naturally (e.g. animals, plants). Ex. #O cao# mordeu o dono.
+Fac - facilities.
+Veh - vehicles.
+Path - a location that consists of a series of locations; it has the potential for traversal; it can function as a boundary; it has no inherent directionality. Ex. autoestrada A1, nacional 222, rua, rio.
+Pl_water - Ex. rio, ribeira, mar, oceano, lago, canal.
+Pl_celestial - Ex. sol, lua, Marte, Andromeda.
+Pl_mountain - a mountain.
+Pl_civil - a political region or administrative area, usually sub-national. Ex. Regiao Autonoma dos Acores, Uniao Europeia, Lisboa, area metropolitana do Porto, Minho.
+Pl_country - a country.
+Pl_mount_range - a mountain range.
+Pl_capital - the capital of a country.
+Pl_region - a non-political or non-administrative region. Ex. deserto, ilha.
+Pl_state - a first-order administrative division within a country (with ISO 3166-2 codes).
+Loc - places that do not fit any of the other Pl_ values (e.g. web pages).
+Other - entities that do not fit into the other categories. Ex. O Joao sentiu #um cheiro a queimado#.
+
+Definition:
+Participants refer to individuals, groups, organizations, or other entities that are actively involved in or impacted by an event or state. They are typically identified based on their relevance and significance to the situation, and may be explicitly mentioned or inferred from the context. Participants can take on a variety of roles, such as actors, agents, patients, victims, or observers, and their actions and interactions can shape the course of events.
+
+Example: The example output omits the confidence; your answer must include one for every element.
+	Input:
+	"Plane makes emergency landing at Lisbon airport due to engine failure
+A plane made an emergency landing today at Humberto Delgado Airport, in Lisbon, due to an engine failure, a Public Security Police source told Lusa.
+The alert for an emergency landing due to the aircraft having a stopped engine, according to the same source, was given at 5:50 pm.
+The aircraft landed at 6:32 p.m., without any notable incidents, he added.
+The plane belongs to the airline Jota Aviation and was connecting the airports of Farnborough, England, and Lisbon, according to the ANA-Aeroportos de Portugal website."
+
+
+	Participants to classify:
+	["Plane", "to engine", "A plane", "engine", "the aircraft", "a stopped engine", "The aircraft", "The plane", "airport", "at Humberto Delgado Airport", "Lisbon", "the airports", "Farnborough", "England", "Lisbon", "Lusa.", "a Public Security Police", "airline Jota Aviation", "ANA-Aeroportos de Portugal", "source", "the same source", "Lisbon", "website."]
+
+
+	Output:
+	[["Plane", "Obj"], ["to engine", "Obj"], ["A plane", "Obj"], ["engine", "Obj"], ["the aircraft", "Obj"], ["a stopped engine", "Obj"], ["The aircraft", "Obj"], ["The plane", "Obj"], ["airport", "Fac"], ["at Humberto Delgado Airport", "Fac"], ["Lisbon", "Pl_capital"], ["the airports", "Fac"], ["Farnborough", "Pl_civil"], ["England", "Pl_country"], ["Lisbon", "Pl_capital"], ["Lusa.", "Org"], ["a Public Security Police", "Org"], ["airline Jota Aviation", "Org"], ["ANA-Aeroportos de Portugal", "Org"], ["source", "Per"], ["the same source", "Per"], ["Lisbon", "Pl_capital"], ["website.", "Loc"]]
+
+Format:
+JSON-parseable list where each element is a list of three values, only with the JSON array and nothing else. Do not include any introductory text, explanation, or markdown code fences.The first value is the entity as a string, the second is the class as a string, and the third is a number between 0 and 1 with your confidence in that class. For example: [["first entity", "its class", 0.85], ["second entity", "its class", 0.6]]. Place the JSON parsable list inside <Output> tags. Return exactly one element for every entity listed above, repeating the entity string verbatim as the first string.
+Use encoding: utf-8.
+
+Input:
+"The GNR of Freamunde announced today that it had closed a restaurant and drinks establishment that brought together around 50 people, in that location in the municipality of Paços de Ferreira."
+
+Participants to classify:
+["The GNR of Freamunde", "it", "a restaurant and drinks establishment", "around 50 people", "Freamunde", "that location", "municipality of Paços de Ferreira"]
+
+Output:
