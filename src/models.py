@@ -436,7 +436,7 @@ def gemini(prompt: str, temp: float) -> str:
     # The max_tokens parameter is mapped to max_output_tokens in Gemini.
     # The temperature is a direct equivalent.
     config = types.GenerateContentConfig(
-        temperature=0,  # Matches the original temperature
+        temperature=temp,  # Matches the original temperature
          # Matches the original max_tokens
     )
     print(f"Gemini Prompt: {prompt}")
