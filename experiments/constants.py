@@ -125,7 +125,7 @@ BEST_TEMPLATES = {
         ("gemma3_12b", "participants"): "cls_exp",
         ("gemma3_4b", "participants"): "cls_def_exp",
         ("euro_llm_9b", "participants"): "cls_exp",
-        ("gemini", "participants"): "ext_def_exp",
+        ("gemini", "participants"): "cls_def_exp",
     }
 }
 
