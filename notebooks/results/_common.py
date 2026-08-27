@@ -723,6 +723,189 @@ def compute_extraction_classification_metrics(df: pd.DataFrame, group_cols=None)
 
 
 # ---------------------------------------------------------------------------
+# Type metrics conditional on the span already being correct
+# ---------------------------------------------------------------------------
+#
+# F1-classification above is bounded by F1-extraction and inherits every
+# extraction failure, so it cannot say whether typing is itself a bottleneck
+# or merely inherits one. Restricting to the matched-span subset answers that
+# question directly: given a participant the model has already located, does
+# it name the right type?
+#
+# On that subset every row carries exactly one gold type and one predicted
+# type, so it is an ordinary closed confusion matrix, and micro-precision,
+# micro-recall and accuracy all collapse to the same number. That number is a
+# poor summary here: the gold prior is heavily skewed (Per/Org/Loc are about
+# three quarters of all participants) and those same frequent classes are the
+# ones the models handle well, so accuracy tracks the support-weighted F1 to
+# within 0.005 and hides a tail of classes scoring below 0.5. `macro_f1`,
+# which weights every class equally, is therefore the reported figure;
+# `accuracy` is returned alongside only so the gap between them stays visible.
+#
+# Every class in `classes` is scored, with no exclusions -- `Other` and `Fac`
+# included. Both are defined in the annotation guidelines, so a model is
+# legitimately accountable for them. A class entirely absent from a group
+# (neither annotated nor predicted) is skipped rather than counted as a zero,
+# so groups are not penalised for classes their documents never contain.
+
+
+def compute_conditional_type_metrics(
+    df: pd.DataFrame,
+    group_cols=None,
+    classes=None,
+    per_class: bool = False,
+) -> pd.DataFrame:
+    """Participant-type metrics over matched spans only.
+
+    Takes any detailed_results-shaped frame (`load_detailed`, optionally
+    filtered to the best configurations and/or passed through `coarsen_types`),
+    so the same call serves the prompt-selection and test phases and any future
+    document-level phase. Apply `coarsen_types` first for the coarse view --
+    this function does not coarsen on your behalf, it only detects which label
+    set to score against.
+
+    Parameters
+    ----------
+    group_cols : list, optional
+        e.g. ["language", "model"] or ["language", "template"]. One row (or one
+        block of per-class rows) per group; omit for a single overall figure.
+    classes : list, optional
+        Label set to score. Defaults to PROMPT_CLASSES_COARSE when the frame
+        has been coarsened and PROMPT_CLASSES when it has not. Restricting to
+        the prompt's own label set keeps the long tail of invented labels out
+        of the macro average, where a one-instance class would otherwise weigh
+        as much as `Per`.
+    per_class : bool
+        False (default) returns group_cols + ["n_matched", "accuracy",
+        "macro_precision", "macro_recall", "macro_f1"]. True returns
+        group_cols + ["cls", "support", "precision", "recall", "f1"].
+    """
+    group_cols = list(group_cols) if group_cols else []
+
+    if classes is None:
+        present = set(df["annt_type"].dropna().unique()) | set(df["pred_type"].dropna().unique())
+        has_fine = any(isinstance(x, str) and x.startswith(COARSE_LOCATION_PREFIX) for x in present)
+        classes = PROMPT_CLASSES if has_fine else PROMPT_CLASSES_COARSE
+    classes = list(classes)
+
+    parts = split_span_outcomes(df)
+    matched = pd.concat([parts["matched"], parts["mismatched"]])
+    matched = matched[matched["annt_type"].notna() & matched["pred_type"].notna()]
+    # Rows whose *gold* type falls outside `classes` are not scoreable; a
+    # prediction outside it still counts against the class it was claimed for,
+    # so those rows stay in and simply never register as a true positive.
+    matched = matched[matched["annt_type"].isin(classes)]
+
+    def _per_class(group: pd.DataFrame) -> pd.DataFrame:
+        rows = []
+        for label in classes:
+            gold = group["annt_type"] == label
+            pred = group["pred_type"] == label
+            tp = int((gold & pred).sum())
+            fp = int((~gold & pred).sum())
+            fn = int((gold & ~pred).sum())
+            if tp + fp + fn == 0:
+                continue  # class absent from this group entirely
+            precision, recall, f1 = _prf(tp, fp, fn)
+            rows.append({
+                "cls": label, "support": int(gold.sum()),
+                "precision": precision, "recall": recall, "f1": f1,
+            })
+        return pd.DataFrame(rows, columns=["cls", "support", "precision", "recall", "f1"])
+
+    def _summary(group: pd.DataFrame) -> pd.DataFrame:
+        table = _per_class(group)
+        if table.empty:
+            row = {"n_matched": len(group), "accuracy": np.nan,
+                   "macro_precision": np.nan, "macro_recall": np.nan, "macro_f1": np.nan}
+        else:
+            row = {
+                "n_matched": len(group),
+                "accuracy": float((group["pred_type"] == group["annt_type"]).mean()),
+                "macro_precision": float(table["precision"].mean()),
+                "macro_recall": float(table["recall"].mean()),
+                "macro_f1": float(table["f1"].mean()),
+            }
+        return pd.DataFrame([row])
+
+    build = _per_class if per_class else _summary
+
+    if not group_cols:
+        return build(matched).reset_index(drop=True)
+
+    frames = []
+    for keys, group in matched.groupby(group_cols, sort=True):
+        keys = keys if isinstance(keys, tuple) else (keys,)
+        part = build(group)
+        if part.empty:
+            continue
+        for position, (col, value) in enumerate(zip(group_cols, keys)):
+            part.insert(position, col, value)
+        frames.append(part)
+
+    if not frames:
+        return pd.DataFrame(columns=group_cols)
+    return pd.concat(frames, ignore_index=True)
+
+
+def class_distribution(
+    df: pd.DataFrame,
+    source: str = "gold",
+    group_cols=None,
+    classes=None,
+    normalize: bool = True,
+) -> pd.DataFrame:
+    """Participant-type distribution over one of three populations.
+
+    `source` selects which population is counted:
+
+    * ``"gold"``      -- every annotated participant (span tp + fn), by
+                         `annt_type`. This is the corpus prior.
+    * ``"predicted"`` -- every span the model proposed (span tp + fp), by
+                         `pred_type`. This is what the model actually emits.
+    * ``"matched"``   -- the span-tp subset, by `annt_type`; the population
+                         `compute_conditional_type_metrics` scores over.
+
+    Returns group_cols + ["cls", "n"] and, when normalize=True, "share"
+    computed within each group. Labels outside `classes` are pooled into
+    "(other labels)" rather than dropped, so the shares still sum to 1 and the
+    size of the invented-label tail stays visible.
+    """
+    populations = {
+        "gold": (("tp", "fn"), "annt_type"),
+        "predicted": (("tp", "fp"), "pred_type"),
+        "matched": (("tp",), "annt_type"),
+    }
+    if source not in populations:
+        raise ValueError(f"source must be one of {sorted(populations)}, got {source!r}")
+    results, col = populations[source]
+
+    group_cols = list(group_cols) if group_cols else []
+    if classes is None:
+        present = set(df["annt_type"].dropna().unique()) | set(df["pred_type"].dropna().unique())
+        has_fine = any(isinstance(x, str) and x.startswith(COARSE_LOCATION_PREFIX) for x in present)
+        classes = PROMPT_CLASSES if has_fine else PROMPT_CLASSES_COARSE
+
+    frame = df[df["result"].isin(results)].copy()
+    frame = frame[frame[col].notna()]
+    if source == "matched":
+        # Mirror `compute_conditional_type_metrics` exactly: a matched span
+        # whose predicted type failed to parse is not scoreable, so it must
+        # not appear in the distribution of the scored population either.
+        frame = frame[frame["pred_type"].notna()]
+    frame["cls"] = frame[col].where(frame[col].isin(list(classes)), "(other labels)")
+
+    counts = frame.groupby(group_cols + ["cls"]).size().rename("n").reset_index()
+    if normalize:
+        if group_cols:
+            totals = counts.groupby(group_cols)["n"].transform("sum")
+        else:
+            totals = counts["n"].sum()
+        counts["share"] = counts["n"] / totals
+    return counts.sort_values(group_cols + ["n"], ascending=[True] * len(group_cols) + [False]).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
 # Plot styling
 # ---------------------------------------------------------------------------
 
