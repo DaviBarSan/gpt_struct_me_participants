@@ -50,6 +50,24 @@ LANGUAGE_COLORS = {
 }
 HEATMAP_CMAP = "Blues"
 
+# Canonical display order of the eight prompt variations. Ordered by the two
+# prompt-engineering levers under study rather than alphabetically: the
+# ext/cls framing alternates fastest, then the class *definition* block, then
+# the worked *example*, so each successive pair adds one component
+# (bare -> +def -> +exp -> +def+exp). Reading a heatmap row left to right
+# therefore reads as an ablation ladder.
+PROMPT_VAR_ORDER = [
+    "ext", "cls",
+    "ext_def", "cls_def",
+    "ext_exp", "cls_exp",
+    "ext_def_exp", "cls_def_exp",
+]
+
+# PROMPT_VAR_ORDER restricted to the classification-framed variations, for
+# figures that only concern the `cls_*` family (the `ext_*` templates never
+# predict an entity type, so any type-aware view is `cls_*`-only).
+CLS_ONLY_PROMPT_VAR_ORDER = ["cls", "cls_def", "cls_exp", "cls_def_exp"]
+
 # llama32_3b's results are invalid (near-zero precision/recall across every
 # template/language -- see notebook 01's combined boxplot, where it stood
 # out as flat near zero while every other model showed the expected
