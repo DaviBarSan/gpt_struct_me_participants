@@ -8,7 +8,21 @@ from experiments.constants import word_to_category
 
 
 # Full participant labels as they appear in the prompts, mapped to the
-# abbreviations used by the corpus annotations.
+# abbreviations used by the corpus annotations. The prompts offer the classes
+# listed in `src/meta.py` ("Person, Organization, Object, Location,
+# Place (Pl_<type>), Nature, Facility, and Other"), so every one of those that
+# the corpus spells differently belongs here -- otherwise a model answering in
+# the spelling the prompt itself taught it is scored as predicting an
+# out-of-schema label. "Nature"/"Nat" and the case folding of "Other" are the
+# two such cases.
+#
+# `Place (Pl_<type>)` is deliberately absent: it is a family of labels, not a
+# label, and the sentence-level regime prompts for the fine-grained `Pl_*`
+# values directly. Collapsing them here would destroy that distinction for
+# every consumer of this function. Location granularity is a *reporting*
+# choice, so it is applied downstream instead (see
+# `notebooks/results/_common.py::coarsen_types`), which lets the document-level
+# analysis report a coarse view while sentence-level keeps the fine one.
 TYPE_ABBREVIATIONS = {
     "Object": "Obj",
     "Facility": "Fac",
@@ -16,6 +30,8 @@ TYPE_ABBREVIATIONS = {
     "Person": "Per",
     "Event": "Eve",
     "Organization": "Org",
+    "Nature": "Nat",
+    "Other": "Other",
 }
 
 # Lookup accepting either spelling of a label, case-insensitively.

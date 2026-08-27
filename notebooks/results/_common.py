@@ -75,22 +75,45 @@ CLS_ONLY_PROMPT_VAR_ORDER = ["cls", "cls_def", "cls_exp", "cls_def_exp"]
 # loaders below, rather than filtered ad hoc in each notebook.
 EXCLUDED_MODELS = ["llama32_3b", "gemma3_1b", "qwen25_12b"] 
 
+# Type-label normalization, mirroring src/evaluate.py::normalize_type.
+#
+# The stored CSVs were written by whichever version of that function was
+# current when the run happened, so labels the table has only just learned to
+# fold ("Nature" -> "Nat") are still spelled the old way on disk. Re-applying
+# the mapping at load time makes the notebooks agree with the pipeline without
+# re-running evaluation over every result tree. Kept as an independent copy
+# rather than an import because this package is run from the notebook
+# directory and does not put the project root on sys.path.
+TYPE_ABBREVIATIONS = {
+    "Object": "Obj",
+    "Facility": "Fac",
+    "Location": "Loc",
+    "Person": "Per",
+    "Event": "Eve",
+    "Organization": "Org",
+    "Nature": "Nat",
+    "Other": "Other",
+}
+
+_TYPE_LOOKUP = {full.lower(): abbr for full, abbr in TYPE_ABBREVIATIONS.items()}
+_TYPE_LOOKUP.update({abbr.lower(): abbr for abbr in TYPE_ABBREVIATIONS.values()})
+
 # Gold annotations use fine-grained location subtypes (Pl_capital, Pl_civil,
 # Pl_country, Pl_region, Pl_state, Pl_water) that model outputs never
-# reproduce -- predictions only ever use the generic "Loc". Left as-is this
-# shows up as a wall of false negatives on every Pl_* class that is really a
-# label-granularity mismatch, not an extraction failure. COARSE_CLASS_MAP
-# lets notebook 03 also show a coarse-grained view where those collapse into
-# "Loc" for a fairer comparison, alongside the raw fine-grained view.
-
-COARSE_CLASS_MAP = {
-    "Pl_capital": "Loc",
-    "Pl_civil": "Loc",
-    "Pl_country": "Loc",
-    "Pl_region": "Loc",
-    "Pl_state": "Loc",
-    "Pl_water": "Loc",
-}
+# reproduce -- predictions only ever use the generic "Loc", or invent subtypes
+# of their own that the corpus does not define (Pl_city, Pl_district, ...).
+# Left as-is this shows up as a wall of false negatives on every Pl_* class
+# that is really a label-granularity mismatch, not an extraction failure:
+# Pl_civil predicted as Loc alone accounts for roughly a third of all
+# type mismatches on matched spans.
+#
+# `coarsen_types` therefore collapses *any* Pl_-prefixed label into "Loc",
+# rather than an enumerated set of the six the corpus happens to use -- an
+# enumeration silently lets the invented subtypes through, so they survive
+# coarsening and are still scored as errors. This is the headline view for the
+# document-level regime; the fine-grained view remains available by simply not
+# calling this.
+COARSE_LOCATION_PREFIX = "Pl_"
 
 # The label set the classification prompts actually offer -- the "Classes:"
 # line of src/meta.py ("Person, Organization, Object, Location,
@@ -106,16 +129,49 @@ PROMPT_CLASSES = [
     "Other",
 ]
 
-# PROMPT_CLASSES after COARSE_CLASS_MAP collapses the Pl_* subtypes into Loc.
+# PROMPT_CLASSES after `coarsen_types` collapses the Pl_* subtypes into Loc.
 PROMPT_CLASSES_COARSE = ["Per", "Org", "Obj", "Nat", "Fac", "Loc", "Other"]
+
+
+def normalize_type_label(label):
+    """Fold one type label to its corpus spelling, case-insensitively.
+
+    Mirrors src/evaluate.py::normalize_type, except that a missing label stays
+    missing here rather than becoming the string "N/A" -- the metric helpers
+    below distinguish "no type predicted" from "a type outside the schema", and
+    collapsing the two would make `ext_*` rows look like out-of-schema
+    predictions. Labels the schema does not know are returned verbatim, so the
+    reports keep showing what the model actually answered.
+    """
+    if not isinstance(label, str) or not label.strip():
+        return label
+    return _TYPE_LOOKUP.get(label.strip().lower(), label.strip())
+
+
+def normalize_types(df: pd.DataFrame) -> pd.DataFrame:
+    """Returns a copy of a detailed_results frame with pred_type/annt_type
+    folded to their corpus spellings (see `normalize_type_label`)."""
+    df = df.copy()
+    for col in ("pred_type", "annt_type"):
+        if col in df.columns:
+            df[col] = df[col].map(normalize_type_label)
+    return df
+
+
+def coarsen_label(label):
+    """Collapse any Pl_-prefixed location subtype into the generic "Loc"."""
+    if isinstance(label, str) and label.startswith(COARSE_LOCATION_PREFIX):
+        return "Loc"
+    return label
 
 
 def coarsen_types(df: pd.DataFrame) -> pd.DataFrame:
     """Returns a copy of a detailed_results frame with pred_type/annt_type
-    location subtypes collapsed via COARSE_CLASS_MAP."""
+    location subtypes collapsed into "Loc" (see COARSE_LOCATION_PREFIX)."""
     df = df.copy()
-    df["pred_type"] = df["pred_type"].replace(COARSE_CLASS_MAP)
-    df["annt_type"] = df["annt_type"].replace(COARSE_CLASS_MAP)
+    for col in ("pred_type", "annt_type"):
+        if col in df.columns:
+            df[col] = df[col].map(coarsen_label)
     return df
 
 
@@ -164,11 +220,18 @@ def load_results(stage: str, language: str) -> pd.DataFrame:
 
 def load_detailed(stage: str, language: str) -> pd.DataFrame:
     """Reads results/{stage}/{language}/detailed_results.csv (per-prediction
-    tp/fp/fn rows with pred_type/annt_type metadata)."""
+    tp/fp/fn rows with pred_type/annt_type metadata).
+
+    Type labels are normalized on load (`normalize_types`) so that analyses
+    here agree with the pipeline's own spelling regardless of which version of
+    src/evaluate.py wrote the file. Location granularity is *not* touched --
+    call `coarsen_types` for the coarse view.
+    """
     path = RESULTS_DIR / stage / language / "detailed_results.csv"
     df = pd.read_csv(path)
     df = df.rename(columns={"modelo": "model"})
     df = _drop_excluded_models(df)
+    df = normalize_types(df)
     df["stage"] = stage
     df["language"] = language
     return df
@@ -176,11 +239,15 @@ def load_detailed(stage: str, language: str) -> pd.DataFrame:
 
 def load_detailed_token(stage: str, language: str) -> pd.DataFrame:
     """Reads results/{stage}/{language}/detailed_results_token_level.csv
-    (word-level LCS match rows with result_type EXACT/PARTIAL/MISS)."""
+    (word-level LCS match rows with result_type EXACT/PARTIAL/MISS).
+
+    Type labels are normalized on load, as in `load_detailed`.
+    """
     path = RESULTS_DIR / stage / language / "detailed_results_token_level.csv"
     df = pd.read_csv(path)
     df = df.rename(columns={"modelo": "model"})
     df = _drop_excluded_models(df)
+    df = normalize_types(df)
     df["stage"] = stage
     df["language"] = language
     return df
@@ -483,6 +550,32 @@ def filter_to_best_configs(df: pd.DataFrame, best_configs: dict, verbose: bool =
 # NaN (a handful of fn rows, plus all fp rows by construction) are excluded
 # in the same way from fn counts.
 
+def split_span_outcomes(df: pd.DataFrame) -> dict:
+    """Partition a detailed_results frame by the counting rule above.
+
+    Returns the four disjoint frames the rule is stated over -- ``matched``
+    (span and type both right), ``mismatched`` (span right, type wrong),
+    ``fn_structural`` and ``fp_structural`` -- so the per-class and the
+    micro-averaged views below cannot drift apart in how they classify a row.
+
+    Note that `pred_type != annt_type` is True when either side is missing, so
+    an unparsed type counts as a mismatch here. `compute_class_level_metrics`
+    filters those out afterwards, because a row with no label cannot be
+    attributed to a class; `compute_extraction_classification_metrics` keeps
+    them, because at the micro level dropping them would shrink the
+    classification denominators below the extraction ones and break the
+    comparison between the two scores.
+    """
+    span_tp = df[df["result"] == "tp"]
+    same = span_tp["pred_type"] == span_tp["annt_type"]
+    return {
+        "matched": span_tp[same],
+        "mismatched": span_tp[~same],
+        "fn_structural": df[df["result"] == "fn"],
+        "fp_structural": df[df["result"] == "fp"],
+    }
+
+
 def compute_class_level_metrics(df: pd.DataFrame, group_cols=None) -> pd.DataFrame:
     """Type-aware per-class precision/recall/F1 from a detailed_results.csv
     frame (as returned by load_detailed). Pass group_cols (e.g. ["model"] or
@@ -494,11 +587,12 @@ def compute_class_level_metrics(df: pd.DataFrame, group_cols=None) -> pd.DataFra
     """
     group_cols = list(group_cols) if group_cols else []
 
-    tp_all = df[(df["result"] == "tp") & df["pred_type"].notna() & df["annt_type"].notna()]
-    matched = tp_all[tp_all["pred_type"] == tp_all["annt_type"]]
-    mismatched = tp_all[tp_all["pred_type"] != tp_all["annt_type"]]
-    fn_structural = df[(df["result"] == "fn") & df["annt_type"].notna()]
-    fp_structural = df[(df["result"] == "fp") & df["pred_type"].notna()]
+    parts = split_span_outcomes(df)
+    labelled = lambda frame: frame[frame["pred_type"].notna() & frame["annt_type"].notna()]
+    matched = labelled(parts["matched"])
+    mismatched = labelled(parts["mismatched"])
+    fn_structural = parts["fn_structural"][parts["fn_structural"]["annt_type"].notna()]
+    fp_structural = parts["fp_structural"][parts["fp_structural"]["pred_type"].notna()]
 
     def _counts(frame, type_col, label):
         cols = group_cols + [type_col]
@@ -530,6 +624,102 @@ def compute_class_level_metrics(df: pd.DataFrame, group_cols=None) -> pd.DataFra
     result["f1"] = (2 * result["precision"] * result["recall"] / denom_f1).fillna(0.0)
 
     return result.sort_values(merge_cols).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
+# Derived micro-averaged extraction and classification metrics
+# ---------------------------------------------------------------------------
+#
+# The same counting rule as above, rolled up over all classes instead of
+# reported per class, which yields the two headline scores:
+#
+#   F1-extraction     -- a prediction is correct when its *span* matches.
+#                        This is what results.csv has always called `f1`; the
+#                        name here only makes explicit what it measures.
+#   F1-classification -- a prediction is correct when its span *and* its type
+#                        match. A span hit with the wrong type is a false
+#                        positive for the type claimed and a false negative
+#                        for the type missed, so it is penalised on both
+#                        sides rather than half-credited.
+#
+# The two share their denominators exactly -- tp+fp and tp+fn are identical
+# between them, because every span-level outcome is counted in both, only
+# sorted differently. That is what makes the pair comparable and the gap
+# between them readable as the cost of typing: F1-classification can never
+# exceed F1-extraction, and their ratio is the share of extraction
+# performance that survives having to name the participant type.
+#
+# The classification score is undefined for `ext_*` templates, which never
+# predict a type. It is returned as NaN there rather than 0.0, so that a
+# template which was never asked to classify is not averaged in as one that
+# tried and failed.
+
+def _prf(tp: float, fp: float, fn: float) -> tuple:
+    """Precision, recall and F1 from raw counts, 0.0 on an empty denominator."""
+    precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+    recall = tp / (tp + fn) if tp + fn > 0 else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0.0
+    return precision, recall, f1
+
+
+def compute_extraction_classification_metrics(df: pd.DataFrame, group_cols=None) -> pd.DataFrame:
+    """Micro-averaged extraction and classification P/R/F1 from a
+    detailed_results.csv frame (as returned by `load_detailed`).
+
+    Pass group_cols (e.g. ["language", "model"] or ["language", "model",
+    "template"]) to compute one row per group; omit for a single row over
+    whatever is in `df`.
+
+    Apply `coarsen_types` to `df` first for the coarse-grained location view,
+    which is the one the document-level analysis reports.
+
+    Returns group_cols + ["tp_ext", "fp_ext", "fn_ext", "precision_ext",
+    "recall_ext", "f1_ext", "tp_cls", "fp_cls", "fn_cls", "precision_cls",
+    "recall_cls", "f1_cls"], with the `*_cls` columns NaN for groups whose
+    template never predicts a type.
+    """
+    group_cols = list(group_cols) if group_cols else []
+
+    def _one(group: pd.DataFrame) -> dict:
+        parts = split_span_outcomes(group)
+        tp_ext = len(parts["matched"]) + len(parts["mismatched"])
+        fp_ext = len(parts["fp_structural"])
+        fn_ext = len(parts["fn_structural"])
+        p_ext, r_ext, f_ext = _prf(tp_ext, fp_ext, fn_ext)
+
+        row = {
+            "tp_ext": tp_ext, "fp_ext": fp_ext, "fn_ext": fn_ext,
+            "precision_ext": p_ext, "recall_ext": r_ext, "f1_ext": f_ext,
+        }
+
+        # An extraction-only template predicts no type anywhere in the group.
+        if not group["pred_type"].notna().any():
+            row.update({
+                "tp_cls": np.nan, "fp_cls": np.nan, "fn_cls": np.nan,
+                "precision_cls": np.nan, "recall_cls": np.nan, "f1_cls": np.nan,
+            })
+            return row
+
+        mismatch = len(parts["mismatched"])
+        tp_cls = len(parts["matched"])
+        fp_cls = fp_ext + mismatch
+        fn_cls = fn_ext + mismatch
+        p_cls, r_cls, f_cls = _prf(tp_cls, fp_cls, fn_cls)
+        row.update({
+            "tp_cls": tp_cls, "fp_cls": fp_cls, "fn_cls": fn_cls,
+            "precision_cls": p_cls, "recall_cls": r_cls, "f1_cls": f_cls,
+        })
+        return row
+
+    if not group_cols:
+        return pd.DataFrame([_one(df)])
+
+    rows = []
+    for keys, group in df.groupby(group_cols, sort=True):
+        keys = keys if isinstance(keys, tuple) else (keys,)
+        rows.append({**dict(zip(group_cols, keys)), **_one(group)})
+
+    return pd.DataFrame(rows).sort_values(group_cols).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
