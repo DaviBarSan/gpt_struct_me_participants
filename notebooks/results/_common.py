@@ -74,6 +74,23 @@ COARSE_CLASS_MAP = {
     "Pl_water": "Loc",
 }
 
+# The label set the classification prompts actually offer -- the "Classes:"
+# line of src/meta.py ("Person, Organization, Object, Location,
+# Place (Pl_<type>), Nature, Facility, and Other"), spelled as the corpus
+# spells it and expanded over the Pl_* subtypes the gold annotations use.
+# Model answers carry a long tail of invented labels on top of this ("Eve",
+# "Pl_city", "Nature", ...); those are genuine precision errors, but as
+# heatmap columns they are hundreds of near-empty cells, so notebook 03
+# restricts the per-class views to the classes the prompt asked for.
+PROMPT_CLASSES = [
+    "Per", "Org", "Obj", "Nat", "Fac", "Loc",
+    "Pl_capital", "Pl_civil", "Pl_country", "Pl_region", "Pl_state", "Pl_water",
+    "Other",
+]
+
+# PROMPT_CLASSES after COARSE_CLASS_MAP collapses the Pl_* subtypes into Loc.
+PROMPT_CLASSES_COARSE = ["Per", "Org", "Obj", "Nat", "Fac", "Loc", "Other"]
+
 
 def coarsen_types(df: pd.DataFrame) -> pd.DataFrame:
     """Returns a copy of a detailed_results frame with pred_type/annt_type
@@ -101,9 +118,25 @@ def _drop_excluded_models(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_results(stage: str, language: str) -> pd.DataFrame:
-    """Reads results/{stage}/{language}/results.csv (span-level P/R/F1/F1-r)."""
+    """Reads results/{stage}/{language}/results.csv (span-level P/R/F1/F1-r).
+
+    results.csv reports the relaxed score under two averaging schemes,
+    `f1_r_micro` (pooled over the corpus) and `f1_r_macro` (one F1 per
+    document, then averaged). Every notebook, plot and legend in this package
+    refers to a single "F1-r", and that name is bound here to the **macro**
+    figure; the micro column stays on the frame as `f1_r_micro` for anyone who
+    wants to compare the two. Change the assignment below to switch which
+    scheme the whole package reports -- nothing downstream hard-codes it.
+    """
     path = RESULTS_DIR / stage / language / "results.csv"
     df = pd.read_csv(path)
+    if "f1_r_macro" not in df.columns:
+        raise ValueError(
+            f"{path} predates the corrected relaxed metrics (no 'f1_r_macro' "
+            f"column). Re-run: python -m experiments.evaluate --mode {stage} "
+            f"--language {language}"
+        )
+    df["f1_r"] = df["f1_r_macro"]
     df = _drop_malformed(df)
     df = _drop_excluded_models(df)
     df["stage"] = stage
