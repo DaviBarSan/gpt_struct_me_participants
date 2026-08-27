@@ -56,6 +56,144 @@ def f1_score(tp: int, fp: int, fn: int) -> float:
     return 2 * (p * r) / (p + r) if p + r > 0 else 0
 
 
+# Credit awarded to a predicted mention that overlaps an annotated one without
+# matching it exactly. Set to 1.0 for a fully lenient scheme, or replace the
+# constant lookup in `_mention_credit` by the similarity ratio itself for a
+# continuous one.
+PARTIAL_MATCH_SCORE = 0.5
+
+# Minimum token-level similarity for a prediction and an annotation to be
+# considered the same mention at all. Below it the prediction is a miss. The
+# bound is inclusive because a prediction keeping only the head noun of a
+# three-token participant scores exactly 0.5, and that is a genuine partial
+# hit rather than a miss.
+MATCH_THRESHOLD = 0.5
+
+
+def mention_text(item) -> str:
+    """Return the surface form of a prediction or annotation entry.
+
+    Predictions are bare strings for extraction templates and ``[text, type]``
+    pairs for classification ones; participant annotations are 4-tuples while
+    event and time annotations are plain strings. Only the surface form is
+    scored, mirroring `strict_metrics`, so the strict/relaxed gap reflects the
+    matching criterion alone and not a change in what is being compared.
+    """
+    if isinstance(item, (list, tuple)):
+        return str(item[0]).strip() if len(item) > 0 and item[0] is not None else ""
+    return str(item).strip() if item is not None else ""
+
+
+def unique_mentions(items) -> list:
+    """De-duplicate a document's mentions by surface form, as strict does."""
+    texts = (mention_text(item) for item in items)
+    return list(dict.fromkeys(text for text in texts if text))
+
+
+def align_mentions(preds: list, annts: list) -> list:
+    """Align predicted mentions to annotated ones, one-to-one and greedily.
+
+    Every candidate pair scoring above `MATCH_THRESHOLD` is considered, best
+    first, and each mention is consumed at most once. The one-to-one constraint
+    is what stops several near-duplicate predictions from all collecting credit
+    for the same annotated participant.
+
+    Returns the accepted ``(pred_index, annt_index, ratio)`` triples.
+    """
+    pred_tokens = [tokenize(text) for text in preds]
+    annt_tokens = [tokenize(text) for text in annts]
+
+    candidates = []
+    for i, p_tkns in enumerate(pred_tokens):
+        for j, a_tkns in enumerate(annt_tokens):
+            if not p_tkns or not a_tkns:
+                continue
+            ratio = difflib.SequenceMatcher(None, p_tkns, a_tkns).ratio()
+            if ratio >= MATCH_THRESHOLD:
+                # Sorted on the negated ratio, then on the indices so that ties
+                # resolve identically across runs.
+                candidates.append((-ratio, i, j))
+    candidates.sort()
+
+    matched_preds, matched_annts, pairs = set(), set(), []
+    for neg_ratio, i, j in candidates:
+        if i in matched_preds or j in matched_annts:
+            continue
+        matched_preds.add(i)
+        matched_annts.add(j)
+        pairs.append((i, j, -neg_ratio))
+    return pairs
+
+
+def _mention_credit(preds: list, annts: list) -> float:
+    """Total relaxed credit earned by one document's predictions."""
+    credit = 0.0
+    for _, _, ratio in align_mentions(preds, annts):
+        credit += 1.0 if ratio == 1.0 else PARTIAL_MATCH_SCORE
+    return credit
+
+
+def relaxed_mention_metrics(prediction: Dict, annotation: Dict) -> dict:
+    """Compute relaxed (partial-match) metrics pooled at the mention level.
+
+    Each predicted mention is aligned with at most one annotated mention and
+    earns full credit for an exact token match, `PARTIAL_MATCH_SCORE` for a
+    partial one and nothing otherwise. Precision divides the earned credit by
+    the number of predicted mentions and recall by the number of annotated
+    ones, so participants the model never proposed are penalised.
+
+    Two averages are returned over the same credit:
+
+    * ``f1`` pools the credit and the counts over the whole corpus (micro),
+      making it directly comparable to the strict F1 -- the only difference
+      between the two is exact versus partial matching.
+    * ``macro_f1`` computes one F1 per document and averages those, giving
+      every document the same weight regardless of how many participants it
+      holds. A macro well below the micro means a subset of documents is
+      failing badly rather than errors being spread evenly.
+
+    Documents absent from `prediction` are excluded from both, exactly as they
+    already are from the strict metrics.
+    """
+    total_credit, total_preds, total_annts = 0.0, 0, 0
+    doc_f1s = []
+
+    for doc_id in prediction:
+        preds = unique_mentions(prediction[doc_id])
+        annts = unique_mentions(annotation.get(doc_id, []))
+        credit = _mention_credit(preds, annts)
+
+        total_credit += credit
+        total_preds += len(preds)
+        total_annts += len(annts)
+
+        if not preds and not annts:
+            # Nothing to find and nothing proposed: vacuously correct, and
+            # counted so that empty documents do not silently drag the macro
+            # down. Any other empty side is a genuine zero.
+            doc_f1s.append(1.0)
+            continue
+        doc_precision = credit / len(preds) if preds else 0.0
+        doc_recall = credit / len(annts) if annts else 0.0
+        doc_f1s.append(
+            2 * doc_precision * doc_recall / (doc_precision + doc_recall)
+            if doc_precision + doc_recall > 0 else 0.0
+        )
+
+    precision = total_credit / total_preds if total_preds > 0 else 0.0
+    recall = total_credit / total_annts if total_annts > 0 else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0.0
+    macro_f1 = sum(doc_f1s) / len(doc_f1s) if doc_f1s else 0.0
+
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "macro_f1": macro_f1,
+        "documents": len(doc_f1s),
+    }
+
+
 def strict_metrics(prediction: list, annotation: list, template: str, modelo: str) -> dict:
     """Compute micro-averaged metrics for a given entity.
     ('modelo', 'entity','doc_id','template', 'token','pred_type', 'annt_type', 'result', 'f1_r_score')

@@ -19,7 +19,7 @@ import pandas as pd
 from experiments.constants import RESOURCE_PATH, ROOT, WORD_CATEGORIES_EN, WORD_CATEGORIES_PT
 
 from src.reader import read_lusa, read_timebank, read_lusa_en
-from src.evaluate import strict_metrics, relaxed_metrics
+from src.evaluate import strict_metrics, relaxed_metrics, relaxed_mention_metrics
 
 
 RESULTS_PATH = ROOT / "results"
@@ -107,12 +107,14 @@ def evaluate(predictions: dict, annotations: dict, dict_words: dict) -> list:
                 annotation = annotations[entity]
                 strict, details = strict_metrics(prediction, annotation, template, model)
                 relaxed, token_details = relaxed_metrics(prediction, annotation, template, model, dict_words)
+                relaxed_mention = relaxed_mention_metrics(prediction, annotation)
                 results.append({
                     "model": model,
                     "template": template,
                     "entity": entity,
                     "strict": strict,
-                    "relaxed": relaxed
+                    "relaxed": relaxed,
+                    "relaxed_mention": relaxed_mention
                 })
                 results_details.append(details)
                 result_detailts_token_level.append(token_details)
@@ -134,14 +136,23 @@ def evaluate(predictions: dict, annotations: dict, dict_words: dict) -> list:
 
 
 def make_results_table(results: list) -> pd.DataFrame:
+    """Build the reported table: strict micro F1 plus relaxed micro and macro.
+
+    `f1` and `f1_r_micro` share the same averaging scheme, so the gap between
+    them isolates exact versus partial matching. `f1_r_macro` weights every
+    document equally instead. The legacy relaxed score is left out of the table
+    but stays in results.json under "relaxed".
+    """
     for result in results:
         strict = result.pop("strict")
         result["precision"] = strict["precision"]
         result["recall"] = strict["recall"]
         result["f1"] = strict["f1"]
 
-        relaxed = result.pop("relaxed")
-        result["f1_r"] = relaxed["f1"]
+        result.pop("relaxed")
+        relaxed_mention = result.pop("relaxed_mention")
+        result["f1_r_micro"] = relaxed_mention["f1"]
+        result["f1_r_macro"] = relaxed_mention["macro_f1"]
     df = pd.DataFrame(results)
     return df
 
