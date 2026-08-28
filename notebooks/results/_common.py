@@ -778,7 +778,9 @@ def compute_conditional_type_metrics(
     per_class : bool
         False (default) returns group_cols + ["n_matched", "accuracy",
         "macro_precision", "macro_recall", "macro_f1"]. True returns
-        group_cols + ["cls", "support", "precision", "recall", "f1"].
+        group_cols + ["cls", "support", "tp", "fp", "fn", "precision",
+        "recall", "f1"], the counts being included so a per-class score can be
+        read against the confusion structure that produced it.
     """
     group_cols = list(group_cols) if group_cols else []
 
@@ -809,9 +811,12 @@ def compute_conditional_type_metrics(
             precision, recall, f1 = _prf(tp, fp, fn)
             rows.append({
                 "cls": label, "support": int(gold.sum()),
+                "tp": tp, "fp": fp, "fn": fn,
                 "precision": precision, "recall": recall, "f1": f1,
             })
-        return pd.DataFrame(rows, columns=["cls", "support", "precision", "recall", "f1"])
+        return pd.DataFrame(
+            rows, columns=["cls", "support", "tp", "fp", "fn", "precision", "recall", "f1"]
+        )
 
     def _summary(group: pd.DataFrame) -> pd.DataFrame:
         table = _per_class(group)
@@ -846,6 +851,152 @@ def compute_conditional_type_metrics(
     if not frames:
         return pd.DataFrame(columns=group_cols)
     return pd.concat(frames, ignore_index=True)
+
+
+# ---------------------------------------------------------------------------
+# F1-post-ext-cls: classification scored only over correctly extracted spans
+# ---------------------------------------------------------------------------
+#
+# F1-classification answers "how much of the annotated participant set did the
+# model recover *and* type correctly", which is the figure that matters for the
+# task as a whole but confounds two abilities. This function isolates the
+# second: of the participants the model already located, how many did it type
+# correctly? The population is the span-level true positives, so extraction
+# failures are excluded by construction rather than inherited.
+#
+# The two scores compose exactly. Because extraction and classification share
+# their denominators (see above), tp_cls / tp_ext is a single factor that
+# scales precision and recall alike, and therefore scales their harmonic mean:
+#
+#     F1-classification = F1-extraction * micro-F1-post-ext-cls
+#
+# so the pair decomposes end-to-end performance into locating and typing. The
+# notebooks assert this identity rather than take it on trust.
+#
+# Two averages are returned, and they are not interchangeable:
+#
+#   micro -- pooled over classes, counted by exactly the rule
+#            `split_span_outcomes` applies: a span tp whose type is not the
+#            annotated one is a false positive for the class claimed and a
+#            false negative for the class missed. Every non-matched row is
+#            therefore counted on both sides, tp+fp == tp+fn == n, and micro
+#            precision, recall and F1 all coincide with accuracy. That is not a
+#            defect: it is what makes the decomposition above an exact
+#            algebraic identity rather than an approximation, since it is the
+#            same rule the global F1-classification uses. The triple is
+#            returned in full anyway, to mirror the other metric helpers and so
+#            the coincidence can be verified rather than trusted.
+#
+#            It is a weak summary in its own right: the gold prior is dominated
+#            by Per/Org/Loc, which are also the classes the models handle well.
+#
+#   macro -- every class weighted equally, delegated to
+#            `compute_conditional_type_metrics` so there is exactly one macro
+#            definition in this module. This is the figure to report.
+#
+# Two kinds of row are not scoreable on both sides, and counting them on both
+# sides anyway is what keeps the identity exact. They are reported as separate
+# diagnostic counts instead, so the information is not lost: `untyped_pec` is
+# span tps whose *predicted* type failed to parse (they claim no class),
+# `ungolded_pec` is span tps whose *gold* type is missing (there is no class to
+# have claimed). Both are errors under any reading; only their attribution to a
+# particular class is undefined. On the current runs untyped_pec is 0 and
+# ungolded_pec is 6 of 7136.
+
+def compute_post_extraction_classification_metrics(
+    df: pd.DataFrame,
+    group_cols=None,
+    classes=None,
+) -> pd.DataFrame:
+    """Participant-type P/R/F1 over the correctly extracted spans only.
+
+    Takes any detailed_results-shaped frame (as returned by `load_detailed`),
+    optionally filtered and/or passed through `coarsen_types` first -- as with
+    `compute_conditional_type_metrics`, this function does not coarsen on your
+    behalf.
+
+    Parameters
+    ----------
+    group_cols : list, optional
+        e.g. ["language", "model", "template"]. One row per group; omit for a
+        single row over whatever is in `df`.
+    classes : list, optional
+        Label set the macro average is taken over. Passed straight through to
+        `compute_conditional_type_metrics`, which defaults it to
+        PROMPT_CLASSES_COARSE or PROMPT_CLASSES depending on whether the frame
+        has been coarsened. The micro counts ignore it: a prediction outside
+        the schema is a genuine error and is counted as one.
+
+    Returns group_cols + ["n_spans_pec", "untyped_pec", "ungolded_pec",
+    "tp_pec", "fp_pec", "fn_pec", "micro_precision_pec", "micro_recall_pec",
+    "micro_f1_pec", "macro_precision_pec", "macro_recall_pec",
+    "macro_f1_pec"]. A group with no correctly extracted span scores NaN
+    throughout rather than 0.0, since there is nothing to have typed.
+    """
+    group_cols = list(group_cols) if group_cols else []
+
+    parts = split_span_outcomes(df)
+    span_tp = pd.concat([parts["matched"], parts["mismatched"]])
+
+    def _one(group: pd.DataFrame) -> dict:
+        # As in `compute_extraction_classification_metrics`, a group that never
+        # predicts a type was never asked to classify, so it scores NaN rather
+        # than 0.0 and is not averaged in as a template that tried and failed.
+        if group.empty or not group["pred_type"].notna().any():
+            return {
+                "n_spans_pec": len(group),
+                "untyped_pec": len(group), "ungolded_pec": 0,
+                "tp_pec": np.nan, "fp_pec": np.nan, "fn_pec": np.nan,
+                "micro_precision_pec": np.nan, "micro_recall_pec": np.nan,
+                "micro_f1_pec": np.nan,
+            }
+        # The same test `split_span_outcomes` uses to separate matched from
+        # mismatched: False whenever either side is missing, so a row is a true
+        # positive only when both are present and agree. Every other row is
+        # counted on both sides, which is what keeps the decomposition exact.
+        hit = group["pred_type"] == group["annt_type"]
+        tp = int(hit.sum())
+        errors = len(group) - tp
+        precision, recall, f1 = _prf(tp, errors, errors)
+        return {
+            "n_spans_pec": len(group),
+            "untyped_pec": int(group["pred_type"].isna().sum()),
+            "ungolded_pec": int(group["annt_type"].isna().sum()),
+            "tp_pec": tp, "fp_pec": errors, "fn_pec": errors,
+            "micro_precision_pec": precision, "micro_recall_pec": recall,
+            "micro_f1_pec": f1,
+        }
+
+    if not group_cols:
+        micro = pd.DataFrame([_one(span_tp)])
+    else:
+        rows = []
+        for keys, group in span_tp.groupby(group_cols, sort=True):
+            keys = keys if isinstance(keys, tuple) else (keys,)
+            rows.append({**dict(zip(group_cols, keys)), **_one(group)})
+        micro = pd.DataFrame(rows)
+        if micro.empty:
+            return pd.DataFrame(columns=group_cols)
+
+    renames = {
+        "macro_precision": "macro_precision_pec",
+        "macro_recall": "macro_recall_pec",
+        "macro_f1": "macro_f1_pec",
+    }
+    macro = compute_conditional_type_metrics(df, group_cols=group_cols, classes=classes)
+    if not set(renames).issubset(macro.columns):
+        # No group had a scoreable row -- an `ext_*` template predicts no type
+        # anywhere, so there is no confusion matrix to macro-average. The micro
+        # side is still well defined (every span tp is an error), so return it
+        # with the macro columns empty rather than failing.
+        for column in renames.values():
+            micro[column] = np.nan
+        return micro.sort_values(group_cols).reset_index(drop=True) if group_cols else micro
+    macro = macro[group_cols + list(renames)].rename(columns=renames)
+
+    if not group_cols:
+        return pd.concat([micro.reset_index(drop=True), macro.reset_index(drop=True)], axis=1)
+    return micro.merge(macro, on=group_cols, how="left").sort_values(group_cols).reset_index(drop=True)
 
 
 def class_distribution(
